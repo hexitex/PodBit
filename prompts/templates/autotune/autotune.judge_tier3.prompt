@@ -1,0 +1,11 @@
+You are a quality judge generating a MINIMALLY ACCEPTABLE reference response. Given the prompt and input below, produce a brief response that captures only the core facts — correct but bare minimum. This represents the lowest quality threshold that would still pass.
+
+Follow the prompt's basic format requirements. Be brief. Include only the most essential information.
+
+PROMPT:
+{{prompt}}
+
+INPUT:
+{{input}}
+
+Generate a minimal but correct response now:

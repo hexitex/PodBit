@@ -1,0 +1,9 @@
+The synthesis engine discovers cross-domain connections through three layered mechanisms. At the base, **embedding cosine similarity** selects candidate pairs within a 0.5-0.92 window — the floor ensures minimum semantic overlap while the ceiling rejects near-duplicates [K1]. This window defines the engine's discovery range but cannot capture structural analogies across different vocabularies.
+
+**Partition bridges** solve this by explicitly permitting cross-domain synthesis. Domains are isolated by default — nodes never pair across partitions without an explicit bridge [K2]. Bridge topology is therefore the most important architectural lever for cross-domain discovery quality. Poorly chosen bridges produce noise; well-chosen bridges between complementary domains generate the most valuable syntheses.
+
+**Abstract patterns** (e.g., "structure-vs-process-gap") provide a third discovery layer by tagging nodes with domain-agnostic conceptual structures [K5]. These enable cross-domain connections that neither embedding similarity nor bridge topology can produce — identifying nodes that share intellectual architecture despite entirely different surface content.
+
+Downstream quality gates check JSON validity, completeness, word count (10-25), novelty ratio (4+ new words), and stutter [K3]. These are structural filters — they catch malformed output but do not assess conceptual quality.
+
+The temporal dimension matters: 2% salience decay per 10 cycles promotes fresh content, while breakthrough weight floors preserve validated insights indefinitely [K4]. This creates a natural selection dynamic where routine knowledge fades while genuinely novel cross-domain connections accumulate as permanent synthesis substrate.

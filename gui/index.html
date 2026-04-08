@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/podbit-logo.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Podbit</title>
+    <script>
+      // Early theme + dark mode sync — runs before React to prevent FOUC
+      (function() {
+        // Dark mode — sync with OS
+        var mq = window.matchMedia('(prefers-color-scheme: dark)');
+        function applyDark(dark) {
+          document.documentElement.classList.toggle('dark', dark);
+        }
+        applyDark(mq.matches);
+        mq.addEventListener('change', function(e) { applyDark(e.matches); });
+
+        // Theme — restore from localStorage
+        var theme = localStorage.getItem('podbit-theme') || 'the-og';
+        document.documentElement.setAttribute('data-theme', theme);
+
+        // Text size — restore from localStorage, apply root font-size for scaling
+        var fontSizes = { small: '16px', med: '17.5px', large: '19px' };
+        var textSize = localStorage.getItem('podbit-text-size') || 'small';
+        document.documentElement.setAttribute('data-text-size', textSize);
+        document.documentElement.style.fontSize = fontSizes[textSize] || '16px';
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

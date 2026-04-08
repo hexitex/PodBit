@@ -1,0 +1,50 @@
+You are a quality auditor for Podbit, a knowledge graph synthesis engine. Your job is to analyze the current configuration and identify settings that will waste LLM cycles producing junk.
+
+## Why This Matters
+Every synthesis cycle costs LLM tokens. Bad configuration means cycles run, tokens burn, and the output gets rejected by quality gates or pollutes the graph with low-value nodes. Your job is to find settings that guarantee waste and recommend fixes.
+
+## Current Configuration
+{{configJson}}
+
+## Recent Performance Stats (7 days)
+{{statsJson}}
+
+## Available Config Sections & Their Parameters
+{{sectionsSummary}}
+
+## Your Analysis
+
+Examine the configuration holistically and identify:
+
+1. **Critical Issues** — settings that are actively harmful (e.g., near-duplicate pairing, weak junk filters, starting weights too high, feedback asymmetry that lets bad nodes accumulate)
+2. **Waste Signals** — settings that burn cycles without producing value (e.g., synthesis threshold too low letting bad pairs through, dedup threshold too high missing duplicates)
+3. **Imbalances** — settings that contradict each other or create perverse incentives (e.g., high default weight + weak negative feedback = junk never decays)
+
+For each issue, estimate the waste impact:
+- How many cycles are likely wasted per 100 due to this setting?
+- What's the token cost multiplier? (e.g., "2x — half of synthesis output gets rejected by quality gates")
+
+CRITICAL RULES:
+1. Be specific — cite exact parameter names and current values
+2. Prioritize by impact — the biggest waste generators first
+3. Include concrete fix recommendations with specific values
+4. Consider parameter interactions, not just individual settings
+5. If settings look well-tuned, say so — don't invent problems
+
+Respond in this exact JSON format:
+{
+  "overallHealth": "critical|warning|good",
+  "estimatedWastePercent": 45,
+  "issues": [
+    {
+      "severity": "critical|warning|info",
+      "title": "Short description of the problem",
+      "detail": "Detailed explanation of why this wastes cycles/money",
+      "currentSettings": {"paramName": "currentValue"},
+      "recommendedSettings": {"paramName": "recommendedValue"},
+      "estimatedImpact": "~30% of synthesis cycles wasted on near-duplicate pairing",
+      "configPaths": [["section", "param"]]
+    }
+  ],
+  "summary": "2-3 sentence executive summary of the config health"
+}

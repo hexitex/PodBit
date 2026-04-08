@@ -1,0 +1,5 @@
+- Knowledge graphs use nodes and typed edges to represent entities and relationships
+- RDF is the standard triple format, queried with SPARQL
+- Embedding methods enable link prediction for missing graph edges
+- Major knowledge graphs include Google's (billions of facts) and Wikidata
+- Cross-graph schema alignment is an ongoing research problem

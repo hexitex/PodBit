@@ -1,0 +1,9 @@
+Find the most interesting connection between these numbered nodes.
+
+Topic nodes ({{topic}}):
+{{topicNodes}}
+
+Other domain nodes:
+{{otherNodes}}
+
+Return JSON with nodeA (number of first node), nodeB (number of second node), synthesis (2-3 sentence insight connecting them), and optionally pattern (abstract pattern name).

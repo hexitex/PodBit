@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 103.95788 80.879677" width="103.95788mm" height="80.879677mm">
+  <g transform="translate(-46.221029,-49.743278)">
+    <g transform="rotate(180,97.962988,89.992004)">
+      <path style="fill:none;stroke:#ff8d00;stroke-width:3.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 130.36597,100.99073 c 0,15.18783 -12.31217,27.5 -27.5,27.5 -15.187832,0 -27.500003,-12.31217 -27.500003,-27.5 0,-14.256621 10.848665,-25.979399 24.740973,-27.363321 2.19506,-0.211341 4.45608,-0.156033 6.48652,0.113808 13.42476,1.81917 23.77251,13.325919 23.77251,27.249513 z"/>
+      <ellipse ry="11.752137" rx="11.752136" style="fill:none;stroke:#ff8d00;stroke-width:3.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" cy="63.151791" cx="59.601208"/>
+      <circle r="8.7039089" style="fill:none;stroke:#ff8d00;stroke-width:3.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" cy="75.855934" cx="139.25104"/>
+      <path d="M 75.109142,101.26696 C 47.312766,93.965584 45.285158,67.504701 48.75237,58.592966" style="fill:none;stroke:#ff8d00;stroke-width:3.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+      <path d="M 147.9492,75.751434 C 146.48782,57.425958 117.07461,51.15624 105.60294,51.111038 m -8.876731,0.449723 c -9.326392,-0.110072 -20.4383,3.698507 -27.040429,17.608925" style="fill:none;stroke:#ff8d00;stroke-width:3.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+    </g>
+    <path style="fill:none;stroke:#ff8d00;stroke-width:3.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 92.870317,97.607346 -10e-7,32.982944"/>
+    <circle transform="scale(-1)" style="fill:none;stroke:#ff8d00;stroke-width:3.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" cy="-122.18525" cx="-99.270844" r="6.2444887"/>
+    <path style="fill:none;stroke:#ff8d00;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m 92.87032,84.801014 -3e-6,10.000002"/>
+  </g>
+</svg>

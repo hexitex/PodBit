@@ -1,0 +1,11 @@
+## Key Insights
+Raft decomposes consensus into leader election, log replication, and safety, tolerating (N-1)/2 failures. A hybrid using Paxos flexible quorums for reads and Raft majority for writes could optimize latency.
+
+## Connections
+The Raft-Paxos synthesis reveals a design space between strict and flexible quorums. BFT comparison (3f+1 vs 2f+1) adds a fault model dimension.
+
+## Foundation
+Raft fault tolerance, leader election timeouts, and Paxos flexible quorums (R+W>N) are well-established.
+
+## Open Questions
+Under what partition patterns does Raft's majority requirement cause unnecessary unavailability vs. flexible quorums?

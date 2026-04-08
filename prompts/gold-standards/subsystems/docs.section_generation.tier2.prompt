@@ -1,0 +1,11 @@
+Cross-domain discovery in the synthesis engine operates through three mechanisms working at different levels.
+
+**Embedding similarity** drives candidate pairing. A cosine similarity window — floor 0.5, ceiling 0.92 — filters node pairs [K1]. The floor ensures minimum semantic overlap; the ceiling rejects near-duplicates. This window is the primary quality lever.
+
+**Partition bridges** enable cross-domain interaction. Domains are isolated by default — nodes in different partitions never pair unless explicitly bridged [K2]. Bridge topology determines what the engine can discover across domains.
+
+**Abstract patterns** capture structural analogies that embeddings miss. Domain-agnostic tags like "structure-vs-process-gap" link nodes sharing conceptual architecture regardless of vocabulary [K5]. This complements statistical similarity with curated cross-domain reasoning.
+
+Quality gates downstream check JSON validity, sentence structure, word count (10-25), novelty ratio (4+ new words), and stutter [K3]. These are structural filters, not quality judges.
+
+Salience decay (2% per 10 cycles) promotes fresh content while breakthrough weight floors preserve validated insights indefinitely [K4], creating natural selection that accumulates valuable cross-domain connections over time.

@@ -1,0 +1,5 @@
+{
+  "novel": false,
+  "confidence": 0.45,
+  "reasoning": "The concept of restricted information flow preventing homogenization is well-known in network theory. The application to knowledge graphs adds specificity but not fundamental novelty."
+}

@@ -1,0 +1,8 @@
+Question: At what task complexity threshold does few-shot scaling advantage overtake fine-tuning's domain specialization, and does this threshold shift with retrieval augmentation?
+
+Relevant knowledge:
+- Transfer learning with LoRA achieves comparable performance to full fine-tuning with 10-100x fewer parameters at rank 4-64
+- Few-shot 175B models perform well on general benchmarks but underperform fine-tuned 7B models on domain-specific tasks
+- RAG reduces hallucination from 15-30% to under 5% in domain-specific tasks
+- The choice of rank in LoRA trades off between adaptation capacity and regularization
+- Scaling laws follow power law with exponent -0.076 for general loss but show diminishing returns on specialized benchmarks above 70B

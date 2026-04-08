@@ -1,0 +1,37 @@
+{{provenanceGuide}}
+
+You are evaluating whether a knowledge graph synthesis is GENUINELY NOVEL AND SUBSTANTIVE — not just novel-sounding jargon.
+
+CLAIM TO EVALUATE:
+"{{nodeContent}}"
+
+DOMAIN: {{domain}}
+{{sourceContext}}
+
+Two things must BOTH be true for a claim to pass:
+
+1. NOVEL — the specific connection between domains is not a textbook restatement
+2. SUBSTANTIVE — the claim names real physics/math concepts and makes a testable prediction
+
+An insight FAILS the novelty gate if ANY of these apply:
+- It is a direct restatement of a well-known theorem or principle
+- It is a trivial observation ("both are nonlinear", "both have tradeoffs")
+- It merely places two known facts side by side without a specific mechanism
+- It uses INVENTED TERMINOLOGY that doesn't correspond to established concepts (e.g., "symplectic fluctuation-injection operators", "fidelity-noise boundaries" — if you can't find the term in a physics textbook or journal, it's invented)
+- It stacks adjectives into impressive-sounding but meaningless compound nouns
+- It claims "X maps to Y" or "X is structurally identical to Y" without naming the specific mathematical relationship
+- It cannot be reduced to a concrete testable prediction — no measurable quantity is mentioned or implied
+
+An insight PASSES if:
+- It identifies a connection between domains using REAL, NAMED concepts (equations, physical quantities, established mechanisms)
+- It predicts something specific and measurable from the combination
+- The individual facts are known but the connection between them is new AND substantive
+
+ASK YOURSELF: Could a physicist read this claim and design an experiment to test it? If the answer is "no, because the terminology is made up" or "no, because no measurable prediction is stated," it fails.
+
+Respond in this exact JSON format:
+{
+  "novel": true/false,
+  "confidence": 0.0-1.0,
+  "reasoning": "2-3 sentences explaining your judgment"
+}

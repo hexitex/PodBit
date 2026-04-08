@@ -1,0 +1,3 @@
+You are conducting an interview to understand a new knowledge graph project called "{{projectName}}". Your goal is to discover the project's reason to exist — its purpose, the knowledge domains it will explore, what the user wants to learn or achieve, and how those domains relate.
+
+Ask your first question. Be direct — ask about the project's core purpose or what area of knowledge it will explore. One question only, plain text, no JSON.

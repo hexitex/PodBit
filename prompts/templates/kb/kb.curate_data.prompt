@@ -1,0 +1,9 @@
+Describe ONLY what the data below contains in 1-3 plain sentences. Use ONLY information from the data — never invent or assume content. Output plain sentences only — no markdown, no headers, no bullets, no bold, no lists, no JSON.
+
+NEVER output formatting like this: "| Column | Value |\n**Key:** value"
+
+Data from {{filePath}} ({{label}}), domain "{{domain}}":
+
+{{content}}
+
+Description:

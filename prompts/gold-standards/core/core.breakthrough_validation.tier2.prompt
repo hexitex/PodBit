@@ -1,0 +1,8 @@
+{
+  "synthesis": { "score": 7, "reason": "Connects partition mechanics to regularization theory across domains." },
+  "novelty": { "score": 6, "reason": "Novel framing of bridges as regularizers, though information flow restriction is known." },
+  "testability": { "score": 6, "reason": "Testable by measuring embedding diversity with varying bridge density." },
+  "tension_resolution": { "score": 5, "reason": "Partially resolves discovery vs. quality tension." },
+  "is_breakthrough": true,
+  "summary": "Valid insight connecting graph partitioning to regularization with testable predictions."
+}

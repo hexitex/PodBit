@@ -1,0 +1,4 @@
+{
+    "analysisCode": "# Investigate the trade-off between read and write quorum sizes\nresults = []\nfor N in range(3, 15, 2):\n    maj = N // 2 + 1\n    flex_read = N - maj + 1\n    saving = maj - flex_read\n    results.append({'N': N, 'majority': maj, 'flex_read': flex_read, 'saving': saving})\n\nresult = {\n    'actualValue': str(results),\n    'expectedValue': 'Positive read savings without write cost',\n    'deviation': 'For odd N with W=majority, R=majority. No free savings.',\n    'alternativePattern': 'Read savings require increasing write quorum above majority.',\n    'alternativeConfidence': 0.8,\n    'isInteresting': True,\n    'summary': 'Flexible quorums with W=majority give R=majority for odd N. Read savings require W>majority, trading write latency for read latency.'\n}",
+    "expectedFindings": "R equals majority when W equals majority for odd N, revealing the write latency trade-off."
+}

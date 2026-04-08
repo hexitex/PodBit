@@ -1,0 +1,11 @@
+## Key Insights
+Engine pairs nodes by similarity (0.5-0.92), generates insights via LLM, filters through quality gates.
+
+## Connections
+Decay (2%/10 cycles) fades old nodes. Breakthroughs are exempt. Partitions isolate domains.
+
+## Foundation
+Embedding similarity, LLM voicing, partition boundaries.
+
+## Open Questions
+Optimal decay rate and bridge scaling.

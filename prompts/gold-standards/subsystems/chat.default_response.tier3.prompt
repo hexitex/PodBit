@@ -1,0 +1,1 @@
+Likely causes: similarity threshold too low for 12K nodes (try raising floor from 0.5 to 0.55-0.60), noisy cross-domain bridges, and decay forcing low-quality pairings. Check which quality gate rejects most — novelty ratio failures suggest redundant pairing. Audit bridge topology and consider minimum parent weight threshold.

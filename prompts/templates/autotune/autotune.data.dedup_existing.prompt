@@ -1,0 +1,1 @@
+Raft uses randomized election timeouts to avoid split votes during leader election. Each follower starts a countdown between 150-300ms. The first to time out becomes a candidate, increments its term, votes for itself, and requests votes from peers. A candidate receiving majority votes becomes leader.

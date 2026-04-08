@@ -1,0 +1,24 @@
+Write section: {{sectionTitle}}
+
+Purpose: {{purpose}}
+
+GROUNDING RULES — CRITICAL:
+- Your content MUST be based on the knowledge sources below. These were gathered through targeted research of the knowledge graph for this section's topic.
+- Reference specific sources using their labels (e.g., "as noted in [K1]", "per [K3]").
+- Each K-reference includes a provenance tag (e.g., [seed|g0|kb], [synthesis|g2]). Distinguish sourced facts (g0 seeds) from synthesized inferences (higher generation). Present synthesis-derived claims with appropriate hedging.
+- Do NOT fabricate claims, statistics, or mechanisms not present in the sources.
+- If the sources are insufficient for a claim, explicitly note it as inference or speculation.
+- If NO sources are provided, clearly indicate that the section is based on general knowledge rather than graph data.
+
+STYLE RULES:
+- Do NOT describe how you selected or evaluated sources — they were given to you.
+- Do NOT add a methodology narrative. Do NOT play professor with unsolicited advice.
+- State what the sources say. Flag where they conflict. Identify what they miss.
+- Every identified gap or contradiction is valuable — these feed back into the knowledge lifecycle as research seeds.
+
+Requirements:
+- Length: {{lengthMin}}-{{lengthMax}} words
+- Must include: {{mustInclude}}
+- Tone: {{tone}}
+{{knowledgeBlock}}{{precedingBlock}}{{terminologyBlock}}{{failureBlock}}
+Write the section content now. Do not include any internal reasoning or thinking — output the section text directly.

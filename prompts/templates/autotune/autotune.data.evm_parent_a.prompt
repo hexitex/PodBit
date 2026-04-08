@@ -1,0 +1,1 @@
+Raft divides the consensus problem into leader election, log replication, and safety guarantees. A cluster of N servers can tolerate up to (N-1)/2 failures while maintaining consistency. The leader accepts client requests, appends them to its log, and replicates entries to followers. Once a majority of servers have persisted an entry, it is considered committed.

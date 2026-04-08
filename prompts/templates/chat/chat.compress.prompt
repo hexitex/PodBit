@@ -1,0 +1,15 @@
+Given these knowledge nodes about "{{topic}}", create a compressed meta-prompt that an LLM could use to demonstrate expert-level understanding of this topic.
+
+{{provenanceGuide}}
+
+Knowledge nodes (sorted by importance):
+{{nodeList}}
+
+Create a meta-prompt that:
+1. Opens with a role definition ("You are an expert in...")
+2. Lists the key principles and facts as compressed bullet points — distinguish established facts from inferred connections
+3. Includes the most important relationships and tensions
+4. Notes common misconceptions to avoid
+5. Defines the vocabulary/terminology precisely
+
+Provenance must survive compression: clearly distinguish sourced facts from synthesized inferences. The prompt should be self-contained — someone reading it should gain the essential knowledge without needing the original nodes. Format it as a ready-to-use system prompt. Keep it dense but readable (300-600 words).

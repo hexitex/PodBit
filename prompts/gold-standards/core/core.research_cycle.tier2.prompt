@@ -1,0 +1,5 @@
+- Mixture-of-experts activates sparse parameter subsets per token (1-5%), matching dense model capacity at lower cost
+- Knowledge distillation from 175B+ teachers preserves 85-95% performance in 7-13B students with 10-25x latency reduction
+- Chinchilla scaling law shows optimal training needs ~20 tokens per parameter, meaning most large models are undertrained
+- Retrieval-augmented generation with learned retrievers enables smaller models to match larger ones on knowledge tasks
+- Gradient checkpointing trades 20-30% extra compute for 60-70% memory savings during fine-tuning

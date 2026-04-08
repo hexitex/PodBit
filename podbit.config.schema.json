@@ -1,0 +1,669 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Podbit Configuration",
+  "description": "Operational constants for the Podbit knowledge graph engine. Values here were previously hardcoded across the codebase. Edit this file to tune timeouts, limits, thresholds, and database performance without touching source code.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for IDE autocompletion and validation."
+    },
+
+    "timeouts": {
+      "type": "object",
+      "description": "Maximum wait durations before operations are aborted. All values in milliseconds unless noted.",
+      "properties": {
+        "evmVerificationMs": {
+          "type": "integer",
+          "description": "Abort timeout for EVM decomposition and verification LLM calls. Set below the frontend's 300-second request timeout to ensure the server responds before the client gives up. At 270000ms (4.5 minutes), this leaves a 30-second buffer.",
+          "default": 270000
+        },
+        "healthCheckMs": {
+          "type": "integer",
+          "description": "Timeout for the orchestrator's HTTP health-check probe against managed services. If a service doesn't respond within this window, it's considered unhealthy and eligible for auto-restart.",
+          "default": 3000
+        },
+        "startupGraceMs": {
+          "type": "integer",
+          "description": "Grace period after a managed service starts before the orchestrator begins health-check evaluation. Prevents false positives from slow-starting services (e.g., model loading, migration runs).",
+          "default": 30000
+        },
+        "restartCooldownMs": {
+          "type": "integer",
+          "description": "Minimum time between auto-restart attempts for a single managed service. Prevents restart storms when a service is persistently failing.",
+          "default": 30000
+        },
+        "sseHeartbeatMs": {
+          "type": "integer",
+          "description": "Interval for Server-Sent Events heartbeat pings on the /api/activity/stream endpoint. Keeps the connection alive through proxies and load balancers that close idle connections.",
+          "default": 30000
+        },
+        "epipeExitDelayMs": {
+          "type": "integer",
+          "description": "Delay before process.exit(0) after an EPIPE error on MCP stdio. On Windows, the IDE disconnects the pipe when reloading; exiting immediately causes a rapid respawn loop (hundreds of processes), while never exiting causes zombie accumulation. This delay is the sweet spot — the IDE stops respawning and the process cleans up.",
+          "default": 5000
+        },
+        "watcherRestartBackoffMs": {
+          "type": "integer",
+          "description": "Backoff delay before restarting the chokidar file watcher after an error. Prevents tight restart loops if the filesystem or permissions are transiently broken.",
+          "default": 10000
+        },
+        "queuePollingMs": {
+          "type": "integer",
+          "description": "How often the EVM queue worker checks for pending verification jobs. Lower values reduce latency for new jobs but increase idle CPU usage.",
+          "default": 5000
+        },
+        "serviceTimeoutMs": {
+          "type": "integer",
+          "description": "Default timeout for embedding and LLM service HTTP calls. Used when no per-service override is set in environment variables.",
+          "default": 5000
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "retries": {
+      "type": "object",
+      "description": "Exponential backoff parameters for transient error recovery. Delay formula: min(baseMs * attemptNumber, capMs).",
+      "properties": {
+        "backoffBaseMs": {
+          "type": "integer",
+          "description": "Base delay multiplier for general LLM call retries (callSubsystemModel). Each attempt waits baseMs * attemptNumber, capped by backoffCapMs. Applies to both primary and consultant model paths.",
+          "default": 1000
+        },
+        "backoffCapMs": {
+          "type": "integer",
+          "description": "Maximum delay for general LLM call retries. Prevents excessively long waits on repeated failures. At 5000ms with a 1000ms base, the cap is reached on the 5th attempt.",
+          "default": 5000
+        },
+        "evmBackoffBaseMs": {
+          "type": "integer",
+          "description": "Base delay multiplier for EVM verification retries on transient network errors (ECONNRESET, ETIMEDOUT, 503). Uses a steeper ramp than general retries because verification calls are expensive and rate-limit-sensitive.",
+          "default": 5000
+        },
+        "evmBackoffCapMs": {
+          "type": "integer",
+          "description": "Maximum delay for EVM verification retries. At 30 seconds, this is high enough to ride out brief API outages without abandoning the verification.",
+          "default": 30000
+        },
+        "rateLimitBackoffMs": {
+          "type": "integer",
+          "description": "Default backoff duration when a model returns HTTP 429 (rate limited). This is the fallback when the model registry doesn't specify a per-model rate_limit_backoff_ms. Set generously (2 minutes) because rate limit windows are typically 60 seconds.",
+          "default": 120000
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "intervals": {
+      "type": "object",
+      "description": "Recurring timer intervals for background housekeeping tasks.",
+      "properties": {
+        "rateLimiterCleanupMs": {
+          "type": "integer",
+          "description": "How often the sliding-window rate limiter prunes expired entries from its internal maps. Each model/subsystem combination accumulates timestamps; this cleanup prevents unbounded memory growth. 5 minutes is conservative — memory impact is negligible even with many models.",
+          "default": 300000
+        },
+        "budgetMonitorMs": {
+          "type": "integer",
+          "description": "Polling interval for the budget monitor background task. Checks cumulative LLM spend against daily/monthly caps and emits warnings or pauses when thresholds are approached. 10 seconds ensures budget overruns are caught quickly.",
+          "default": 10000
+        },
+        "costsCacheTtlMs": {
+          "type": "integer",
+          "description": "Time-to-live for the aggregated cost query cache. Cost queries join across llm_usage_log which can be expensive; caching for 60 seconds reduces DB load while keeping the GUI budget display reasonably fresh.",
+          "default": 60000
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "contentLimits": {
+      "type": "object",
+      "description": "Character and word limits for text truncation, prompt sizing, and content validation. These prevent oversized content from blowing up LLM context windows or database storage.",
+      "properties": {
+        "maxEmbeddingChars": {
+          "type": "integer",
+          "description": "Maximum characters sent to the embedding model. Text beyond this is truncated. Most embedding models have a token limit around 8192 tokens (~24K chars); 8000 chars stays safely within that for any model while preserving the most semantically important content (the beginning).",
+          "default": 8000
+        },
+        "summaryMinSearchOffset": {
+          "type": "integer",
+          "description": "Minimum character position to start searching for a sentence boundary when extracting a summary from node content. The summary extraction finds the first period after this offset, ensuring the summary is at least one meaningful sentence rather than a fragment.",
+          "default": 30
+        },
+        "summaryMaxSearchOffset": {
+          "type": "integer",
+          "description": "Maximum character position to search for a sentence boundary during summary extraction. If no period is found between summaryMinSearchOffset and this value, the text is truncated at this offset. Keeps summaries concise for display in the GUI activity feed.",
+          "default": 80
+        },
+        "embeddingTruncationChars": {
+          "type": "integer",
+          "description": "Character limit for text passed to inline embedding calls in node-ops (not the main embedding service). Used when computing quick similarity scores during node operations where full content isn't needed.",
+          "default": 2000
+        },
+        "specificityTruncationChars": {
+          "type": "integer",
+          "description": "Character limit for content passed to the specificity scoring function. Specificity analysis focuses on lexical features (named entities, numbers, technical terms) which are dense in the first ~200 characters. Truncating saves computation without affecting score accuracy.",
+          "default": 200
+        },
+        "keywordContentChars": {
+          "type": "integer",
+          "description": "Character limit for content sent to the LLM keyword extraction prompt. Keywords are extracted from the most salient portion of the text; 500 chars is enough to capture the key concepts while keeping the prompt small and fast.",
+          "default": 500
+        },
+        "knowThyselfTruncationChars": {
+          "type": "integer",
+          "description": "Maximum characters for synthesized tuning knowledge content in the Know Thyself system. Truncated at the nearest sentence boundary. Keeps tuning insights concise enough for the config-tune LLM to process efficiently.",
+          "default": 2000
+        },
+        "kbDefaultChunkSize": {
+          "type": "integer",
+          "description": "Default maximum chunk size (characters) for Knowledge Base file ingestion when no per-folder override is set. Files larger than this are split into multiple chunks, each becoming a child node linked to the parent file node.",
+          "default": 4000
+        },
+        "kbCurationTokens": {
+          "type": "integer",
+          "description": "Default max_tokens parameter for Knowledge Base reader LLM calls (curated mode). Controls how much text the reader model generates when describing/summarizing a file chunk. Higher values allow richer descriptions but cost more.",
+          "default": 2000
+        },
+        "sandboxOutputPreviewChars": {
+          "type": "integer",
+          "description": "Maximum characters preserved from sandbox stdout in EVM feedback and query results. Sandbox output can be very large (data dumps, stack traces); this prevents bloating the feedback response while keeping enough context for debugging.",
+          "default": 10000
+        },
+        "eliteOutputTruncationChars": {
+          "type": "integer",
+          "description": "Maximum characters preserved from EVM verification stdout when building elite pool node context. Keeps the elite content payload manageable for downstream LLM calls (content synthesis, manifest mapping).",
+          "default": 2000
+        },
+        "eliteCodeTruncationChars": {
+          "type": "integer",
+          "description": "Maximum characters preserved from EVM verification code when building elite pool context. Verification code can be long; this truncation keeps the most relevant portion (typically the test setup and assertions at the top).",
+          "default": 4000
+        },
+        "toolResultCharLimit": {
+          "type": "integer",
+          "description": "Maximum characters for tool call results returned to the chat LLM. Prevents a single tool result from consuming the entire context window. Results exceeding this are truncated with an indication of omitted content.",
+          "default": 3000
+        },
+        "expressBodySizeLimit": {
+          "type": "string",
+          "description": "Maximum request body size for the Express JSON middleware on the proxy server. Accepts sizes like '10mb', '1gb'. Set high enough to handle large chat histories with embedded knowledge context, but not so high that a malicious request can OOM the server.",
+          "default": "10mb"
+        },
+        "contentPreviewLength": {
+          "type": "integer",
+          "description": "Character limit for content previews in activity log entries and GUI displays. Keeps log messages readable without truncating so aggressively that context is lost.",
+          "default": 200
+        },
+        "maxNodeWords": {
+          "type": "integer",
+          "description": "Maximum word count for node content validation. Nodes exceeding this are rejected at the propose/validate gate. Ensures graph nodes stay focused and synthesizable rather than becoming document-length blobs.",
+          "default": 200
+        },
+        "stderrPreviewChars": {
+          "type": "integer",
+          "description": "Maximum characters from stderr included in error details when sandbox execution fails. Enough to capture the error message and first stack frame without overwhelming the evaluation result.",
+          "default": 200
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "queryLimits": {
+      "type": "object",
+      "description": "SQL LIMIT values and batch sizes controlling how many rows are fetched or processed in a single operation. These balance completeness against performance and LLM context budget.",
+      "properties": {
+        "voicingCandidates": {
+          "type": "integer",
+          "description": "Maximum nodes selected per voicing cycle query. The voicing cycle runs multiple queries (high-weight, low-resonated, cross-domain, etc.); each returns at most this many candidates. Lower values make cycles faster but may miss good pairings.",
+          "default": 5
+        },
+        "researchContextLimit": {
+          "type": "integer",
+          "description": "Maximum context nodes fetched per research cycle query. Research cycles pull existing knowledge as context for generating new research questions; this limits how much context is injected into the prompt.",
+          "default": 10
+        },
+        "knowledgeQueryLimit": {
+          "type": "integer",
+          "description": "Default LIMIT for the primary knowledge query endpoint (ORDER BY weight DESC). Controls the maximum number of knowledge nodes returned in a single API response.",
+          "default": 30
+        },
+        "knowledgeAltQueryLimit": {
+          "type": "integer",
+          "description": "LIMIT for the alternate/fallback knowledge query path. Slightly smaller than the primary limit to keep fallback responses concise.",
+          "default": 20
+        },
+        "knowledgeContextLimit": {
+          "type": "integer",
+          "description": "LIMIT for additional knowledge context queries within handlers. Used when fetching supplementary context for a specific operation.",
+          "default": 10
+        },
+        "maxKeywordsToExtract": {
+          "type": "integer",
+          "description": "Maximum keywords extracted from a node's content for search indexing and domain classification. More keywords improve recall but increase storage and embedding costs.",
+          "default": 30
+        },
+        "eliteScanBatchSize": {
+          "type": "integer",
+          "description": "Maximum verified nodes processed per elite pool promotion scan. The scan iterates through EVM-verified nodes that haven't been considered for elite status yet. Larger batches are more thorough but slower.",
+          "default": 100
+        },
+        "eliteBridgingCandidates": {
+          "type": "integer",
+          "description": "Maximum cross-domain elite bridging pairs returned per query. Bridging identifies elite nodes from different domains that could be synthesized together. More candidates increase discovery but also LLM evaluation cost.",
+          "default": 10
+        },
+        "eliteQueryDefaultLimit": {
+          "type": "integer",
+          "description": "Default result limit for general elite pool queries when no explicit limit is provided by the caller.",
+          "default": 50
+        },
+        "patternSearchLimit": {
+          "type": "integer",
+          "description": "Maximum abstract patterns returned from a text search. Patterns are cross-domain conceptual tags; this limits how many are surfaced per query.",
+          "default": 10
+        },
+        "patternSiblingLimit": {
+          "type": "integer",
+          "description": "Maximum sibling nodes returned when finding nodes that share the same abstract pattern. Siblings are nodes from different domains tagged with the same conceptual pattern.",
+          "default": 20
+        },
+        "junkFilterPoolSize": {
+          "type": "integer",
+          "description": "Maximum recently-junked nodes loaded for the junk embedding filter. When proposing a new node, its embedding is compared against this pool to prevent re-introducing content that was previously marked as junk. Larger pools catch more repeats but slow down the propose path.",
+          "default": 200
+        },
+        "triageParentLimit": {
+          "type": "integer",
+          "description": "Maximum parent nodes fetched as context for EVM triage decisions. Parent content helps the triage model understand the node's provenance and decide verification priority.",
+          "default": 3
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "evm": {
+      "type": "object",
+      "description": "Empirical Verification Machine parameters — confidence scores and thresholds for interpreting sandbox test results.",
+      "properties": {
+        "confidence": {
+          "type": "object",
+          "description": "Confidence and score values assigned by the EVM evaluator based on test outcomes. These calibrate how much trust the system places in different verification results.",
+          "properties": {
+            "runtimeError": {
+              "type": "number",
+              "description": "Confidence assigned when test code runs but hits a runtime error (uncaught exception, import failure, etc.). Set to 0.5 because the code executed (partial signal) but didn't complete the test — better than syntax error but worse than a clean result.",
+              "default": 0.5
+            },
+            "vacuousPassThreshold": {
+              "type": "number",
+              "description": "Confidence threshold below which a verified=true result is treated as a vacuous pass (the code couldn't meaningfully test the claim). When the sandbox reports confidence <= this value with verified=true, it signals 'I passed but only because I couldn't construct a real test'.",
+              "default": 0.3
+            },
+            "vacuousPassScore": {
+              "type": "number",
+              "description": "Score assigned to vacuous passes. Set to 0.5 (neutral) because the claim is neither supported nor refuted — the test was simply inapplicable.",
+              "default": 0.5
+            },
+            "fallbackThreshold": {
+              "type": "number",
+              "description": "Confidence threshold for triggering the structured boolean fallback. When a mode-specific evaluator (numerical, convergence, pattern) returns confidence <= this value, the system falls back to interpreting the result as a simple {verified, confidence} boolean if those fields are present.",
+              "default": 0.2
+            },
+            "structuredMinConfidence": {
+              "type": "number",
+              "description": "Minimum confidence the fallback result must have to be used. The fallback only activates when the mode-specific evaluator scored <= fallbackThreshold AND the structured result has confidence > this value. Prevents falling back to equally low-confidence data.",
+              "default": 0.3
+            },
+            "malformedOutputThreshold": {
+              "type": "number",
+              "description": "Confidence threshold below which an unverified result is flagged with routingSignal='malformed_output'. Signals to the routing policy that the test likely failed due to output format issues (not genuine verification failure) and may benefit from retry with different codegen.",
+              "default": 0.2
+            },
+            "booleanTrueConfidence": {
+              "type": "number",
+              "description": "Confidence for a direct boolean true result (verification passed). Set to 0.8 (not 1.0) because a bare true/false lacks the nuance of a structured {verified, confidence, explanation} result.",
+              "default": 0.8
+            },
+            "booleanFalseConfidence": {
+              "type": "number",
+              "description": "Confidence for a direct boolean false result (verification failed). Slightly lower than true (0.7 vs 0.8) because false negatives are more common than false positives in automated testing — the test may have failed for reasons unrelated to the claim.",
+              "default": 0.7
+            },
+            "booleanTrueScore": {
+              "type": "number",
+              "description": "Score assigned when boolean verification passes. 1.0 = full support for the claim.",
+              "default": 1.0
+            },
+            "booleanFalseScore": {
+              "type": "number",
+              "description": "Score assigned when boolean verification fails. 0.0 = no support for the claim.",
+              "default": 0.0
+            },
+            "unparseableConfidence": {
+              "type": "number",
+              "description": "Confidence when the boolean evaluator cannot parse the result at all (not a boolean, not a structured object with 'verified'). Low but nonzero — the sandbox at least produced output, which rules out total execution failure.",
+              "default": 0.3
+            },
+            "numericalFailConfidence": {
+              "type": "number",
+              "description": "Confidence when numerical evaluation fails (non-numeric values, missing value/expected fields). Very low because the test produced no usable numerical comparison.",
+              "default": 0.2
+            },
+            "convergenceFailConfidence": {
+              "type": "number",
+              "description": "Confidence when convergence evaluation fails (series too short, non-numeric data). Very low because convergence analysis requires sufficient data points to be meaningful.",
+              "default": 0.2
+            },
+            "convergenceThresholdRatio": {
+              "type": "number",
+              "description": "Ratio used to determine convergence. A series is 'converging' when the average absolute delta in the second half is less than this fraction of the first half's average delta. At 0.5, the series must show at least a 50% reduction in variation.",
+              "default": 0.5
+            },
+            "convergenceNotConvergingConfidence": {
+              "type": "number",
+              "description": "Confidence assigned when a valid series is analyzed but does not meet the convergence threshold. The data was processable (not a parse failure) but the claim of convergence is not supported.",
+              "default": 0.3
+            },
+            "patternMatchConfidence": {
+              "type": "number",
+              "description": "Confidence when pattern evaluation finds a match (matched=true). Higher than unmatched because a positive pattern match is a stronger signal — the evidence actively supports the claim.",
+              "default": 0.75
+            },
+            "patternNoMatchConfidence": {
+              "type": "number",
+              "description": "Confidence when pattern evaluation finds no match. Moderate (0.6) because absence of a pattern is weaker evidence than presence — the test may not have looked in the right place.",
+              "default": 0.6
+            },
+            "patternMatchScore": {
+              "type": "number",
+              "description": "Score for a successful pattern match. Not 1.0 (unlike boolean) because pattern matching is inherently fuzzy — the match may be partial or coincidental.",
+              "default": 0.8
+            },
+            "patternNoMatchScore": {
+              "type": "number",
+              "description": "Score when the expected pattern is not found. 0.0 = no support.",
+              "default": 0.0
+            },
+            "patternFallbackConfidence": {
+              "type": "number",
+              "description": "Confidence when pattern evaluation can't find the 'matched' field in the result at all. Equivalent to a parse failure — the sandbox didn't produce the expected output format.",
+              "default": 0.2
+            },
+            "defaultTriageConfidence": {
+              "type": "number",
+              "description": "Fallback confidence assigned when the triage model doesn't return an explicit confidence value, or when triage is unavailable (model unassigned, call failed). Neutral 0.5 means 'no opinion' — the node proceeds to verification without a priority boost or penalty.",
+              "default": 0.5
+            },
+            "triageDisabledConfidence": {
+              "type": "number",
+              "description": "Confidence assigned when triage is explicitly disabled (bypassed). Set to 1.0 so that all nodes proceed to verification with full priority — triage filtering is intentionally turned off.",
+              "default": 1.0
+            },
+            "minTriageScore": {
+              "type": "number",
+              "description": "Minimum triage score threshold. Nodes scoring below this are deprioritized or skipped by the queue worker. At 0.3, only nodes the triage model is fairly confident are untestable get filtered out.",
+              "default": 0.3
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "database": {
+      "type": "object",
+      "description": "SQLite performance tuning pragmas and cache settings. Applied at database open time. Changes require a server restart to take effect.",
+      "properties": {
+        "systemDb": {
+          "type": "object",
+          "description": "Pragmas for the system database (system.db) which stores model registry, prompts, config history, and other cross-project data. Smaller cache than project DB because it's accessed less frequently.",
+          "properties": {
+            "busyTimeoutMs": {
+              "type": "integer",
+              "description": "Maximum time to wait for a database lock before returning SQLITE_BUSY. WAL mode reduces lock contention significantly, but concurrent writes (config saves, model updates) can still contend briefly.",
+              "default": 5000
+            },
+            "cacheSizeKb": {
+              "type": "integer",
+              "description": "Page cache size in kilobytes (passed as negative value to SQLite's cache_size pragma). 16MB is sufficient for the system DB which has small tables. Larger values waste memory without benefit.",
+              "default": 16000
+            },
+            "mmapSizeBytes": {
+              "type": "integer",
+              "description": "Memory-mapped I/O window in bytes. Allows SQLite to read the database file directly from the OS page cache, bypassing the SQLite page cache for cold reads. 64MB is generous for system.db which is typically under 10MB.",
+              "default": 67108864
+            }
+          },
+          "additionalProperties": false
+        },
+        "projectDb": {
+          "type": "object",
+          "description": "Pragmas for the active project database. This is the hot database with nodes, edges, embeddings, and EVM results. Larger cache and mmap than system DB to handle graph queries efficiently.",
+          "properties": {
+            "busyTimeoutMs": {
+              "type": "integer",
+              "description": "Lock wait timeout. Same as system DB — 5 seconds handles normal WAL contention from concurrent synthesis cycles and GUI reads.",
+              "default": 5000
+            },
+            "cacheSizeKb": {
+              "type": "integer",
+              "description": "Page cache in kilobytes. 64MB keeps most of the active working set (recent nodes, hot embeddings) in memory, dramatically reducing disk I/O during synthesis cycles.",
+              "default": 64000
+            },
+            "mmapSizeBytes": {
+              "type": "integer",
+              "description": "Memory-mapped I/O window. 256MB allows the OS to efficiently page in embedding vectors and node content from disk. On machines with less RAM, the OS will naturally limit actual memory use.",
+              "default": 268435456
+            }
+          },
+          "additionalProperties": false
+        },
+        "readDb": {
+          "type": "object",
+          "description": "Pragmas for the read-only WAL reader connection. This connection serves GUI queries concurrently while the write connection handles synthesis. Shares the same WAL file for snapshot isolation.",
+          "properties": {
+            "busyTimeoutMs": {
+              "type": "integer",
+              "description": "Lock wait timeout. Read connections in WAL mode rarely contend, but WAL checkpoint operations can briefly block reads.",
+              "default": 5000
+            },
+            "cacheSizeKb": {
+              "type": "integer",
+              "description": "Page cache in kilobytes. 32MB is a middle ground — GUI reads benefit from caching but don't need the full 64MB since they're mostly sequential table scans, not the random-access pattern of synthesis.",
+              "default": 32000
+            },
+            "mmapSizeBytes": {
+              "type": "integer",
+              "description": "Memory-mapped I/O window. Matches the project DB at 256MB so GUI queries reading large embedding columns get the same mmap benefit.",
+              "default": 268435456
+            }
+          },
+          "additionalProperties": false
+        },
+        "stmtCacheMax": {
+          "type": "integer",
+          "description": "Maximum number of prepared statements cached per database connection. Prepared statements avoid re-parsing SQL on repeated queries. 256 covers all common queries with room for dynamic queries from search/filter operations.",
+          "default": 256
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "scoring": {
+      "type": "object",
+      "description": "Weights and thresholds for quality scoring, gold standard evaluation, and config tuning behavioral analysis.",
+      "properties": {
+        "goldStandardTierWeights": {
+          "type": "object",
+          "description": "Quality weights for gold standard tiers. Tier 1 is the ideal output, tier 2 is acceptable, tier 3 is minimum quality. When scoring model output against gold standards, similarity scores are multiplied by these weights so higher-tier matches count more.",
+          "properties": {
+            "tier1": { "type": "number", "description": "Weight for tier-1 (ideal) gold standard matches.", "default": 1.0 },
+            "tier2": { "type": "number", "description": "Weight for tier-2 (good) gold standard matches.", "default": 0.85 },
+            "tier3": { "type": "number", "description": "Weight for tier-3 (minimum acceptable) gold standard matches.", "default": 0.65 }
+          },
+          "additionalProperties": false
+        },
+        "goldStandardFallbackWeight": {
+          "type": "number",
+          "description": "Fallback tier weight when a gold standard has an unrecognized tier number. Provides a neutral middle ground.",
+          "default": 0.5
+        },
+        "behavioralWeights": {
+          "type": "object",
+          "description": "Relative importance of each behavioral metric in the config tuning fitness function. Must sum to 1.0. synthesis_success_rate dominates because it directly measures whether the engine is producing usable output.",
+          "properties": {
+            "synthesisSuccessRate": { "type": "number", "description": "Weight for synthesis success rate (accepted / total attempted). The primary indicator of engine health.", "default": 0.5 },
+            "avgResonance": { "type": "number", "description": "Weight for average resonance score of produced syntheses. Measures how well new nodes connect to existing knowledge.", "default": 0.2 },
+            "avgSpecificity": { "type": "number", "description": "Weight for average specificity score. Measures how concrete and actionable syntheses are (vs vague platitudes).", "default": 0.3 }
+          },
+          "additionalProperties": false
+        },
+        "behavioralNormalization": {
+          "type": "object",
+          "description": "Normalization denominators for behavioral metrics. Each metric is divided by its normalization value before weighting, so they contribute on comparable scales despite having different natural ranges.",
+          "properties": {
+            "synthesisSuccessRate": { "type": "number", "description": "Normalizer for success rate (already 0-1, so 1.0 is identity).", "default": 1.0 },
+            "avgResonance": { "type": "number", "description": "Normalizer for resonance (typical range 0-1, but 0.5 stretches it to 0-2 scale for more sensitivity).", "default": 0.5 },
+            "avgSpecificity": { "type": "number", "description": "Normalizer for specificity (typical range 0-10, dividing by 5.0 maps it to 0-2 scale).", "default": 5.0 }
+          },
+          "additionalProperties": false
+        },
+        "convergenceRatio": {
+          "type": "number",
+          "description": "Threshold for detecting parameter oscillation in config tuning. If a parameter's value changes direction more than convergenceRatio times within the observation window, it's flagged as oscillating rather than converging. At 2.0, three direction changes trigger the flag.",
+          "default": 2.0
+        },
+        "minImpact": {
+          "type": "number",
+          "description": "Minimum impact ratio for a config parameter change to be considered meaningful in tuning analysis. Changes with impact below this threshold are treated as noise and excluded from recommendations.",
+          "default": 0.01
+        },
+        "environmentChangeThreshold": {
+          "type": "number",
+          "description": "Score threshold for environment change detection in config tuning. When the behavioral difference between periods exceeds this value, the system concludes the operating environment has changed (e.g., different domain, different model) and treats apparent oscillation as legitimate adaptation rather than instability.",
+          "default": 0.3
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "validation": {
+      "type": "object",
+      "description": "Bounds and defaults for proxy knowledge budgeting and numerical evaluation.",
+      "properties": {
+        "knowledgeReserveDefault": {
+          "type": "number",
+          "description": "Default proportion of the model's context window reserved for injected knowledge graph content in proxy requests. At 0.15, a 128K context model reserves ~19K tokens for knowledge. Adjustable per-user in proxy settings.",
+          "default": 0.15
+        },
+        "knowledgeMinReserveDefault": {
+          "type": "number",
+          "description": "Default minimum knowledge reserve. Even when knowledge isn't highly relevant, this floor ensures at least some graph context is injected. At 0.05, ~6K tokens are always available for knowledge in a 128K model.",
+          "default": 0.05
+        },
+        "knowledgeReserveMin": {
+          "type": "number",
+          "description": "Minimum allowed value for knowledgeReserve (validation bound). Prevents users from setting reserve so low that knowledge injection is effectively disabled.",
+          "default": 0.01
+        },
+        "knowledgeReserveMax": {
+          "type": "number",
+          "description": "Maximum allowed value for knowledgeReserve. At 0.5, half the context can be knowledge — anything higher risks crowding out the actual conversation.",
+          "default": 0.5
+        },
+        "knowledgeMinReserveMin": {
+          "type": "number",
+          "description": "Minimum allowed value for knowledgeMinReserve. 0.0 allows users to disable the knowledge floor entirely.",
+          "default": 0.0
+        },
+        "knowledgeMinReserveMax": {
+          "type": "number",
+          "description": "Maximum allowed value for knowledgeMinReserve. Capped at 0.3 so the floor never exceeds the typical ceiling, which would create a confusing inversion.",
+          "default": 0.3
+        },
+        "numericalTolerance": {
+          "type": "number",
+          "description": "Default tolerance for numerical EVM evaluations when the sandbox result doesn't specify one. Expressed as a ratio — 0.01 means the computed value must be within 1% of the expected value to pass.",
+          "default": 0.01
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "misc": {
+      "type": "object",
+      "description": "Miscellaneous operational parameters that don't fit neatly into other categories.",
+      "properties": {
+        "imageMaxDimension": {
+          "type": "integer",
+          "description": "Maximum width or height (in pixels) for image normalization in autotune test variable processing. Images are resized proportionally so neither dimension exceeds this value. Matches the Knowledge Base image reader default.",
+          "default": 1024
+        },
+        "imageQuality": {
+          "type": "integer",
+          "description": "JPEG compression quality (1-100) for normalized images in autotune processing. 80 provides a good balance between file size and visual fidelity for screenshot-based test variables.",
+          "default": 80,
+          "minimum": 1,
+          "maximum": 100
+        },
+        "imageFormat": {
+          "type": "string",
+          "description": "Output format for normalized images. JPEG is preferred for photographic content and screenshots; use 'webp' for better compression or 'png' for lossless.",
+          "default": "jpeg",
+          "enum": ["jpeg", "webp", "png"]
+        },
+        "keywordTemperature": {
+          "type": "number",
+          "description": "LLM temperature for keyword extraction and domain synonym generation calls. Low temperature (0.3) produces more deterministic, consistent keyword sets. Higher values introduce variety but may produce spurious keywords.",
+          "default": 0.3
+        },
+        "junkAgeCutoffDays": {
+          "type": "integer",
+          "description": "How many days of junked nodes to include in the junk embedding filter pool. Nodes junked longer ago than this are excluded, implementing a natural decay — if a topic was junked months ago but has since been reseeded with better content, the old junk shouldn't block it.",
+          "default": 30
+        },
+        "hashTruncationLength": {
+          "type": "integer",
+          "description": "Number of hex characters to keep when truncating SHA-256 hashes for conversation/session IDs. 12 hex chars = 48 bits of entropy, giving collision probability <1% at ~16 million concurrent sessions.",
+          "default": 12
+        },
+        "domainSlugWords": {
+          "type": "integer",
+          "description": "Number of words to keep when generating a short slug from a domain name. Used for compact display in activity logs and chip labels.",
+          "default": 3
+        },
+        "logRateLimitWindowMs": {
+          "type": "integer",
+          "description": "Time window for console log deduplication. Identical log messages within this window are suppressed after logRateLimitMaxRepeats occurrences. Prevents noisy errors (e.g., repeated connection failures) from flooding the log.",
+          "default": 5000
+        },
+        "logRateLimitMaxRepeats": {
+          "type": "integer",
+          "description": "Maximum identical console messages allowed within the rate limit window before suppression kicks in.",
+          "default": 5
+        },
+        "nodeReselectionCooldownMinutes": {
+          "type": "integer",
+          "description": "Minimum minutes before a node can be selected for synthesis again after its last resonation. Prevents the same node from dominating consecutive cycles. The query uses last_resonated < datetime('now', '-N minutes').",
+          "default": 10
+        },
+        "eliteBridgePriorityBonus": {
+          "type": "integer",
+          "description": "Priority score bonus added to elite bridging candidates that span a manifest-defined bridge. Ensures architecturally significant cross-domain connections are surfaced first.",
+          "default": 50
+        },
+        "attractorThreshold": {
+          "type": "integer",
+          "description": "Number of times a node must appear as a dedup target (attractor) before it's flagged as overly generic. High-attractor nodes tend to be broad platitudes that match everything — flagging them helps identify content that should be sharpened or archived.",
+          "default": 30
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

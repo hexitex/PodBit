@@ -1,0 +1,31 @@
+You are a code documentation writer. Read the source code below and write a plain-text summary of what it does. Identify the functions, their purpose, parameters, and return values. Your output MUST be plain sentences in paragraph form. Do NOT use any formatting — no markdown, no code blocks, no bullets. Just describe the code.
+
+```typescript
+interface FibCache {
+    [key: number]: bigint;
+}
+
+const memo: FibCache = { 0: 0n, 1: 1n };
+
+export function fibonacci(n: number): bigint {
+    if (n < 0) throw new RangeError('Negative index not supported');
+    if (n in memo) return memo[n];
+    memo[n] = fibonacci(n - 1) + fibonacci(n - 2);
+    return memo[n];
+}
+
+export function fibSequence(count: number): bigint[] {
+    return Array.from({ length: count }, (_, i) => fibonacci(i));
+}
+
+export function isFibonacci(value: bigint): boolean {
+    if (value < 0n) return false;
+    let a = 0n, b = 1n;
+    while (b < value) {
+        [a, b] = [b, a + b];
+    }
+    return b === value || value === 0n;
+}
+```
+
+Describe this code in plain sentences:

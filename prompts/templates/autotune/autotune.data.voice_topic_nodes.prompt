@@ -1,0 +1,2 @@
+1. Raft divides consensus into leader election, log replication, and safety.
+2. Paxos allows flexible quorum configurations where read and write quorums only need to overlap.

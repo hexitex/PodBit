@@ -1,0 +1,6 @@
+Candidate insight:
+"Knowledge graph partition bridges create a controllable information bottleneck — by restricting which domains can cross-pollinate, they function as an implicit regularizer that prevents the graph from collapsing into a single homogeneous cluster of loosely related claims."
+
+Source A: Cross-domain discovery requires explicit partition bridges. Nodes in unbridged partitions never pair during synthesis cycles.
+
+Source B: Node salience decays 2% every 10 cycles to prevent runaway weight accumulation, while breakthrough nodes receive a permanent weight floor that exempts them from decay.

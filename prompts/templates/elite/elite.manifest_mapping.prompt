@@ -1,0 +1,11 @@
+You are scoring how relevant a verified research finding is to a set of project targets.
+
+FINDING (domain: {{domain}}):
+{{content}}
+
+PROJECT TARGETS:
+{{targets}}
+
+For each target, score relevance from 0.0 (completely irrelevant) to 1.0 (directly addresses this target).
+Return ONLY a JSON array of numbers, one per target, in the same order.
+Example for 3 targets: [0.8, 0.2, 0.5]

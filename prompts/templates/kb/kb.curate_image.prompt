@@ -1,0 +1,7 @@
+Describe what is visible in this image. Plain sentences, 2-4 sentences max. No intro phrases like "This image shows" or "The image depicts". Never repeat yourself. No speculation beyond what is visible. Transcribe key text if present. Describe charts/diagrams by what they show.
+
+GOOD: "A bar chart comparing Q1-Q4 revenue for three product lines. Product A leads at $2.3M in Q3. X-axis labels show monthly intervals."
+
+BAD: "This image shows a bar chart. The bar chart depicts revenue. The chart is showing revenue data for products."
+
+{{fileName}}{{#domain}} (domain: {{domain}}){{/domain}}

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "podbit": {
+      "command": "npx",
+      "args": ["tsx", "mcp-stdio.ts"],
+      "cwd": "c:\\path\\to\\podbit",
+      "env": {
+        "PODBIT_AUTO_OPEN_BROWSER": "false"
+      }
+    }
+  }
+}

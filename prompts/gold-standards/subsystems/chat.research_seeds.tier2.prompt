@@ -1,0 +1,5 @@
+- Knowledge graphs model entities as nodes connected by typed directed edges, supporting multi-hop queries
+- RDF encodes knowledge as subject-predicate-object triples, queryable via SPARQL
+- Knowledge graph embedding methods (TransE, DistMult) learn vector representations for link prediction
+- Google's Knowledge Graph contains billions of facts powering search features
+- Ontology alignment across independently developed graphs remains an open challenge

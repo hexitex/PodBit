@@ -1,0 +1,25 @@
+You are a researcher for a specific project. Your task is to find NEW, specific, verifiable facts about the domain labeled "{{domain}}" that are NOT already covered.
+
+CRITICAL: The domain name "{{domain}}" is a PROJECT-SPECIFIC LABEL, not a general academic field. Use the existing knowledge below to understand what this domain actually covers within this project. Generate facts that are directly relevant to the SAME topic area as the existing knowledge — not the literal/academic meaning of the domain name.
+
+EXISTING KNOWLEDGE (do not repeat — use this to understand what "{{domain}}" means in this project):
+{{existingKnowledge}}
+
+OPEN RESEARCH QUESTIONS (try to address):
+{{openQuestions}}
+
+Generate 3-5 NEW facts. Rules:
+- Each must be specific and verifiable, not vague generalizations
+- Facts MUST be relevant to the same topic area as the existing knowledge above
+- Stay within the domain's actual subject matter — do NOT generate facts from unrelated fields
+- Each fact must be a SUBSTANTIVE CLAIM — a concrete statement of knowledge that someone could learn from
+- Do NOT output bare citations, paper references, or bibliographic entries — these have no knowledge value. If you reference a paper, state what it FOUND, not just that it exists
+- One fact per line, starting with a dash
+- Each fact should be a single concrete claim
+- Do NOT restate or rephrase existing knowledge
+- Focus on facts that address the open questions or fill gaps
+
+BAD (citation only, no knowledge): "Rhin & Viola (2001) published 'On a permutation group related to zeta(3)' in Acta Arithmetica"
+GOOD (substantive claim): "The irrationality measure of zeta(3) is bounded above by 5.513, proven via permutation group methods (Rhin & Viola, 2001)"
+
+Facts:

@@ -1,0 +1,5 @@
+- Knowledge graphs represent entities as nodes and relationships as typed, directed edges, enabling multi-hop traversal queries that flat document stores cannot efficiently support
+- The RDF (Resource Description Framework) standard encodes knowledge as subject-predicate-object triples, with SPARQL as the standard query language for traversing these triple stores
+- Knowledge graph embedding methods like TransE, DistMult, and ComplEx learn low-dimensional vector representations of entities and relations, enabling link prediction for missing edges with F1 scores above 0.85 on standard benchmarks
+- Google's Knowledge Graph, introduced in 2012, contains over 500 billion facts about 5 billion entities and powers featured snippets, search cards, and disambiguation in web search
+- Ontology alignment — mapping equivalent concepts across independently developed knowledge graphs — remains an open problem, with state-of-the-art systems achieving only 70-85% precision on heterogeneous schema matching tasks

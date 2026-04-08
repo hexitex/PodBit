@@ -1,0 +1,14 @@
+Given these knowledge nodes about "{{topic}}", write a summary focused on this task: "{{task}}".
+
+{{provenanceGuide}}
+
+Nodes:
+{{nodeList}}
+
+Write:
+1. Key Insights (most relevant to the task)
+2. Connections
+3. Foundation
+4. Open Questions
+
+Prioritize information directly useful for the task. Be specific. Under 500 words.

@@ -1,0 +1,44 @@
+Create an outline for this {{taskType}}.
+
+Request: {{request}}
+{{knowledgeContext}}
+IMPORTANT: Your outline sections MUST be grounded in the available knowledge listed above (if any). Do NOT create sections about topics not covered by the knowledge sources. If the knowledge is limited, create fewer sections that stay within what the data supports.
+
+STYLE RULES — CRITICAL:
+- Do NOT use academic ceremony sections. No "Methodology", "Literature Review", "Scope & Limitations", or "Actionable Recommendations" unless the request explicitly asks for an academic paper.
+- You did not conduct research. The knowledge sources were given to you. Do not describe how you "selected" or "evaluated" sources — that is dishonest framing.
+- Do not play professor. No prescriptive "recommendations" sections unless the user asked for advice. Your job is extraction and synthesis, not instruction.
+- Structure the outline around what is actually valuable: what the sources say, where they agree, where they contradict each other, what connections aren't obvious, and what's missing.
+
+Good section orientations:
+- What the sources establish (core claims, key facts)
+- Where sources contradict or create tension (this is where unknown knowledge hides)
+- Non-obvious connections between sources (cross-cutting patterns)
+- What's missing — gaps that no source covers (these become research seeds)
+- Confidence landscape — which claims are well-supported vs. thinly evidenced
+
+Provide a structured outline with sections. Each section should have:
+- id: unique identifier (e.g., "core_claims", "tensions", "connections")
+- title: section title
+- purpose: what this section accomplishes
+- length: approximate word count (min-max) - be generous, technical content needs space
+- must_include: key elements that must be present. Use SHORT terms (1-3 words each, e.g. "contradictions", "key claims", "evidence gaps"). Do NOT use full sentences or long phrases.
+
+Typical length ranges by section type:
+- Overview/summary: 300-600 words
+- Core content sections: 400-1000 words each
+- Tensions/gaps sections: 300-600 words
+- Connections sections: 300-600 words
+
+Respond in JSON format:
+{
+  "sections": [
+    {
+      "id": "core_claims",
+      "title": "What the Sources Establish",
+      "purpose": "Extract and synthesize the key claims across all sources",
+      "length": { "min": 400, "max": 800 },
+      "must_include": ["key claims", "evidence strength"]
+    }
+  ]
+}

@@ -1,0 +1,408 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   THEME SYSTEM — CSS Custom Properties
+   Three themes: The-OG (neon/pastel), Velvet (warm/cream), Silver (brushed steel)
+   Each has light + dark variants, controlled by data-theme + .dark class
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Text Size Scale ──────────────────────────────────────────────────────────
+   Scales ALL rem-based sizes via root font-size.
+   Small = 16px (browser default), Med = 17.5px, Large = 19px.
+   Every Tailwind rem class auto-scales. Pixel sizes need rem conversion. */
+:root {
+  --text-scale: 1;
+  font-size: 16px;
+}
+html[data-text-size="med"] {
+  font-size: 17.5px;  /* 1.094x — subtle but noticeable */
+}
+html[data-text-size="large"] {
+  font-size: 19px;    /* 1.1875x — clearly larger, still fits layouts */
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   THE-OG THEME — Default
+   Light: standard Tailwind cool grays, sky-blue accent
+   Dark: same cool grays, neon accent pop
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* The-OG Light (default) */
+:root, [data-theme="the-og"] {
+  /* Gray palette — standard Tailwind cool gray (RGB channels) */
+  --gray-50:  249 250 251;
+  --gray-100: 243 244 246;
+  --gray-200: 229 231 235;
+  --gray-300: 209 213 219;
+  --gray-400: 156 163 175;
+  --gray-500: 107 114 128;
+  --gray-600: 75  85  99;
+  --gray-700: 55  65  81;
+  --gray-800: 31  41  55;
+  --gray-900: 17  24  39;
+  --gray-950: 3   7   18;
+
+  /* Accent palette — sky blue (podbit brand) */
+  --accent-50:  240 249 255;
+  --accent-100: 224 242 254;
+  --accent-200: 186 230 253;
+  --accent-300: 125 211 252;
+  --accent-400: 56  189 248;
+  --accent-500: 14  165 233;
+  --accent-600: 2   132 199;
+  --accent-700: 3   105 161;
+  --accent-800: 7   89  133;
+  --accent-900: 12  74  110;
+
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light dark;
+}
+
+/* The-OG Dark — no gray changes needed (dark: prefix gates usage) */
+/* Accent stays the same neon sky-blue in dark — that's the OG look */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   VELVET THEME
+   Light: warm creams, tans, ivory backgrounds, terracotta accent
+   Dark: deep espresso/charcoal, muted copper accent (less neon)
+   Color theory: analogous warm palette (cream → tan → brown → copper)
+   Contrast: all pairs verified WCAG AA (4.5:1 text, 3:1 large text)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Velvet Light */
+[data-theme="velvet"] {
+  /* Warm gray palette — shifted toward cream/sand/brown
+     Contrast ratios verified against bg-50 (250,247,242): */
+  --gray-50:  250 247 242;   /* warm ivory         — bg-gray-50  */
+  --gray-100: 244 239 230;   /* light sand          — bg-gray-100 */
+  --gray-200: 232 225 213;   /* warm beige          — bg-gray-200 */
+  --gray-300: 212 200 183;   /* soft tan            — bg-gray-300 (decorative) */
+  --gray-400: 168 153 134;   /* dusty taupe         — 2.6:1 on 50 (placeholder/muted only) */
+  --gray-500: 116 103 88;    /* warm stone          — 5.1:1 on 50 ✓ AA normal text */
+  --gray-600: 91  79  65;    /* cocoa               — 7.4:1 on 50 ✓ AA */
+  --gray-700: 68  58  46;    /* dark mocha          — 10.4:1 on 50 ✓ AAA */
+  --gray-800: 46  39  30;    /* espresso            — bg-gray-800 */
+  --gray-900: 32  27  20;    /* deep coffee         — bg-gray-900 */
+  --gray-950: 22  18  13;    /* near-black warm     — bg-gray-950 */
+
+  /* Accent palette — terracotta/copper (analogous warm)
+     Contrast verified against bg-50: */
+  --accent-50:  252 245 238;   /* cream blush */
+  --accent-100: 248 232 218;   /* peach cream */
+  --accent-200: 240 210 185;   /* light terracotta */
+  --accent-300: 224 180 148;   /* warm peach */
+  --accent-400: 200 145 100;   /* copper tan — 3.5:1 on 50 (large text/icons) */
+  --accent-500: 152 96  50;    /* terracotta — 4.9:1 on 50 ✓ AA normal text */
+  --accent-600: 128 78  42;    /* burnt sienna — 6.8:1 on 50 ✓ AA */
+  --accent-700: 102 62  33;    /* dark terracotta */
+  --accent-800: 82  48  24;    /* deep rust */
+  --accent-900: 64  36  16;    /* dark umber */
+}
+
+/* Velvet Dark — deeper, warmer, less neon */
+.dark[data-theme="velvet"],
+[data-theme="velvet"].dark {
+  /* Warm dark grays — espresso/charcoal tones */
+  --gray-50:  250 247 242;   /* kept light for text-on-dark readability */
+  --gray-100: 240 235 226;   /* warm light — text-gray-100 on dark bg: 14:1 ✓ */
+  --gray-200: 220 213 200;   /* sandy light — 10.4:1 on 950 ✓ */
+  --gray-300: 196 184 168;   /* warm taupe — 7.2:1 on 950 ✓ */
+  --gray-400: 152 140 124;   /* dusty brown — 4.7:1 on 950 ✓ */
+  --gray-500: 112 102 90;    /* muted stone */
+  --gray-600: 82  74  64;    /* dark taupe */
+  --gray-700: 60  53  44;    /* charcoal brown */
+  --gray-800: 42  37  30;    /* deep espresso */
+  --gray-900: 30  26  20;    /* dark coffee */
+  --gray-950: 20  17  12;    /* near-black warm */
+
+  /* Accent — muted copper (less neon than OG, warm glow) */
+  --accent-50:  252 245 238;
+  --accent-100: 248 232 218;
+  --accent-200: 235 205 178;
+  --accent-300: 216 174 138;   /* warm copper glow */
+  --accent-400: 196 150 108;   /* muted copper — 5.1:1 on 950 ✓ */
+  --accent-500: 172 125 82;    /* copper — readable on dark */
+  --accent-600: 148 104 65;
+  --accent-700: 122 84  50;
+  --accent-800: 98  66  38;
+  --accent-900: 76  50  28;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SILVER THEME
+   Light: true neutral silver grays (no blue/warm tint), desaturated steel accent
+   Dark: lighter gunmetal (NOT black like OG) — distinctly gray
+   Color theory: neutral monochrome + desaturated blue-gray complement
+   All semantic colors globally muted via saturation filter
+   Contrast: all text pairs verified WCAG AA
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Silver Light */
+[data-theme="silver"] {
+  /* True neutral gray palette — near-equal RGB = no hue tint = pure silver
+     Contrast ratios verified against bg-50 (248,248,250): */
+  --gray-50:  248 248 250;   /* silver white         — bg-gray-50  */
+  --gray-100: 240 240 244;   /* light silver          — bg-gray-100 */
+  --gray-200: 226 226 232;   /* brushed silver        — bg-gray-200 */
+  --gray-300: 200 200 210;   /* medium silver         — bg-gray-300 (decorative) */
+  --gray-400: 158 158 170;   /* pewter                — 2.6:1 on 50 (placeholder/muted only) */
+  --gray-500: 108 108 122;   /* dark pewter           — 4.9:1 on 50 ✓ AA normal text */
+  --gray-600: 78  78  92;    /* steel                 — 7.7:1 on 50 ✓ AA */
+  --gray-700: 54  54  66;    /* dark steel            — 11.2:1 on 50 ✓ AAA */
+  --gray-800: 38  38  48;    /* gunmetal              — bg-gray-800 */
+  --gray-900: 26  26  34;    /* dark gunmetal         — bg-gray-900 */
+  --gray-950: 18  18  24;    /* deep slate            — bg-gray-950 */
+
+  /* Accent palette — desaturated steel blue (muted, not vibrant)
+     Contrast verified against bg-50: */
+  --accent-50:  242 244 252;   /* pale silver-blue */
+  --accent-100: 228 232 248;   /* light steel wash */
+  --accent-200: 204 212 240;   /* silver sheen */
+  --accent-300: 172 184 224;   /* muted chrome */
+  --accent-400: 136 152 200;   /* pewter blue — 3.2:1 on 50 (large text/icons) */
+  --accent-500: 88  100 136;   /* steel blue — 5.5:1 on 50 ✓ AA normal text */
+  --accent-600: 68  80  116;   /* deep steel — 7.5:1 on 50 ✓ AA */
+  --accent-700: 52  62  96;    /* dark steel blue */
+  --accent-800: 38  46  76;    /* midnight steel */
+  --accent-900: 28  34  58;    /* deep gunmetal blue */
+}
+
+/* Silver Dark — lighter gunmetal NOT near-black like OG
+   Key differentiator: bg-950 is (26,26,32) vs OG (3,7,18) — visibly grayer */
+.dark[data-theme="silver"],
+[data-theme="silver"].dark {
+  /* True neutral dark grays — gunmetal, distinctly lighter than OG dark */
+  --gray-50:  248 248 250;   /* silver white — 14.5:1 on 950 ✓ */
+  --gray-100: 234 234 240;   /* bright silver — 14.5:1 on 950 ✓ */
+  --gray-200: 214 214 224;   /* light pewter — 12.0:1 on 950 ✓ */
+  --gray-300: 186 186 200;   /* silver mist — 9.0:1 on 950 ✓ */
+  --gray-400: 148 148 164;   /* pewter — 5.8:1 on 950 ✓ */
+  --gray-500: 112 112 126;   /* muted steel */
+  --gray-600: 82  82  94;    /* dark pewter */
+  --gray-700: 62  62  72;    /* charcoal — borders */
+  --gray-800: 48  48  56;    /* gunmetal — surfaces/cards */
+  --gray-900: 36  36  42;    /* medium gunmetal — main bg */
+  --gray-950: 26  26  32;    /* dark gunmetal — deepest bg (NOT black) */
+
+  /* Accent — desaturated chrome glow (muted, understated) */
+  --accent-50:  242 244 252;
+  --accent-100: 228 232 248;
+  --accent-200: 204 212 240;
+  --accent-300: 158 172 212;   /* soft chrome — 7.7:1 on 950 ✓ */
+  --accent-400: 128 144 196;   /* muted steel — 5.5:1 on 950 ✓ */
+  --accent-500: 104 120 172;   /* gunmetal blue */
+  --accent-600: 82  96  148;
+  --accent-700: 64  76  124;
+  --accent-800: 48  58  100;
+  --accent-900: 36  44  78;
+}
+
+/* Silver: globally mute all non-gray Tailwind semantic colors
+   Reduces saturation of blues, greens, purples, etc. to match the silver aesthetic
+   Applied to colored backgrounds and text, not structural grays */
+[data-theme="silver"] .bg-blue-500,
+[data-theme="silver"] .bg-green-500,
+[data-theme="silver"] .bg-purple-500,
+[data-theme="silver"] .bg-orange-500,
+[data-theme="silver"] .bg-emerald-500,
+[data-theme="silver"] .bg-cyan-500,
+[data-theme="silver"] .bg-amber-500,
+[data-theme="silver"] .bg-rose-500,
+[data-theme="silver"] .bg-red-500,
+[data-theme="silver"] .bg-indigo-500,
+[data-theme="silver"] .bg-teal-500,
+[data-theme="silver"] .bg-sky-500,
+[data-theme="silver"] .bg-yellow-500,
+[data-theme="silver"] .bg-pink-500 {
+  filter: saturate(0.45) brightness(0.95);
+}
+/* Status dots and small colored indicators */
+[data-theme="silver"] [class*="bg-emerald-"],
+[data-theme="silver"] [class*="bg-cyan-"],
+[data-theme="silver"] [class*="bg-purple-"],
+[data-theme="silver"] [class*="bg-orange-"],
+[data-theme="silver"] [class*="bg-amber-"],
+[data-theme="silver"] [class*="bg-rose-"],
+[data-theme="silver"] [class*="bg-sky-"],
+[data-theme="silver"] [class*="bg-teal-"],
+[data-theme="silver"] [class*="bg-indigo-"],
+[data-theme="silver"] [class*="bg-yellow-"],
+[data-theme="silver"] [class*="bg-red-"],
+[data-theme="silver"] [class*="bg-green-"],
+[data-theme="silver"] [class*="bg-blue-"],
+[data-theme="silver"] [class*="bg-pink-"] {
+  filter: saturate(0.4);
+}
+/* Mute colored text as well */
+[data-theme="silver"] [class*="text-emerald-"],
+[data-theme="silver"] [class*="text-cyan-"],
+[data-theme="silver"] [class*="text-purple-"],
+[data-theme="silver"] [class*="text-orange-"],
+[data-theme="silver"] [class*="text-amber-"],
+[data-theme="silver"] [class*="text-rose-"],
+[data-theme="silver"] [class*="text-sky-"],
+[data-theme="silver"] [class*="text-teal-"],
+[data-theme="silver"] [class*="text-indigo-"],
+[data-theme="silver"] [class*="text-yellow-"],
+[data-theme="silver"] [class*="text-red-"],
+[data-theme="silver"] [class*="text-green-"],
+[data-theme="silver"] [class*="text-blue-"],
+[data-theme="silver"] [class*="text-pink-"] {
+  filter: saturate(0.4);
+}
+/* Mute colored borders */
+[data-theme="silver"] [class*="border-emerald-"],
+[data-theme="silver"] [class*="border-cyan-"],
+[data-theme="silver"] [class*="border-purple-"],
+[data-theme="silver"] [class*="border-orange-"],
+[data-theme="silver"] [class*="border-amber-"],
+[data-theme="silver"] [class*="border-rose-"],
+[data-theme="silver"] [class*="border-sky-"],
+[data-theme="silver"] [class*="border-teal-"],
+[data-theme="silver"] [class*="border-indigo-"],
+[data-theme="silver"] [class*="border-yellow-"],
+[data-theme="silver"] [class*="border-red-"],
+[data-theme="silver"] [class*="border-green-"],
+[data-theme="silver"] [class*="border-blue-"],
+[data-theme="silver"] [class*="border-pink-"] {
+  filter: saturate(0.4);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   BASE STYLES — use .dark class (not media query) to match Tailwind darkMode:'class'
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: rgb(var(--gray-100));
+  color: rgb(var(--gray-900));
+}
+
+.dark body {
+  background-color: rgb(var(--gray-900));
+  color: rgb(var(--gray-200));
+}
+
+/* Heading colors */
+h1, h2, h3, h4, h5, h6 {
+  color: rgb(var(--gray-600));
+}
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: rgb(var(--gray-300));
+}
+
+/* Body text colors — p and span excluded (inline elements should inherit;
+   global p/span rules create specificity conflicts with Tailwind utilities
+   like text-white — .dark p at 0,1,1 beats .text-white at 0,1,0) */
+label {
+  color: rgb(var(--gray-700));
+}
+.dark label {
+  color: rgb(var(--gray-300));
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   BAR TEXT — subtle shadow for readability on colored backgrounds
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.bar-text {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   SCROLLBAR — themed
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--gray-100));
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--gray-400));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--gray-500));
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: rgb(var(--gray-800));
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgb(var(--gray-600));
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--gray-500));
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   FORM ELEMENTS — dark mode
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+input, textarea, select {
+  background-color: rgb(var(--gray-50));
+  border-color: rgb(var(--gray-300));
+  color: rgb(var(--gray-900));
+}
+
+.dark input, .dark textarea, .dark select {
+  background-color: rgb(var(--gray-800));
+  border-color: rgb(var(--gray-700));
+  color: rgb(var(--gray-200));
+}
+
+input::placeholder, textarea::placeholder {
+  color: rgb(var(--gray-400));
+}
+
+.dark input::placeholder, .dark textarea::placeholder {
+  color: rgb(var(--gray-500));
+}
+
+option {
+  background-color: rgb(var(--gray-50));
+  color: rgb(var(--gray-900));
+}
+
+.dark option {
+  background-color: rgb(var(--gray-800));
+  color: rgb(var(--gray-200));
+}
+
+.dark code {
+  color: rgb(var(--gray-200));
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   RECHARTS — dark mode
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.dark .recharts-default-tooltip {
+  background-color: rgb(var(--gray-800)) !important;
+  border-color: rgb(var(--gray-700)) !important;
+}
+.dark .recharts-tooltip-label {
+  color: rgb(var(--gray-200)) !important;
+}
+.dark .recharts-cartesian-axis-tick-value {
+  fill: rgb(var(--gray-400)) !important;
+}

@@ -1,0 +1,57 @@
+{{projectContext}}You are a knowledge quality judge for a persistent knowledge graph. Rate whether this node is worth keeping.
+
+CRITICAL: You are evaluating a KNOWLEDGE GRAPH NODE, not a user message. The content below is stored knowledge. Judge it on whether it captures useful, concrete, testable knowledge.
+
+NODE TO EVALUATE:
+- Provenance: {{provenanceTag}}
+- Type: {{nodeType}}
+- Domain: {{nodeDomain}}
+- Content: "{{nodeContent}}"
+{{parentContext}}
+=== TYPE-SPECIFIC EXPECTATIONS ===
+
+SEED nodes are raw facts from humans, agents, or KB ingestion:
+- Rate 1 if it captures a specific, concrete fact (a named entity, measurement, mechanism, relationship, constraint)
+- Rate 0 if it describes the absence of content, is pure boilerplate, or is generic enough to apply to any domain
+- Seeds that cite named researchers, methods, or results ARE useful — they document what is known
+
+VOICED and SYNTHESIS nodes are LLM-generated combinations of parent nodes:
+- Rate 1 if it names a SPECIFIC mechanism, equation, or physical quantity connecting the parents
+- Rate 1 if it makes a TESTABLE prediction — something a physicist could design an experiment to verify
+- Rate 1 if it identifies a concrete relationship (e.g., "X converges to Y", "A is bounded by B", "the gap closes when C exceeds D")
+- Rate 0 if it merely restates parents without adding insight
+- Rate 0 if it uses INVENTED TERMINOLOGY that doesn't correspond to real physics concepts (compound nouns that don't appear in textbooks or journals)
+- Rate 0 if it claims abstract structural parallels without naming the specific mathematical relationship
+- Rate 0 if it stacks adjectives into impressive-sounding but meaningless phrases
+- Rate -1 if it contradicts parents or fabricates specific facts (names, numbers, citations)
+- Rate -1 if it's incoherent, garbled, or LLM refusal text
+
+THE KEY TEST FOR VOICED/SYNTHESIS: Could a physicist read this and know what to compute or measure? If yes → 1. If they'd say "this sounds impressive but I have no idea what it's actually claiming" → 0.
+
+=== RATING SCALE ===
+
+Rate 1 (USEFUL) — concrete, specific, actionable knowledge:
+- Names real things (equations, physical quantities, mechanisms, processes)
+- Makes testable claims or predictions
+- A reader could verify, compute, or build on this
+
+Rate 0 (NOT USEFUL) — vague, jargon-heavy, or substanceless:
+- Abstract parallels without specifics ("both exhibit phase transitions" — which ones?)
+- Invented terminology not grounded in established physics
+- Hedging without insight ("further research needed")
+- Surface-level connections that could describe anything
+
+Rate -1 (HARMFUL) — actively wrong or destructive:
+- Fabricated facts, wrong citations, invented numbers
+- Contradicts its own parents
+- Incoherent or garbled text
+- LLM refusal or meta-commentary
+
+=== CALIBRATION ===
+
+Be honest. If a synthesis is just impressive-sounding jargon with no testable content, rate 0. The graph is better off without vague nodes that waste verification compute downstream. Expect roughly:
+- 40-60% useful (1) — concrete, specific claims
+- 30-50% not useful (0) — vague, jargon-heavy, or redundant
+- 1-5% harmful (-1) — genuinely wrong or incoherent
+
+Respond with JSON: {"rating": 1, "reason": "one-line explanation"} (rating must be 1, 0, or -1)

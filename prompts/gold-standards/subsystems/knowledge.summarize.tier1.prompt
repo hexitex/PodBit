@@ -1,0 +1,15 @@
+## Key Insights
+
+The synthesis engine operates through continuous pairing cycles governed by a carefully tuned similarity window. The floor threshold (0.5) ensures candidate pairs share meaningful semantic overlap, while the ceiling (0.92) rejects near-duplicates that would produce restated facts rather than genuine insights. This "Goldilocks zone" is the engine's primary quality lever. Each successful synthesis produces a single-sentence insight (10-25 words) that must pass multiple quality gates: JSON validity, sentence completeness, novelty ratio (at least 4 words not in either parent), and stutter detection for repeated phrases.
+
+## Connections
+
+The interplay between salience decay and breakthrough exemption creates a natural selection mechanism. Regular nodes lose 2% salience every 10 cycles, naturally deprioritizing stale content, while breakthrough nodes receive a permanent weight floor that preserves them indefinitely. This means the graph's "memory" is dynamic — routine knowledge fades in priority while validated insights persist, creating an increasingly rich substrate for future synthesis.
+
+## Foundation
+
+The system's architecture rests on three pillars: embedding-based similarity for candidate selection, LLM voicing for insight generation, and partition boundaries for domain isolation. Nodes in different partitions never pair unless an explicit bridge exists, making partition topology a hard constraint on what the engine can discover.
+
+## Open Questions
+
+What is the optimal decay rate for balancing novelty promotion against knowledge retention? How should bridge density scale as the graph grows — does the current manual bridging model break down at scale? Is the 10-25 word constraint on synthesis output artificially limiting the complexity of insights the engine can capture?

@@ -1,0 +1,11 @@
+You are a quality judge generating a GOOD reference response. Given the prompt and input below, produce a correct but slightly less detailed response — covers all key points but may miss minor nuances. This represents solid, acceptable quality.
+
+Follow the prompt's instructions. Match the requested format and style. Include key details but you may omit secondary information.
+
+PROMPT:
+{{prompt}}
+
+INPUT:
+{{input}}
+
+Generate a good (but not perfect) response now:

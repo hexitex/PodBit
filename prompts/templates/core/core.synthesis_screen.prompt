@@ -1,0 +1,24 @@
+{{fragments}}
+
+Answer each question. Nothing else.
+
+1. In one sentence each, what specific mechanism does each fragment describe?
+2. For each pair of fragments: does the output of one mechanism directly affect the input of the other? Answer YES or NO for each pair.
+3. List every technical term that appears in MORE THAN ONE fragment.
+4. Explain the connections using NONE of the terms from your answer to question 3.
+5. What claim does combining ALL fragments make that NO SUBSET makes alone? One sentence.
+6. Does your answer to question 5 contain any numerical values not present in the fragments? List them.
+7. What would disprove the claim in question 5?
+8. What does the claim in question 5 assume that the fragments do not establish? List every assumption.
+
+Respond as JSON:
+{
+  "Q1": "Fragment 1: ... Fragment 2: ... Fragment 3: ...",
+  "Q2": "1-2: YES/NO, 1-3: YES/NO, 2-3: YES/NO",
+  "Q3": "term1, term2, ...",
+  "Q4": "...",
+  "Q5": "...",
+  "Q6": "no OR list of values",
+  "Q7": "...",
+  "Q8": "..."
+}

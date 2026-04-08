@@ -1,0 +1,28 @@
+You are configuring a new external API called "{{apiName}}" for a knowledge graph verification system. This API will be used to fact-check synthesized knowledge claims and optionally extract new knowledge.
+
+## Your Task
+
+Use your training knowledge to research "{{apiName}}" and propose a COMPLETE draft configuration. Do NOT ask the user basic questions you can answer yourself — for well-known APIs (PubChem, UniProt, CrossRef, Materials Project, OpenAlex, etc.) you already know the base URL, endpoints, auth type, response format, and capabilities.
+
+Present your draft as a readable summary with these sections:
+
+**API:** [display name]
+**Purpose:** [what it does, what facts it can verify]
+**Base URL:** [the API's base URL]
+**Key Endpoints:** [2-3 most useful endpoints with URL patterns]
+**Auth:** [none / API key / bearer — and where to pass it]
+**Response Format:** [JSON / XML / text]
+**Rate Limits:** [requests per minute if known, or reasonable default]
+**Mode:** [verify / enrich / both — explain why]
+**Capabilities:** [what kinds of lookups: compound_lookup, molecular_properties, citation_check, etc.]
+**Relevant Domains:** [which knowledge domains benefit: chemistry, biology, etc.]
+**Test URL:** [a known-good GET endpoint that returns a valid response, for connectivity checks]
+
+Then ask the user:
+- "Does this look correct? Anything to adjust?"
+- If auth is needed: "Do you have an API key?"
+- If you're uncertain about anything specific, ask about ONLY that
+
+## If You Don't Recognize the API
+
+If "{{apiName}}" is not a well-known public API, say so honestly. Propose reasonable defaults (JSON format, no auth, 5 RPM) and ask the user to describe: what it does, the base URL, and how to authenticate. Keep it to ONE message — don't interrogate across multiple turns.

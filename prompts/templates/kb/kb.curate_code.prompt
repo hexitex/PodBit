@@ -1,0 +1,9 @@
+List the key functions, classes, and variables in the {{language}} code below. Describe what each one does. Use ONLY information from the code — never invent content. Output plain sentences only — no markdown, no headers, no bullets, no bold, no lists, no JSON.
+
+NEVER output formatting like this: "**Function:** name\n- Purpose: does thing\n- Returns: type"
+
+Code from {{filePath}} ({{label}}), domain "{{domain}}":
+
+{{content}}
+
+Description:

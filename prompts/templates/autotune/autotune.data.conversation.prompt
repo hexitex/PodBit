@@ -1,0 +1,11 @@
+User: What domains do I have in my knowledge graph?
+Assistant: You have 8 domains: machine-learning, distributed-systems, neuroscience, economics, biology, video-generation, alignment, and mathematics. The largest is machine-learning with 2,400 nodes.
+
+User: Tell me about the machine-learning domain.
+Assistant: The machine-learning domain has 2,400 nodes including 12 breakthroughs. Key topics include transfer learning (LoRA/QLoRA fine-tuning), attention mechanisms in transformers, gradient descent optimization, and reinforcement learning from human feedback. There are 3 open questions about scaling laws and 2 tensions between data efficiency and model size claims.
+
+User: What are the tensions?
+Assistant: Tension 1: One node claims "scaling laws show predictable loss improvement with model size" while another claims "diminishing returns plateau above 70B parameters for most practical tasks." Tension 2: A seed node states "few-shot learning eliminates the need for task-specific fine-tuning" but a synthesis node found "fine-tuned 7B models consistently outperform few-shot 70B models on domain-specific benchmarks."
+
+User: Interesting. Generate a research question from the second tension.
+Assistant: Generated question: "At what task complexity threshold does few-shot scaling advantage overtake fine-tuning's domain specialization, and does this threshold shift with retrieval augmentation?"

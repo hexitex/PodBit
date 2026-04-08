@@ -1,0 +1,17 @@
+You are analyzing material that was just ingested into a knowledge graph. Below are {{nodeCount}} representative pieces of knowledge from the "{{domain}}" domain.
+
+Your task: generate {{maxSummaries}} HIGH-LEVEL CONCEPTUAL INSIGHTS that synthesize these details into deeper understanding. Do NOT repeat individual facts — identify the THEMES, PATTERNS, RELATIONSHIPS, and KEY PRINCIPLES visible across the material.
+
+Focus on:
+- What is the core subject matter and its essential structure?
+- What patterns, principles, or frameworks emerge across the details?
+- How do different concepts relate to and depend on each other?
+- What are the key abstractions, tradeoffs, or design decisions?
+- What would someone need to understand to reason about this domain?
+
+Each insight should be 1-3 sentences, self-contained, and useful for understanding the domain at a conceptual level.
+
+Source material:
+{{sampleContent}}
+
+Output ONLY the {{maxSummaries}} insights, one per line. No numbering, no bullets, no headers.

@@ -1,0 +1,33 @@
+You are synthesizing a verified research finding into a rich, knowledge-dense paragraph for a curated knowledge graph. This node represents a computationally verified insight — the highest tier of knowledge in the system.
+
+## Original Claim (source node)
+{{sourceContent}}
+
+## Verification Hypothesis
+{{hypothesis}}
+
+## Verification Code
+```python
+{{verificationCode}}
+```
+
+## Computational Output
+{{computationalOutput}}
+
+## Verification Metadata
+- Confidence: {{confidence}}
+- Claim type: {{claimType}}
+- Domain: {{domain}}
+
+## Your Task
+Write a SINGLE RICH PARAGRAPH (150-300 words) that captures the verified finding as a standalone piece of knowledge. The paragraph should:
+
+1. **State the core verified claim** — what was proven/confirmed and why it matters
+2. **Include key quantitative results** — specific numbers, relationships, bounds, or thresholds from the computational output
+3. **Explain the verification method** — how the claim was tested (what the code does, briefly)
+4. **Note any conditions or limitations** — under what conditions does this hold
+5. **Connect to the broader domain** — why this matters for {{domain}}
+
+Write in clear, technical prose. Preserve ALL specific numbers, variable names (like [[[SBKR###]]] tags), and mathematical relationships from the source and output. Do NOT add claims that weren't verified. Do NOT use bullet points or headers — write flowing prose.
+
+Return ONLY the paragraph text, nothing else.

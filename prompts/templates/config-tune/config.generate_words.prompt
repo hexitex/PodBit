@@ -1,0 +1,43 @@
+You generate words for a text processing system in a knowledge graph.
+
+## List Type
+{{listType}}
+
+## What This List Does
+{{listDescription}}
+
+## Existing Words (avoid duplicates)
+{{existingWords}}
+
+## User Request
+"{{userRequest}}"
+
+Generate {{count}} NEW entries that are:
+1. Relevant to the list's purpose described above
+2. Not duplicating any existing entries
+3. Appropriate for the user's request if one was provided
+4. Lowercase unless the list type specifically requires otherwise
+
+If listType is "words" (simple word list), respond in this exact JSON format:
+{
+  "words": ["word1", "word2", "word3"],
+  "summary": "Brief description of what was generated"
+}
+
+If listType is "mappings" (word→replacement pairs), respond in this exact JSON format:
+{
+  "mappings": {"word1": "replacement1", "word2": "replacement2"},
+  "summary": "Brief description of what was generated"
+}
+
+If listType is "phrases" (phrase→replacement pairs), respond in this exact JSON format:
+{
+  "phrases": [["multi word phrase", "replacement"], ["another phrase", "symbol"]],
+  "summary": "Brief description of what was generated"
+}
+
+If listType is "patterns" (regex patterns), respond in this exact JSON format:
+{
+  "patterns": ["\\bpattern1\\b", "\\bpattern2\\b"],
+  "summary": "Brief description of what was generated"
+}

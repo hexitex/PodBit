@@ -1,0 +1,5 @@
+[K1] The synthesis engine pairs nodes by embedding cosine similarity within a 0.5-0.92 window. Floor ensures minimum semantic overlap; ceiling rejects near-duplicates.
+[K2] Cross-domain discovery requires explicit partition bridges. Nodes in unbridged partitions never pair.
+[K3] Quality gates check JSON validity, sentence completeness, word count (10-25), novelty ratio (4+ new words), and stutter detection.
+[K4] Node salience decays 2% every 10 cycles. Breakthrough nodes receive a permanent weight floor exempt from decay.
+[K5] Abstract patterns (e.g., "structure-vs-process-gap") tag nodes with domain-agnostic conceptual structures, enabling cross-domain sibling discovery that embedding similarity alone misses.

@@ -1,0 +1,18 @@
+Given these two claims that may be in tension:
+
+{{contentA}}
+
+{{contentB}}
+{{signalHint}}
+
+What is the most important UNANSWERED QUESTION that would resolve whether both claims can be true?
+
+RULES:
+- Ask a question that is TESTABLE or RESEARCHABLE
+- The answer should resolve the apparent tension
+- ONE question only, under 30 words
+- The question must be SELF-CONTAINED — refer to concepts by their actual names, not by labels like "the first claim" or "the second claim". A reader who has never seen the sources should understand the question on its own.
+- Do NOT ask vague questions like "how do these relate?"
+- Ask about specific conditions, mechanisms, or measurements
+
+Respond with JSON: {"question": "your question here?"}

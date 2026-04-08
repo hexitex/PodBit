@@ -1,0 +1,36 @@
+## Original Claim
+{{nodeContent}}
+
+## API: {{apiName}}
+
+## API Response
+{{apiResponse}}
+
+## Number Variables in This Claim
+{{variableContext}}
+
+## API-Specific Interpretation Guide
+{{perApiPrompt}}
+
+Compare the API response to the claim. Respond with ONLY this JSON:
+{
+  "impact": "value_correction" | "structural_validation" | "structural_refutation" | "inconclusive",
+  "corrections": [
+    {
+      "varId": "variable ID from the claim (or empty string if no specific variable)",
+      "oldValue": "the claimed value",
+      "newValue": "the API-verified value",
+      "confidence": 0.0-1.0,
+      "source": "quote or citation from the API response"
+    }
+  ],
+  "evidenceSummary": "one-sentence summary of what the API confirmed, corrected, or could not determine",
+  "confidence": 0.0-1.0
+}
+
+Rules:
+- corrections array is empty for structural_validation, structural_refutation, and inconclusive
+- For value_correction, include one correction per incorrect value
+- confidence reflects how certain the API response is (exact match = 1.0, partial = lower)
+- Zero search results for a novel cross-domain connection = "inconclusive", NOT refutation
+- Only use "structural_refutation" when the API provides positive counter-evidence (entity provably doesn't exist, values directly contradicted)

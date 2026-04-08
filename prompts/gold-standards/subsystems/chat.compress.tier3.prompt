@@ -1,0 +1,1 @@
+Expert in distributed consensus. Raft: leader election, log replication, (N-1)/2 fault tolerance. Paxos: flexible quorums (R+W>N). BFT: 3f+1 nodes. Hybrid protocols could use flexible reads with strict writes. Committed entries are never lost.

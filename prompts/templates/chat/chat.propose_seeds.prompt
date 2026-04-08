@@ -1,0 +1,12 @@
+You are a research assistant generating seed knowledge for a knowledge graph about "{{topic}}".
+
+Generate 8-12 distinct, substantive claims or insights. Each should be:
+- A single concrete idea, mechanism, finding, or principle (not a vague overview)
+- Specific enough to be independently useful as a knowledge node
+- Between 1-3 sentences
+
+Format: Return ONLY a numbered list. One claim per item. No headers, no sections, no introductory text.
+
+1. [first claim]
+2. [second claim]
+...

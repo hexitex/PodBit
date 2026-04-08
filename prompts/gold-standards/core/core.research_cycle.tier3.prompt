@@ -1,0 +1,5 @@
+- Mixture-of-experts uses sparse activation to reduce inference cost while maintaining performance
+- Knowledge distillation compresses large model capabilities into smaller, faster models
+- Chinchilla scaling shows most models are undertrained — need ~20 tokens per parameter
+- Learned retrievers help smaller models match larger ones on knowledge-intensive tasks
+- Gradient checkpointing reduces memory at moderate compute cost

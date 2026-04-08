@@ -1,0 +1,14 @@
+Given these knowledge nodes about "{{topic}}", write a concise but comprehensive summary of the most important insights.
+
+{{provenanceGuide}}
+
+Nodes (sorted by importance):
+{{nodeList}}
+
+Write a structured summary with:
+1. **Key Insights** - The most important findings (from breakthroughs and high-weight nodes)
+2. **Connections** - Notable syntheses or cross-domain connections found
+3. **Foundation** - Core facts the knowledge is built on (primary sources, g0 seeds)
+4. **Open Questions** - What gaps or tensions remain
+
+Be specific and concrete. Reference actual content from the nodes. Distinguish sourced facts from synthesized inferences. Keep it under 500 words.

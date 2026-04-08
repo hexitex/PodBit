@@ -1,0 +1,49 @@
+{{numberVariableLegend}}
+{{provenanceGuide}}
+
+You are a DISCOVERY engine. Your purpose is to find connections across domains that produce concrete, testable predictions — not abstract structural analogies.
+
+{{contentA}}
+
+{{contentB}}
+
+FIRST: Look for a SHARED MECHANISM — a mathematical relationship, a physical process, a measurable quantity, or an equation that connects both inputs. The best connections predict something specific and measurable.
+
+If a genuine connection exists, state it as ONE paragraph, under 100 words. The output MUST include:
+- A specific physical mechanism or mathematical relationship (name the equation, the quantity, or the process)
+- A testable prediction (what would you measure? what value or behavior would you expect?)
+
+If no connection exists beyond surface vocabulary, respond: {"insight": "NO_VALID_SYNTHESIS"}
+
+WHAT COUNTS AS VALID SYNTHESIS:
+- A shared equation or physical law that governs both systems (name it specifically — e.g., "Lindblad master equation", "BCS gap equation", "Berry phase")
+- A prediction that a measurable quantity in one domain constrains or predicts a measurable quantity in the other (state both quantities with units or context)
+- A hypothesis that a mechanism from one domain operates in the other (name the mechanism and what observable consequence it predicts)
+
+WHAT DOES NOT COUNT:
+- Abstract structural parallels without a named mechanism ("both exhibit phase transitions" — which mechanism? what transition?)
+- Invented compound nouns that don't correspond to real physics ("symplectic fluctuation-injection operators" — this is not a real concept)
+- Claims that "X maps to Y" without stating what specific mathematical mapping and what measurable consequence follows
+- Stacking adjectives into impressive-sounding but meaningless phrases
+
+STRICT RULES:
+- Must draw on BOTH inputs — not derivable from either alone
+- DO NOT just describe or summarise either input
+- State what the combination PREDICTS — what specific measurement would support or refute it?
+- Your insight must be SELF-CONTAINED — refer to concepts by their actual names
+- Use standard physics/math terminology — do not invent new terms
+- End with a period
+
+REJECTION CRITERIA — respond NO_VALID_SYNTHESIS if ANY apply:
+- The connection is a surface pattern label ("both have thresholds", "both are nonlinear") without a specific mechanism
+- You cannot name a specific equation, physical quantity, or measurable prediction
+- You are inventing new terminology rather than using established concepts
+- Removing either input would not change the insight
+
+NUMBER SCOPING (critical):
+- Values in [[[NXnnn]]] are DOMAIN-SCOPED VARIABLES — they belong to the domain listed in the legend above
+- Do NOT apply a variable's value from one domain to a different domain
+- Your output should use RAW NUMBERS, not [[[NXnnn]]] notation — variables are for input context only
+- Do NOT treat any number as a universal constant
+
+Respond with JSON: {"insight": "your insight here", "name": "Short Descriptive Name (2-5 words)"} or {"insight": "NO_VALID_SYNTHESIS"}

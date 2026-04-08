@@ -1,0 +1,25 @@
+Extract 8-15 searchable keywords AND a short novel name from this knowledge node in the "{{domain}}" domain.
+
+Content: "{{content}}"
+
+KEYWORD RULES:
+- PRIORITIZE technical terms: named mechanisms, processes, structures, methods, compounds, algorithms, protocols, named effects
+- Include domain-specific jargon and vocabulary that distinguishes expert writing from vague description
+- Include named entities (people, theories, frameworks, standards, tools)
+- Include concrete nouns: specific structures, components, measurements, phenomena
+- Include broader category terms that help someone find this node
+- Each keyword should be 1-3 words, lowercase
+- Do NOT include generic filler words (e.g. "system", "approach", "method", "process" by themselves)
+- Do NOT include vague abstractions — every keyword should be something a domain expert would recognize as specific
+
+GOOD keywords are terms a domain expert would use precisely — named things, specific mechanisms, measurable quantities.
+BAD keywords are vague words that could appear in any context: "system", "analysis", "important", "relationship", "approach", "method".
+
+NAME RULES:
+- Create a short, descriptive name (2-5 words) that captures the core concept of this node
+- The name should be specific enough to distinguish this node from others in the same domain
+- Use the actual key concepts from the content — not generic labels
+- Think of it as a chapter heading or index entry that a human would recognize
+- Examples: "Synaptic Pruning Rate Constraint", "Sparse Activation Density Threshold", "Cross-Domain Bridge Decay"
+
+Respond with ONLY this JSON: {"keywords": ["term1", "term2", ...], "name": "Short Descriptive Name"}

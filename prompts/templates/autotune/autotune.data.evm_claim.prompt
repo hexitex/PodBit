@@ -1,0 +1,1 @@
+Because Raft requires majority quorum for commits and Paxos allows flexible quorums, hybrid protocols could optimize latency by using Paxos-style flexible quorums for reads while maintaining Raft's strict majority for writes — achieving lower read latency without sacrificing write safety.

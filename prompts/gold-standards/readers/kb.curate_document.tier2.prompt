@@ -1,0 +1,1 @@
+Raft and Paxos solve distributed consensus by getting servers to agree on values despite failures. Raft uses leader election with randomized timeouts, log replication, and safety guarantees. An N-server cluster tolerates (N-1)/2 failures.

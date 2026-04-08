@@ -1,0 +1,16 @@
+Does this knowledge contain a causal claim, transferable principle, mechanism, or theoretical insight that could combine with other knowledge to produce new understanding?
+
+SYNTHESIZABLE examples:
+- "Lipschitz continuity bounds gradient explosion via the Contraction Principle" (mechanism)
+- "Sparse population coding uses only 1-5% of neurons simultaneously" (transferable principle)
+- "Eligibility traces bridge temporal gaps by creating biochemical tags" (causal claim)
+
+NOT SYNTHESIZABLE examples:
+- "The study used a CNN with 5 layers achieving 94% accuracy" (result only)
+- "Features were preprocessed using PCA and label encoding" (procedure only)
+- "The proposed approach outperformed baseline methods" (comparison only)
+
+Content:
+{{content}}
+
+Answer ONLY "YES" or "NO".

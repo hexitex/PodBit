@@ -1,0 +1,5 @@
+{
+  "novel": true,
+  "confidence": 0.65,
+  "reasoning": "The specific framing of partition bridges as an implicit regularizer that prevents cluster collapse is not standard in graph partitioning literature. While information bottlenecks are well-studied in network theory and information theory, applying this lens to knowledge graph synthesis topology — where the 'regularization' emerges from restricting which semantic domains can cross-pollinate — represents a genuine conceptual contribution. The prediction that bridge density inversely correlates with inter-partition diversity is testable and not obvious from either source alone."
+}

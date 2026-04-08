@@ -1,0 +1,3 @@
+A: Retrieval-augmented generation grounds language model outputs in external knowledge, reducing hallucination rates from 15-30% to under 5% in domain-specific tasks, but introduces latency proportional to corpus size and retrieval complexity.
+
+B: Knowledge graphs encode typed relationships between entities with explicit provenance, enabling multi-hop reasoning chains that flat document retrieval cannot support, though maintaining graph consistency requires O(n log n) operations as node count grows.

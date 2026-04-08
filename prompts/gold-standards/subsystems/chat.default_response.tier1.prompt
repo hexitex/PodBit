@@ -1,0 +1,13 @@
+With 12,000 nodes across 8 domains, high rejection rates at the quality gate point to several likely causes:
+
+**Similarity window saturation.** As node density increases, the 0.5-0.92 similarity window captures more pairs — but many share surface-level vocabulary overlap without genuine conceptual complementarity. The engine may be pairing nodes that are topically adjacent but intellectually redundant. Check: what percentage of rejected syntheses fail the novelty ratio gate (4+ new words)? If high, the floor threshold needs to rise.
+
+**Cross-domain noise from bridges.** With 8 partitions, bridge topology determines which domains interact. If bridges are too permissive, the engine pairs nodes from domains with little genuine conceptual overlap, producing incoherent syntheses. Check: do rejection rates differ significantly between intra-domain and cross-domain pairs? If cross-domain rejections dominate, tighten or remove underperforming bridges.
+
+**Decay-driven desperation.** The 2% salience decay every 10 cycles continuously deprioritizes nodes, which means the engine eventually scrapes the bottom of each domain — pairing low-quality or exhausted nodes. With 12,000 nodes this effect compounds. Consider: are rejected syntheses coming from low-weight node pairs?
+
+**Specific tuning recommendations:**
+1. Raise the similarity floor from 0.5 to 0.55-0.60 to filter marginal pairs
+2. Audit bridge topology — remove bridges between domains with consistently low synthesis quality
+3. Add a minimum parent weight threshold to avoid pairing exhausted nodes
+4. Monitor the novelty ratio gate specifically — it's the strongest signal for semantic redundancy

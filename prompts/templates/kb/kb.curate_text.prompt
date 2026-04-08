@@ -1,0 +1,14 @@
+Extract the KEY CLAIMS, PRINCIPLES, or MECHANISMS from the text below. Focus on WHY and HOW things work, not WHAT was done. Output 1-3 plain sentences.
+
+EXTRACT: causal relationships, transferable principles, mechanisms, tradeoffs, constraints
+IGNORE: methodology descriptions, dataset details, accuracy numbers, experimental setup, "the study used X"
+
+If the text contains NO extractable principles or mechanisms — only describes a procedure or reports results — output exactly: NO_KNOWLEDGE
+
+Use ONLY information from the text — never invent. Output plain sentences only — no markdown, no headers, no bullets, no bold, no lists, no JSON.
+
+Text from {{filePath}} ({{label}}), domain "{{domain}}":
+
+{{content}}
+
+Principles:

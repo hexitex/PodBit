@@ -1,0 +1,5 @@
+- RAG reduces hallucination from 15-30% to under 5% but adds latency proportional to corpus size
+- Knowledge graphs enable multi-hop reasoning that flat retrieval cannot support
+- Synthesis engine pairs nodes by cosine similarity (0.5 floor, 0.92 ceiling) for cross-pollination
+- Node salience decays 2% every 10 cycles; breakthroughs are exempt via weight floor
+- Partition boundaries prevent cross-domain pairing unless explicitly bridged

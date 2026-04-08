@@ -1,0 +1,1 @@
+Scaling laws show predictable, smooth loss improvement as model parameters increase from 1B to 175B, following a power law with exponent -0.076.

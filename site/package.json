@@ -1,0 +1,20 @@
+{
+  "name": "podbit-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Podbit marketing site with contact form",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "nodemailer": "^6.9.16"
+  },
+  "devDependencies": {
+    "lucide-react": "^0.294.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}

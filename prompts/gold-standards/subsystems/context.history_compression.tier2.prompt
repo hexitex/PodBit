@@ -1,0 +1,1 @@
+User has 8 domains; machine-learning is largest (2,400 nodes, 12 breakthroughs). Two key tensions: (1) scaling laws vs. diminishing returns above 70B, (2) few-shot vs. fine-tuned 7B outperforming on domain tasks. Generated research question about task complexity threshold for few-shot vs. fine-tuning, and whether retrieval augmentation shifts it.

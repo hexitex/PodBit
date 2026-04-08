@@ -1,0 +1,1 @@
+My knowledge graph has 12,000 nodes across 8 domains. The synthesis engine seems to produce mostly low-quality nodes lately — lots of rejections at the quality gate. What could be going wrong and how should I tune it?

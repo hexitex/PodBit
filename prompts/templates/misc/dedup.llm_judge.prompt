@@ -1,0 +1,6 @@
+Two knowledge nodes are semantically similar (cosine similarity: {{similarity}}). Does Node B add reasoning, evidence, or perspective that Node A lacks?
+
+Node A: "{{existingContent}}"
+Node B: "{{newContent}}"
+
+Answer NOVEL or DUPLICATE, then one line explaining why.

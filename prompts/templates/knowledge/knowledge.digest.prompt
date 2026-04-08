@@ -1,0 +1,5 @@
+Compress these {{nodeCount}} knowledge nodes about "{{domain}}" into a single dense paragraph of at most 200 tokens. Include only the most important facts. No introductions or filler. Prioritize facts from primary sources (g0 seeds) over speculative synthesis (high generation).
+
+{{provenanceGuide}}
+
+{{nodeList}}

@@ -1,0 +1,13 @@
+# Podbit — Autonomous Knowledge Infrastructure
+# https://podbit.com
+
+User-agent: *
+Allow: /
+Disallow: /generated/
+Disallow: /node_modules/
+
+# Crawl politely
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: https://podbit.com/sitemap.xml

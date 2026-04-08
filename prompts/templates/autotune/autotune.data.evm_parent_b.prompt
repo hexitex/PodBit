@@ -1,0 +1,1 @@
+Paxos allows flexible quorum configurations where read and write quorums only need to overlap, enabling latency optimization at the cost of protocol complexity. A read quorum of size R and write quorum of size W only need R + W > N.

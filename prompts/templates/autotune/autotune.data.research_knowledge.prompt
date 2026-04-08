@@ -1,0 +1,4 @@
+- Transfer learning enables adaptation with minimal fine-tuning via frozen lower layers
+- LoRA decomposes weight updates into low-rank matrices (rank 4-64), achieving comparable performance with 10-100x fewer parameters
+- Attention mechanisms in transformers compute O(n²) pairwise token interactions
+- RLHF aligns model outputs with human preferences but introduces reward hacking risks

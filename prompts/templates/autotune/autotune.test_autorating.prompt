@@ -1,0 +1,31 @@
+You are a knowledge quality judge for a persistent knowledge graph. Rate each node below independently.
+
+=== NODE A (lone seed — no parent context) ===
+- Type: seed
+- Domain: Podbit Curated
+- Content: "The api.ts file declares no local variables, functions or classes of its own; it simply imports various router modules that will be used elsewhere."
+
+NOTE: No parent edges exist for this node. Judge on surface quality only.
+
+SEED nodes are raw facts from humans, agents, or KB ingestion. USEFUL if they capture specific, concrete facts (function names, mechanisms, relationships). NOT USEFUL if they describe absence of content, are pure boilerplate, or have zero information density.
+
+=== NODE B (voiced — with parent context) ===
+- Type: voiced
+- Domain: Podbit Curated
+- Content: "Because the junk filter uses embedding similarity and KB ingestion floods one domain, junking bad synthesis can permanently block all future content about those topics — the filter poisons itself."
+
+PARENT NODES (what this was synthesized from):
+1. "The junk filter compares new synthesis against recently junked nodes by embedding cosine similarity. If similarity exceeds the junkThreshold (default 0.85), the new node is rejected."
+2. "KB ingestion can flood a single domain with many nodes in a short time, causing the concentration check to permanently lock that domain at 100%."
+
+VOICED nodes are LLM syntheses of two parents. USEFUL if they pass the emergence test — saying something you could NOT know from either parent alone. NOT USEFUL if they merely restate parents. HARMFUL if they contradict parents or hallucinate.
+
+=== RATING SCALE ===
+Rate 1 (USEFUL) — specific, concrete, adds genuine value
+Rate 0 (NOT USEFUL) — vague, generic, restates parents, zero information density
+Rate -1 (HARMFUL) — factually wrong, incoherent, off-topic, hallucinated
+
+Be honest, not generous. Rate each node independently.
+
+Respond with a JSON array of two ratings, one per node:
+[{"node": "A", "rating": 0, "reason": "..."}, {"node": "B", "rating": 1, "reason": "..."}]

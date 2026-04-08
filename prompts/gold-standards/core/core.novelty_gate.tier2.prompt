@@ -1,0 +1,5 @@
+{
+  "novel": true,
+  "confidence": 0.55,
+  "reasoning": "Framing partition bridges as regularizers is a valid new perspective, though information bottleneck principles are established. The specific application to knowledge graph synthesis quality is novel enough to warrant further investigation."
+}

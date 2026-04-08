@@ -1,0 +1,76 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.6/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"ignoreUnknown": true,
+		"includes": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+	},
+	"formatter": {
+		"enabled": false
+	},
+	"assist": {
+		"enabled": false
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"correctness": {
+				"noUnusedImports": "warn",
+				"noUnusedVariables": "warn",
+				"useExhaustiveDependencies": "off",
+				"noUndeclaredDependencies": "off"
+			},
+			"suspicious": {
+				"noExplicitAny": "off",
+				"noAssignInExpressions": "off",
+				"noConfusingVoidType": "off",
+				"noConsole": "off",
+				"noAsyncPromiseExecutor": "warn",
+				"noDoubleEquals": "warn",
+				"noImplicitAnyLet": "off",
+				"noRedeclare": "off",
+				"noGlobalIsNan": "error",
+				"noFallthroughSwitchClause": "error",
+				"noShadowRestrictedNames": "error",
+				"noArrayIndexKey": "off",
+				"useIterableCallbackReturn": "off"
+			},
+			"complexity": {
+				"noForEach": "off",
+				"noUselessSwitchCase": "off",
+				"noBannedTypes": "off",
+				"noStaticOnlyClass": "off",
+				"useFlatMap": "off",
+				"useLiteralKeys": "off"
+			},
+			"style": {
+				"noNonNullAssertion": "off",
+				"useConst": "warn",
+				"noParameterAssign": "off",
+				"useDefaultParameterLast": "off",
+				"useImportType": "off",
+				"useNodejsImportProtocol": "off",
+				"useTemplate": "off",
+				"noNamespace": "off",
+				"noInferrableTypes": "off",
+				"useNumberNamespace": "off"
+			},
+			"performance": {
+				"noAccumulatingSpread": "off",
+				"noDelete": "off",
+				"useTopLevelRegex": "off"
+			},
+			"security": {
+				"noDangerouslySetInnerHtml": "off"
+			},
+			"a11y": {
+				"recommended": false
+			}
+		}
+	}
+}

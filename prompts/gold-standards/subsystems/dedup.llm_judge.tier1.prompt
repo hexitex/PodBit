@@ -1,0 +1,2 @@
+NOVEL
+Node B introduces the Pre-Vote extension (Raft §9.6) as a solution to disruptive server term inflation — a specific vulnerability and its mitigation mechanism that Node A does not mention. While both describe randomized timeout leader election, B adds a concrete protocol improvement with a specific section reference.

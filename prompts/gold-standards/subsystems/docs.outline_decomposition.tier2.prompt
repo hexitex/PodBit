@@ -1,0 +1,32 @@
+{
+  "sections": [
+    {
+      "id": "mechanisms",
+      "title": "Discovery Mechanisms",
+      "purpose": "Describe how the engine finds and pairs nodes for cross-domain synthesis",
+      "length": { "min": 500, "max": 800 },
+      "must_include": ["similarity window", "bridges", "patterns"]
+    },
+    {
+      "id": "quality",
+      "title": "Quality Controls",
+      "purpose": "Explain the quality gate pipeline",
+      "length": { "min": 400, "max": 600 },
+      "must_include": ["gates", "novelty", "word count"]
+    },
+    {
+      "id": "evolution",
+      "title": "Graph Evolution",
+      "purpose": "How salience decay and breakthroughs shape the graph over time",
+      "length": { "min": 300, "max": 500 },
+      "must_include": ["decay", "breakthroughs"]
+    },
+    {
+      "id": "gaps",
+      "title": "Open Questions",
+      "purpose": "What the sources don't cover",
+      "length": { "min": 300, "max": 500 },
+      "must_include": ["gaps", "tensions"]
+    }
+  ]
+}

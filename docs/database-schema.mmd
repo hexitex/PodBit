@@ -1,0 +1,333 @@
+erDiagram
+    %% ========== CORE GRAPH ==========
+    nodes {
+        text id PK
+        text content
+        text node_type
+        text trajectory
+        text domain
+        real weight
+        real salience
+        text origin
+        text contributor
+        int archived
+        int junk
+        text lifecycle_state
+        text created_at
+        text updated_at
+    }
+
+    edges {
+        text id PK
+        text source_id FK
+        text target_id FK
+        text edge_type
+        real strength
+    }
+
+    nodes ||--o{ edges : "source"
+    nodes ||--o{ edges : "target"
+
+    %% ========== VOICING & SYNTHESIS ==========
+    voicings {
+        text id PK
+        text proto_node_id FK
+        text voiced_node_id FK
+        text architecture
+        text mode
+        text created_at
+    }
+
+    dream_cycles {
+        text id PK
+        text node_a_id FK
+        text node_b_id FK
+        text child_node_id FK
+        real resonance_score
+        text domain
+        text started_at
+    }
+
+    bias_observations {
+        text id PK
+        text proto_node_id FK
+        text arch_a
+        text arch_b
+        real divergence_score
+    }
+
+    voicings }o--|| nodes : "proto"
+    voicings }o--o| nodes : "voiced"
+    dream_cycles }o--o| nodes : "node_a"
+    dream_cycles }o--o| nodes : "node_b"
+    dream_cycles }o--o| nodes : "child"
+    bias_observations }o--|| nodes : "proto"
+
+    %% ========== DOMAINS & PARTITIONS ==========
+    domain_partitions {
+        text id PK
+        text name
+        int system
+    }
+
+    partition_domains {
+        text partition_id PK,FK
+        text domain PK
+    }
+
+    partition_bridges {
+        text partition_a PK,FK
+        text partition_b PK,FK
+    }
+
+    domain_partitions ||--o{ partition_domains : "has"
+    domain_partitions ||--o{ partition_bridges : "a"
+    domain_partitions ||--o{ partition_bridges : "b"
+
+    node_keywords {
+        text node_id PK,FK
+        text keyword PK
+    }
+    nodes ||--o{ node_keywords : "keywords"
+
+    %% ========== ABSTRACT PATTERNS ==========
+    abstract_patterns {
+        text id PK
+        text name
+        text description
+    }
+
+    node_abstract_patterns {
+        text node_id PK,FK
+        text pattern_id PK,FK
+        real strength
+    }
+
+    abstract_patterns ||--o{ node_abstract_patterns : ""
+    nodes ||--o{ node_abstract_patterns : ""
+
+    %% ========== PARAMETERS & CODE PATTERNS ==========
+    parameters {
+        text id PK
+        text domain
+        real resonance_threshold
+        int active
+    }
+
+    patterns {
+        text id PK
+        text name
+        text skeleton
+        text category
+    }
+
+    slot_fills {
+        text id PK
+        text pattern_id FK
+        text slot_name
+        text fill_code
+    }
+
+    patterns ||--o{ slot_fills : ""
+
+    templates {
+        text id PK
+        text task_type
+        text name
+        text outline_schema
+    }
+
+    %% ========== LLM & MODELS ==========
+    model_registry {
+        text id PK
+        text name
+        text provider
+        text model_id
+        int enabled
+        real input_cost_per_mtok
+        real output_cost_per_mtok
+    }
+
+    subsystem_assignments {
+        text subsystem PK
+        text model_id FK
+        text consultant_model_id FK
+    }
+
+    model_registry ||--o{ subsystem_assignments : "model"
+    model_registry ||--o{ subsystem_assignments : "consultant"
+
+    llm_usage_log {
+        int id PK
+        text subsystem
+        text model_id
+        int input_tokens
+        int output_tokens
+        real total_cost
+        text created_at
+    }
+
+    %% ========== CACHE & CONFIG ==========
+    knowledge_cache {
+        text cache_type PK
+        text topic PK
+        text domains
+        text result
+        int stale
+    }
+
+    prompts {
+        text id PK
+        text category PK
+        text locale PK
+        text content
+    }
+
+    prompt_gold_standards {
+        text id PK
+        text prompt_id FK
+        int tier
+        text content
+    }
+
+    prompts ||--o{ prompt_gold_standards : ""
+
+    scaffold_jobs {
+        text id PK
+        text request
+        text task_type
+        text outline
+        text sections
+        text status
+    }
+
+    settings {
+        text key PK
+        text value
+    }
+
+    config_history {
+        int id PK
+        text config_path
+        text old_value
+        text new_value
+        text changed_by
+    }
+
+    config_snapshots {
+        text id PK
+        text label
+        text parameters
+    }
+
+    %% ========== DECISIONS ==========
+    decisions {
+        int id PK
+        text entity_type
+        text entity_id
+        text field
+        text new_value
+        text decided_by_tier
+    }
+
+    %% ========== FEEDBACK & VERIFICATION ==========
+    node_feedback {
+        text id PK
+        text node_id FK
+        int rating
+        text source
+    }
+
+    nodes ||--o{ node_feedback : ""
+
+    dedup_gate_overrides {
+        text source PK
+        real embedding_threshold
+        real word_overlap_threshold
+    }
+
+    evm_executions {
+        text id PK
+        text node_id
+        text status
+        int verified
+        real score
+    }
+
+    breakthrough_registry {
+        text id PK
+        text node_id
+        text content
+        text domain
+        text project_name
+        real validation_composite
+    }
+
+    %% ========== CHAT & SESSION ==========
+    chat_conversations {
+        text id PK
+        text title
+        text session_id
+        text messages
+        text scope_partition
+    }
+
+    session_insights {
+        text id PK
+        text session_id
+        text topic
+        real weight
+        text domain
+    }
+
+    session_node_usage {
+        text id PK
+        text session_id
+        text node_id FK
+        int times_delivered
+        int times_used
+    }
+
+    nodes ||--o{ session_node_usage : ""
+
+    %% ========== KNOWLEDGE BASE ==========
+    kb_folders {
+        text id PK
+        text folder_path
+        text domain
+        int recursive
+        int raw_mode
+    }
+
+    kb_files {
+        text id PK
+        text folder_id FK
+        text file_path
+        text content_hash
+        text status
+        text node_id
+        text domain
+    }
+
+    kb_chunks {
+        text id PK
+        text file_id FK
+        int chunk_index
+        text chunk_type
+        text content
+        text node_id
+    }
+
+    kb_folders ||--o{ kb_files : ""
+    kb_files ||--o{ kb_chunks : ""
+    nodes ||--o{ kb_files : "ingested"
+    nodes ||--o{ kb_chunks : "chunk"
+
+    %% ========== QUEUE ==========
+    pending_requests {
+        text id PK
+        text type
+        text params
+        text status
+        text result
+    }

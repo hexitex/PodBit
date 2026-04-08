@@ -1,0 +1,15 @@
+Given these knowledge nodes about "{{topic}}", create a compressed meta-prompt optimized for this task: "{{task}}".
+
+{{provenanceGuide}}
+
+Nodes:
+{{nodeList}}
+
+Create a self-contained system prompt with:
+1. Role definition (oriented toward the task)
+2. Key principles as bullet points — distinguish established facts from inferred connections
+3. Important relationships and tensions
+4. Common misconceptions
+5. Precise vocabulary
+
+Provenance must survive compression: clearly distinguish sourced facts from synthesized inferences. 300-600 words, dense but readable. Emphasize knowledge most useful for the stated task.

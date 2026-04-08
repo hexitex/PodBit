@@ -1,0 +1,13 @@
+=== NODE A (lone seed — no parent context) ===
+- Type: seed
+- Domain: Podbit Curated
+- Content: "The api.ts file declares no local variables, functions or classes of its own; it simply imports various router modules that will be used elsewhere."
+
+=== NODE B (voiced — with parent context) ===
+- Type: voiced
+- Domain: Podbit Curated
+- Content: "Because the junk filter uses embedding similarity and KB ingestion floods one domain, junking bad synthesis can permanently block all future content about those topics — the filter poisons itself."
+
+PARENT NODES:
+1. "The junk filter compares new synthesis against recently junked nodes by embedding cosine similarity. If similarity exceeds the junkThreshold (default 0.85), the new node is rejected."
+2. "KB ingestion can flood a single domain with many nodes in a short time, causing the concentration check to permanently lock that domain at 100%."

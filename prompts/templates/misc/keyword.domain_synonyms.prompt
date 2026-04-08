@@ -1,0 +1,14 @@
+Generate semantic synonyms and related terms for the knowledge domain "{{domain}}".
+
+These synonyms help match user queries to the correct domain in a knowledge graph. Include:
+- Direct synonyms and alternate names
+- Parent/broader field names
+- Key sub-topics and specializations
+- Common abbreviations
+- Related terms a researcher might search for
+
+Existing rule-based synonyms (do not repeat these): {{existingSynonyms}}
+
+Return 8-15 terms. Each term should be lowercase, 1-3 words max.
+
+Respond with ONLY this JSON: {"synonyms": ["term1", "term2", ...]}

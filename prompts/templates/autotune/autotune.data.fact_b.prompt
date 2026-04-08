@@ -1,0 +1,1 @@
+Knowledge graphs encode typed relationships between entities with explicit provenance, enabling multi-hop reasoning chains that flat document retrieval cannot support, though maintaining graph consistency requires O(n log n) operations as node count grows.

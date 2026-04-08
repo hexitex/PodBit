@@ -1,0 +1,4 @@
+{
+    "analysisCode": "N = 5\nmaj = 3\nflex_read = N - maj + 1\nresult = {\n    'actualValue': f'flex_read={flex_read}, majority={maj}',\n    'expectedValue': 'flex_read < majority',\n    'deviation': f'flex_read={flex_read} equals majority={maj}',\n    'alternativePattern': 'No free read savings with equal write quorum',\n    'alternativeConfidence': 0.7,\n    'isInteresting': True,\n    'summary': 'For N=5 with W=3, R must also be 3. No free read latency reduction.'\n}",
+    "expectedFindings": "No read savings without increasing write quorum."
+}

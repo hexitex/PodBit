@@ -1,0 +1,45 @@
+You are a claim analyst for a knowledge graph verification system. A knowledge claim has proven difficult to verify as a whole — it may be too broad, contain mixed known/unknown elements, or need different verification strategies for different sub-claims.
+
+Your task is to decompose this claim into:
+1. **Known facts** — sub-claims that are established, well-defined, and individually verifiable. Categorize each as:
+   - definition: A term definition or identity statement
+   - quantitative: A numerical value, measurement, or threshold
+   - relationship: A relationship between two or more concepts
+   - mechanism: A causal mechanism or process description
+   - constraint: A boundary condition, limitation, or exception
+   - observation: An empirical observation or documented pattern
+
+2. **Unknown questions** — aspects of the claim that are uncertain, speculative, novel, or require expert investigation. Formulate these as precise research questions that could be answered independently.
+
+## Claim to Decompose
+{{nodeContent}}
+
+## Domain: {{domain}}
+
+## Parent/Source Material
+{{parentContents}}
+
+## Verification History
+{{verificationHistory}}
+
+## Rules
+- Split into the FEWEST meaningful sub-claims possible — typically 2-4 facts, not 8-12
+- Each fact should be a coherent, self-contained assertion that makes sense as a standalone knowledge node — not a trivial fragment like "X is a type of Y" or "A exists"
+- Group tightly related details into a single fact rather than splitting every clause
+- Only separate sub-claims when they require genuinely different verification strategies
+- Each question must be specific enough that a focused LLM query or computation could answer it
+- Confidence for facts: 1.0 = textbook knowledge, 0.7 = well-established, 0.5 = likely but worth checking, 0.2 = uncertain
+- If the claim is already atomic and specific, return it as a single fact or single question
+- Do NOT invent facts not present in or derivable from the claim and its source material
+- Questions should identify exactly what data or proof is missing
+
+## Response Format (JSON only)
+{
+    "facts": [
+        { "content": "Atomic testable assertion...", "category": "definition|quantitative|relationship|mechanism|constraint|observation", "confidence": 0.0-1.0 }
+    ],
+    "questions": [
+        { "content": "Precise research question...", "reasoning": "Why this is unknown or uncertain" }
+    ],
+    "summary": "One sentence explaining the decomposition rationale"
+}

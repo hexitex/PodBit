@@ -1,0 +1,25 @@
+{
+  "sections": [
+    {
+      "id": "mechanisms",
+      "title": "Discovery Mechanisms",
+      "purpose": "How cross-domain synthesis works",
+      "length": { "min": 500, "max": 800 },
+      "must_include": ["similarity", "bridges", "patterns"]
+    },
+    {
+      "id": "quality_and_evolution",
+      "title": "Quality and Evolution",
+      "purpose": "Quality gates and temporal dynamics",
+      "length": { "min": 400, "max": 700 },
+      "must_include": ["gates", "decay", "breakthroughs"]
+    },
+    {
+      "id": "gaps",
+      "title": "Gaps and Open Questions",
+      "purpose": "Missing knowledge",
+      "length": { "min": 300, "max": 500 },
+      "must_include": ["gaps"]
+    }
+  ]
+}

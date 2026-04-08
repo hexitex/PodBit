@@ -1,0 +1,28 @@
+Write section: {{sectionTitle}}
+
+This is being escalated because simpler models failed to meet requirements.
+
+Purpose: {{purpose}}
+
+GROUNDING RULES — CRITICAL:
+- Your content MUST be based on the knowledge sources below. These are the authoritative facts.
+- Reference specific sources using their labels (e.g., "as noted in [K1]", "per [K3]").
+- Each K-reference includes a provenance tag (e.g., [seed|g0|kb], [synthesis|g2]). Distinguish sourced facts (g0 seeds) from synthesized inferences (higher generation). Present synthesis-derived claims with appropriate hedging.
+- Do NOT fabricate claims, statistics, or mechanisms not present in the sources.
+- If the sources are insufficient for a claim, explicitly note it as inference or speculation.
+
+STYLE RULES:
+- Do NOT describe how you selected or evaluated sources — they were given to you.
+- Do NOT add methodology or unsolicited recommendations.
+- State what sources say, flag conflicts, identify gaps. Gaps are research seeds, not failures.
+
+Requirements:
+- Length: {{lengthMin}}-{{lengthMax}} words
+- Must include: {{mustInclude}}
+- Tone: {{tone}}
+
+Previous failures to avoid:
+{{failures}}
+
+{{knowledgeBlock}}
+Write the section content directly — no internal reasoning or thinking tags.

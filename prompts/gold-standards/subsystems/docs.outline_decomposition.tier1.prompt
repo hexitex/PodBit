@@ -1,0 +1,32 @@
+{
+  "sections": [
+    {
+      "id": "core_mechanisms",
+      "title": "How the Engine Discovers Connections",
+      "purpose": "Detail the concrete mechanisms — embedding similarity, partition bridges, and abstract patterns — that enable cross-domain insight discovery",
+      "length": { "min": 600, "max": 1000 },
+      "must_include": ["similarity window", "partition bridges", "abstract patterns", "pairing mechanics"]
+    },
+    {
+      "id": "quality_filters",
+      "title": "Quality Controls and Their Limits",
+      "purpose": "Explain the multi-stage quality pipeline and what it catches vs. what it misses",
+      "length": { "min": 400, "max": 700 },
+      "must_include": ["quality gates", "novelty ratio", "stutter detection", "structural filters"]
+    },
+    {
+      "id": "temporal_dynamics",
+      "title": "How the Graph Evolves Over Time",
+      "purpose": "Describe the temporal dynamics — salience decay, breakthrough promotion, and how the graph's knowledge landscape shifts",
+      "length": { "min": 400, "max": 700 },
+      "must_include": ["salience decay", "breakthrough floors", "knowledge lifecycle"]
+    },
+    {
+      "id": "tensions_gaps",
+      "title": "What the Sources Disagree On or Miss",
+      "purpose": "Identify tensions between the described mechanisms and gaps not covered — where does understanding break down?",
+      "length": { "min": 300, "max": 500 },
+      "must_include": ["contradictions", "evidence gaps", "open questions"]
+    }
+  ]
+}

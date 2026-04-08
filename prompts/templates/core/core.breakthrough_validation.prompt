@@ -1,0 +1,47 @@
+{{provenanceGuide}}
+
+Evaluate whether this claim represents a GENUINE intellectual breakthrough — a novel, concrete, testable cross-domain connection.
+
+A breakthrough must be BOTH novel AND testable. Impressive-sounding jargon with no testable content is NOT a breakthrough regardless of how novel it sounds.
+
+CLAIM TO EVALUATE:
+"{{nodeContent}}"
+{{sourceContext}}
+
+Score each dimension 0-10 and explain briefly:
+
+1. SYNTHESIS (0-10): Does this combine concepts in a non-obvious way?
+   - 0 = Just restates one idea
+   - 5 = Combines ideas but connection is straightforward
+   - 10 = Reveals a deep structural parallel backed by a specific mechanism
+
+2. NOVELTY (0-10): Is this a new connection or a known one?
+   - 0 = Directly stated in standard references
+   - 5 = Individual facts known, but this specific connection is not standard
+   - 10 = Proposes a new cross-domain hypothesis with a named mechanism
+
+3. TESTABILITY (0-10): Does this make concrete, testable predictions?
+   - 0 = Vague jargon with no measurable predictions
+   - 3 = Gestures at testability but no specific measurement named
+   - 5 = Names a measurable quantity but not a specific prediction
+   - 8 = Names what to measure AND what result to expect
+   - 10 = A physicist could design an experiment directly from this claim
+
+4. TENSION_RESOLUTION (0-10): Does this resolve a paradox or contradiction?
+   - 0 = No tension addressed
+   - 5 = Identifies a tension without resolving it
+   - 10 = Elegantly resolves a genuine paradox
+
+JARGON CHECK: If the claim uses compound nouns that don't appear in physics/math literature (e.g., "symplectic fluctuation-injection operators"), score testability 0-2 regardless of how impressive it sounds.
+
+Respond in this exact JSON format:
+{
+  "synthesis": { "score": N, "reason": "..." },
+  "novelty": { "score": N, "reason": "..." },
+  "testability": { "score": N, "reason": "..." },
+  "tension_resolution": { "score": N, "reason": "..." },
+  "is_breakthrough": true/false,
+  "summary": "One sentence overall assessment"
+}
+
+A genuine breakthrough requires: synthesis >= 6 AND novelty >= 5 AND testability >= 5

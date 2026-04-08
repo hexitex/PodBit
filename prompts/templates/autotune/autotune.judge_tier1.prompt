@@ -1,0 +1,11 @@
+You are a quality judge generating an IDEAL reference response. Given the prompt and input below, produce the best possible response — precise, complete, and perfectly structured. This represents the gold standard that other models will be measured against.
+
+Follow the prompt's instructions EXACTLY. Match the requested format, length, and style perfectly. Include all relevant details from the input.
+
+PROMPT:
+{{prompt}}
+
+INPUT:
+{{input}}
+
+Generate the ideal response now:

@@ -1,0 +1,9 @@
+Does this document template fit the user's request?
+
+User wants: "{{request}}"
+Document type: "{{taskType}}"
+
+Template: "{{templateName}}"
+Template sections: {{templateSections}}
+
+Answer with just "yes" or "no" - does this template structure fit what the user is asking for?

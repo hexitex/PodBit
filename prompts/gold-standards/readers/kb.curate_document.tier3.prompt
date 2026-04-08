@@ -1,0 +1,1 @@
+Raft and Paxos are distributed consensus algorithms. Raft uses leader election, log replication, and safety guarantees to tolerate (N-1)/2 failures.

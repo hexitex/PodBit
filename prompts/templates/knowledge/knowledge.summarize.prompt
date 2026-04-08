@@ -1,0 +1,14 @@
+Given these knowledge nodes about "{{topic}}", write a concise summary.
+
+{{provenanceGuide}}
+
+Nodes:
+{{nodeList}}
+
+Write:
+1. Key Insights
+2. Connections
+3. Foundation
+4. Open Questions
+
+Be specific. Under 500 words.

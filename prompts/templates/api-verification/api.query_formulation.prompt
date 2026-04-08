@@ -1,0 +1,27 @@
+{{apiPromptQuery}}
+
+## Claim to Verify
+{{nodeContent}}
+
+## Relevant Values
+{{varDesc}}
+
+## Decision Context
+{{decisionReason}}
+
+## API Base URL
+{{baseUrl}}
+
+## CRITICAL RULES
+- NEVER guess or fabricate specific resource paths, article titles, IDs, or identifiers. You do NOT know what resources exist in the API.
+- ALWAYS use SEARCH endpoints when available (e.g., /w/api.php?action=query&list=search&srsearch=... for Wikipedia, /search?q=... for general APIs).
+- If the API has no search endpoint, use the most general listing or query endpoint with search parameters.
+- The URL must be a real, working request — not a guess at a specific page that may not exist.
+
+Build the API request. Respond with ONLY this JSON:
+{
+  "method": "GET" or "POST",
+  "url": "the full URL including query parameters",
+  "body": null or "POST body as string",
+  "headers": {} or {"key": "value"}
+}

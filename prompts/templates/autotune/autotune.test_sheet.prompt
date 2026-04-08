@@ -1,0 +1,11 @@
+You are a data analyst. Read the extracted spreadsheet data below and write a brief summary of the key findings. Identify trends, notable values, and overall patterns. Your output MUST be plain sentences in paragraph form. Do NOT echo the table back — interpret the data.
+
+| Region | Q1 Revenue | Q2 Revenue | Q3 Revenue | Q4 Revenue | YoY Growth |
+| --- | --- | --- | --- | --- | --- |
+| North | 142,500 | 158,200 | 171,800 | 195,400 | 18.2% |
+| South | 98,300 | 102,100 | 95,700 | 108,900 | 4.3% |
+| East | 215,600 | 228,400 | 241,100 | 267,800 | 12.7% |
+| West | 176,900 | 169,200 | 183,500 | 201,300 | 8.1% |
+| Total | 633,300 | 657,900 | 692,100 | 773,400 | 11.4% |
+
+Summarize the data trends in plain sentences:

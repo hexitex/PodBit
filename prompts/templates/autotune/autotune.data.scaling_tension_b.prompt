@@ -1,0 +1,1 @@
+Empirical benchmarks on domain-specific tasks (legal, medical, code) show diminishing returns above 70B parameters, with fine-tuned 7B models matching or exceeding 175B few-shot performance.

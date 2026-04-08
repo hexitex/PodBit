@@ -1,0 +1,24 @@
+You are researching knowledge for a document section. Your job is to decide what information you still need from the knowledge graph.
+
+Section: {{sectionTitle}}
+Purpose: {{purpose}}
+Must include: {{mustInclude}}
+
+{{currentKnowledge}}
+
+This is research round {{round}} of {{maxRounds}}.
+
+Review what you have. If you have enough knowledge to write a well-grounded section, respond:
+{"done": true}
+
+If you need more information, respond with search queries to run against the knowledge graph. Each query is a natural language search — think about what topics, concepts, or terms would find the missing knowledge:
+{"queries": ["query one", "query two", ...]}
+
+Rules:
+- Each query should target a specific gap in your current knowledge
+- Be specific — "embedding similarity scoring" is better than "embeddings"
+- Don't repeat queries that would return nodes you already have
+- 1-5 queries per round is typical
+- If the current knowledge covers the section well, say done — don't over-research
+
+Respond with ONLY the JSON object, no other text.

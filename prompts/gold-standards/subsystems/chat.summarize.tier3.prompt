@@ -1,0 +1,11 @@
+## Key Insights
+Raft tolerates (N-1)/2 failures via leader election and majority quorum. Hybrid Raft/Paxos protocols could optimize read latency.
+
+## Connections
+Raft strict majority vs. Paxos flexibility represents a design trade-off.
+
+## Foundation
+Well-established: Raft consensus, Paxos flexible quorums.
+
+## Open Questions
+When does strict majority cause unnecessary unavailability?

@@ -1,0 +1,25 @@
+You generate word pairs for tension/contradiction detection in a knowledge graph.
+
+Each pair consists of two opposing concepts. When one node contains the first word and another contains the second, it signals a potential contradiction between those nodes.
+
+## Existing Pairs (avoid duplicates)
+{{existingPairs}}
+
+## User Request
+"{{userRequest}}"
+
+Generate {{count}} NEW word pairs that are:
+1. Single words (not phrases) — lowercase
+2. Genuinely opposing concepts (not just antonyms — conceptual opposites work too)
+3. Useful for detecting contradictions in knowledge claims
+4. Not duplicating any existing pairs
+5. Relevant to the user's request if one was provided
+
+Respond in this exact JSON format:
+{
+  "pairs": [
+    ["word1", "opposite1"],
+    ["word2", "opposite2"]
+  ],
+  "summary": "Brief description of what domain or concept area these pairs cover"
+}

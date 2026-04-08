@@ -1,0 +1,73 @@
+# Dependencies
+node_modules/
+
+# Environment
+# .env is tracked — it contains only ports, endpoints, and lab autostart flags
+# (no secrets). Per-user variants (.env.local, .env.production) are still ignored.
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+data/logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build outputs
+dist/
+build/
+gui/dist/
+
+# Test coverage
+coverage/
+
+# Data — runtime data, databases, artifacts, evidence, temp files
+data/
+backups/
+client-config.txt
+
+# Agent instruction file — local only, not shipped.
+# CLAUDE.md is private operating instructions for the Claude Code agent
+# working on this repo, not user-facing documentation.
+CLAUDE.md
+
+# Stale / internal docs — kept locally, not shipped in the repo.
+# These predate the lab framework + journaling refactor and now contradict
+# the README. Either rewrite or remove. Until then, ignore so they don't
+# mislead anyone reading the repo.
+possibleerrors.md
+gui/src/pages/help/HELP_AUDIT.md
+PODBIT-SYSTEM-GUIDE.md
+SPECIFICATION.md
+TUNING.md
+
+# Misc
+*.tmp
+*.temp
+tmp_*
+nul
+.cursorrules
+.cursor/mcp.json
+.mcp.json
+.mcp.json.local
+.mcp.json.remote
+.mcp.json.local.remote
+.mcp.json.remote.local
+.mcp.json.local.remote.local
+.mcp.json.remote.local.remote
+.mcp.json.local.remote.local.remote
+.mcp.json.remote.local.remote.local
+.mcp.json.local.remote.local.remote.local
+.backup/
+**temp/
+**data
+.cursor

@@ -1,0 +1,11 @@
+{
+  "_comment": "FALLBACK port values — used by both TypeScript (config/ports.ts) and the Vite build (gui/vite.config.js). The RUNTIME source of truth is the .env file; these JSON defaults only fire when an env var is unset. To change ports for an installation, set API_PORT / ORCHESTRATOR_PORT / GUI_PORT / PARTITION_SERVER_PORT / PROXY_PORT / MATH_LAB_PORT / NN_LAB_PORT / CRITIQUE_LAB_PORT in .env. Edit this JSON only if the entire fallback block must move.",
+  "api": 4710,
+  "orchestrator": 4711,
+  "gui": 4712,
+  "partitionServer": 4713,
+  "mathLab": 4714,
+  "nnLab": 4715,
+  "critiqueLab": 4716,
+  "proxy": 11435
+}

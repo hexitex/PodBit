@@ -1,0 +1,15 @@
+## Key Insights
+
+Raft provides linearizable consistency by decomposing consensus into three subproblems: leader election (via randomized timeouts), log replication (leader-driven append), and safety guarantees. A cluster of N servers tolerates (N-1)/2 failures — the fundamental quorum requirement. The most significant synthesis in this graph is the hybrid protocol idea: using Paxos-style flexible quorums (R+W>N) for reads while maintaining Raft's strict majority for writes, potentially achieving lower read latency without sacrificing write safety.
+
+## Connections
+
+The voiced synthesis connecting Raft and Paxos quorum models reveals a design space between the two: Raft's strict majority is simpler but potentially over-constrains reads, while Paxos flexibility enables latency optimization at the cost of protocol complexity. The BFT comparison (3f+1 vs 2f+1) provides a third reference point — the cost of tolerating Byzantine vs. crash failures.
+
+## Foundation
+
+The core facts are well-established: Raft's (N-1)/2 fault tolerance, leader election via randomized timeouts, committed entries requiring majority persistence. Paxos flexible quorums (R+W>N) are also well-documented. These form a solid foundation for exploring hybrid designs.
+
+## Open Questions
+
+The open question is precisely targeted: under what partition patterns does Raft's strict majority cause unnecessary unavailability compared to flexible quorums? This points toward the key gap — understanding the real-world scenarios where hybrid protocols would provide measurable benefit.

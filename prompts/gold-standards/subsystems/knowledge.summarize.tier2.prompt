@@ -1,0 +1,11 @@
+## Key Insights
+The engine pairs nodes by cosine similarity (0.5-0.92 window) and generates single-sentence insights via LLM voicing. Quality gates check JSON validity, sentence structure, novelty (4+ new words), and stutter patterns. The similarity window is the main quality control — too low produces noise, too high produces restatements.
+
+## Connections
+Salience decay (2%/10 cycles) and breakthrough exemption create natural selection: routine knowledge fades while validated insights persist. Partition boundaries enforce domain isolation unless explicitly bridged.
+
+## Foundation
+Three architectural pillars: embedding similarity for pairing, LLM voicing for generation, and partition topology for isolation. These interact to produce emergent knowledge.
+
+## Open Questions
+Optimal decay rate, bridge density scaling, and whether the word count constraint limits insight complexity.

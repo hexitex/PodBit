@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Podbit — autonomous knowledge infrastructure. AI has nothing to say unless you ask the question. Podbit discovers the questions that creates NEW knowledge. 29 AI agents, 9 quality gates, executable verification. Runs on your hardware.">
+  <meta name="author" content="Rob McGlade">
+  <meta name="keywords" content="knowledge graph, autonomous AI, knowledge infrastructure, AI agents, research tool, synthesis engine, MCP server, local AI, knowledge management, executable verification">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#09090b">
+  <title>Podbit — Autonomous Knowledge Infrastructure</title>
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://podbit.com/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Podbit">
+  <meta property="og:title" content="Podbit — Autonomous Knowledge Infrastructure">
+  <meta property="og:description" content="AI has nothing to say unless you ask the question. Podbit discovers the questions that creates NEW knowledge. 29 AI agents, 9 quality gates, executable verification. Runs on your hardware.">
+  <meta property="og:url" content="https://podbit.com/">
+  <meta property="og:image" content="https://podbit.com/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Podbit — Autonomous Knowledge Infrastructure">
+  <meta name="twitter:description" content="AI has nothing to say unless you ask the question. Podbit discovers the questions that creates NEW knowledge. 29 AI agents, 9 quality gates, executable verification.">
+  <meta name="twitter:image" content="https://podbit.com/og-image.png">
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Podbit",
+    "description": "Autonomous knowledge infrastructure — 29 AI agents discover questions nobody is asking, synthesize insights across domains, and verify claims with executable code. Runs entirely on your hardware.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Windows, macOS, Linux",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "Rob McGlade"
+    },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+    "url": "https://podbit.com",
+    "featureList": [
+      "29 autonomous AI agents",
+      "9 quality gates",
+      "Execution Validation Module (EVM)",
+      "Cross-domain synthesis",
+      "MCP server integration",
+      "Knowledge graph with Merkle DAG integrity",
+      "Runs locally on your hardware"
+    ]
+  }
+  </script>
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Background animation — fixed behind all content -->
+  <canvas id="hero-canvas" aria-hidden="true"></canvas>
+
+  <!-- NAV -->
+  <nav id="main-nav">
+    <div class="nav-inner">
+      <a href="#hero" class="nav-brand">
+        <img src="podbit-logo.svg" alt="" width="28" height="24">
+        <span>Podbit</span>
+      </a>
+      <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#ide">Control</a></li>
+        <li><a href="#collaboration">Collaboration</a></li>
+        <li><a href="docs.html">Docs</a></li>
+        <li><a href="https://github.com/placeholder/podbit" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- HERO                                            -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="hero">
+    <div class="contain hero-contain">
+      <!-- Animated logo -->
+      <div class="hero-logo anim-in">
+        <svg class="hero-logo-svg" viewBox="0 0 103.95788 80.879677" role="img" aria-label="Podbit logo">
+          <g transform="translate(-46.221029,-49.743278)">
+            <g transform="rotate(180,97.962988,89.992004)">
+              <path class="ll ll-P" pathLength="1" d="m 130.36597,100.99073 c 0,15.18783 -12.31217,27.5 -27.5,27.5 -15.187832,0 -27.500003,-12.31217 -27.500003,-27.5 0,-14.256621 10.848665,-25.979399 24.740973,-27.363321 2.19506,-0.211341 4.45608,-0.156033 6.48652,0.113808 13.42476,1.81917 23.77251,13.325919 23.77251,27.249513 z"/>
+              <ellipse class="ll ll-o" pathLength="1" ry="11.752137" rx="11.752136" cy="63.151791" cx="59.601208"/>
+              <circle class="ll ll-b" pathLength="1" r="8.7039089" cy="75.855934" cx="139.25104"/>
+              <path class="ll ll-P2" pathLength="1" d="M 75.109142,101.26696 C 47.312766,93.965584 45.285158,67.504701 48.75237,58.592966"/>
+              <path class="ll ll-d" pathLength="1" d="M 147.9492,75.751434 C 146.48782,57.425958 117.07461,51.15624 105.60294,51.111038 m -8.876731,0.449723 c -9.326392,-0.110072 -20.4383,3.698507 -27.040429,17.608925"/>
+            </g>
+            <path class="ll ll-i" pathLength="1" d="m 92.870317,97.607346 -10e-7,32.982944"/>
+            <circle class="ll ll-i2" pathLength="1" transform="scale(-1)" cy="-122.18525" cx="-99.270844" r="6.2444887"/>
+            <path class="ll ll-t" pathLength="1" d="m 92.87032,84.801014 -3e-6,10.000002"/>
+          </g>
+        </svg>
+      </div>
+      <p class="hero-eyebrow anim-in">Autonomous Knowledge Infrastructure</p>
+      <h1 class="hero-headline anim-in">
+        AI has nothing to say<br>unless you ask the question.
+      </h1>
+      <p class="hero-sub anim-in">Podbit discovers the questions that creates NEW knowledge.</p>
+      <p class="hero-desc anim-in">
+        A genetic algorithm that breeds knowledge into verified insight. It combines your research,
+        the LLM's training knowledge, and live web research - then evolves them through multiple
+        generations. Twenty-nine AI agents run continuously. Runs on your hardware. No cloud dependencies.
+      </p>
+    </div>
+  </section>
+
+  <!-- Hero product shot -->
+  <div class="contain">
+    <figure class="product-shot product-shot-hero anim-in">
+      <div class="product-shot-inner">
+        <span class="product-shot-label">Dashboard - Knowledge Graph Overview</span>
+      </div>
+    </figure>
+  </div>
+
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- THE PROBLEM                                     -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="problem">
+    <div class="contain">
+      <div class="section-intro anim-in">
+        <h2>The gap isn't intelligence.<br>It's inquiry.</h2>
+        <p>Your models already know a lot. They've absorbed the internet. They can search the web in real-time. But they only respond to what you ask. Nobody is combining your research with what LLMs already know. Nobody is searching for evidence to fill the gaps. Nobody is verifying any of it. And nobody is asking the questions that would connect the dots.</p>
+      </div>
+
+      <div class="contrast-grid anim-in">
+        <div class="contrast-row contrast-head">
+          <div class="contrast-label">Problem</div>
+          <div class="contrast-label">Solution</div>
+        </div>
+        <div class="contrast-row">
+          <div class="contrast-before">Knowledge decays in documents</div>
+          <div class="contrast-after">A genetic algorithm evolves it through generations of recombination and selection</div>
+        </div>
+        <div class="contrast-row">
+          <div class="contrast-before">LLM knowledge stays trapped in weights</div>
+          <div class="contrast-after">Synthesis draws on both your research and the LLM's training data, producing novel combinations of both</div>
+        </div>
+        <div class="contrast-row">
+          <div class="contrast-before">Research gaps stay invisible</div>
+          <div class="contrast-after">The research agent identifies gaps, searches the web for evidence, and seeds verified findings back into the graph</div>
+        </div>
+        <div class="contrast-row">
+          <div class="contrast-before">LLMs hallucinate with confidence</div>
+          <div class="contrast-after">Nine quality gates filter every output. Then the EVM writes Python to computationally prove it.</div>
+        </div>
+        <div class="contrast-row">
+          <div class="contrast-before">Insight gets locked in one tool</div>
+          <div class="contrast-after">Industry-standard proxy, MCP server, and REST API serve to every client in your stack</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- HOW IT WORKS                                    -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="how-it-works">
+    <div class="contain">
+      <div class="section-intro anim-in">
+        <p class="section-label">How It Works</p>
+        <h2>Three sources of knowledge. One engine.</h2>
+      </div>
+
+      <div class="split anim-in">
+        <div class="split-text">
+          <h3>Seed from three sources</h3>
+          <p>Your documents are one input - drop folders of PDFs, spreadsheets, code, and images. But the LLMs already carry the knowledge of the internet in their weights, and synthesis draws on that too. Then the research agent identifies gaps, searches the web for evidence, and seeds what it finds back into the graph. Your material, LLM knowledge, and live research all feed the same engine.</p>
+        </div>
+        <figure class="split-media product-shot">
+          <div class="product-shot-inner">
+            <span class="product-shot-label">Knowledge Base - Three Input Sources</span>
+          </div>
+        </figure>
+      </div>
+
+      <div class="split split-reverse anim-in">
+        <div class="split-text">
+          <h3>Evolve through synthesis</h3>
+          <p>The genetic algorithm samples node pairs by embedding similarity, voices novel connections through LLMs, and creates child nodes that inherit from both parents. The LLM doesn't just rearrange your words - it brings its own training knowledge into every synthesis. Multi-parent recombination. Temperature curves that cool over generations. Niching pressure that prevents domain collapse. Knowledge that survives is stronger than anything a single prompt produces.</p>
+        </div>
+        <figure class="split-media product-shot">
+          <div class="product-shot-inner">
+            <span class="product-shot-label">Resonance - Synthesis Engine</span>
+          </div>
+        </figure>
+      </div>
+
+      <div class="split anim-in">
+        <div class="split-text">
+          <h3>Verify with executable proof</h3>
+          <p>Every synthesis output passes through nine quality gates - injection detection, structural validation, novelty filtering, hallucination heuristics, claim provenance, deduplication, junk filtering, specificity enforcement, and domain concentration checks. What survives faces the EVM: it writes Python code to computationally test claims, runs it in a sandbox, and adjusts node weight based on the result.</p>
+          <p>This is not confidence scoring - it's proof.</p>
+        </div>
+        <figure class="split-media product-shot">
+          <div class="product-shot-inner">
+            <span class="product-shot-label">Verification - EVM Pipeline</span>
+          </div>
+        </figure>
+      </div>
+
+      <div class="callout anim-in">
+        <h3>Numbers don't cross domains.</h3>
+        <p>LLMs leak numbers across domains during synthesis — a ratio from biology becomes a "constant" in physics. Podbit strips numbers at ingestion, stores them in a scoped registry, and forces synthesis to work blind. Cross-domain connections are structural or they don't exist. Verification gets the real numbers back to check the maths.</p>
+      </div>
+
+      <div class="split split-reverse anim-in">
+        <div class="split-text">
+          <h3>Document breakthroughs automatically</h3>
+          <p>When a node earns breakthrough status, Podbit curates everything behind it - the parent nodes, the synthesis chain, the verification results, the domain context. It assembles this into a structured brief and hands it to a frontier model to produce fully audited documentation. You get a complete, traceable record of how the insight was discovered, what evidence supports it, and why it matters.</p>
+        </div>
+        <figure class="split-media product-shot">
+          <div class="product-shot-inner">
+            <span class="product-shot-label">Breakthroughs - Audited Documentation</span>
+          </div>
+        </figure>
+      </div>
+
+      <div class="split anim-in">
+        <div class="split-text">
+          <h3>Serve to every model in your stack</h3>
+          <p>Evolved knowledge flows through three channels: an industry-standard chat completions proxy that enriches requests automatically, an MCP server with 31 tools for direct graph access, and a REST API for custom integrations. The context engine tracks conversation topics across turns, detects intent, and selects the most relevant graph knowledge for each message. Cross-session learning means your second conversation is smarter than your first.</p>
+        </div>
+        <figure class="split-media product-shot">
+          <div class="product-shot-inner">
+            <span class="product-shot-label">Knowledge Proxy - Enriched Chat</span>
+          </div>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- THE SYSTEM                                      -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="features">
+    <div class="contain">
+      <div class="section-intro anim-in">
+        <p class="section-label">The System</p>
+        <h2>Autonomous. Verifiable. Tunable.</h2>
+        <p>Seven cycles running continuously. Twenty-nine agents, each with its own model, prompt, and tuning profile. Every aspect observable and adjustable.</p>
+      </div>
+
+      <div class="spec-grid anim-in">
+        <div class="spec-item">
+          <svg class="spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.22-8.56"/><path d="M21 3v5h-5"/></svg>
+          <span class="spec-title">Autonomous Cycles</span>
+          <span class="spec-desc">Synthesis, validation, tensions, questions, research, autorating, and EVM verification - all running without intervention.</span>
+        </div>
+        <div class="spec-item">
+          <svg class="spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
+          <span class="spec-title">AI Agents</span>
+          <span class="spec-desc">Each subsystem is a separate agent with its own model assignment, prompt, temperature profile, and quality thresholds.</span>
+        </div>
+        <div class="spec-item">
+          <svg class="spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          <span class="spec-title">Quality Gates</span>
+          <span class="spec-desc">Injection detection, structural validation, novelty, hallucination, provenance, dedup, junk, specificity, and concentration.</span>
+        </div>
+        <div class="spec-item">
+          <svg class="spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+          <span class="spec-title">Tunable Parameters</span>
+          <span class="spec-desc">Mutation rates, gating thresholds, temperature curves, scoring weights, fitness functions. Organised across 45 sections with audit trails.</span>
+        </div>
+        <div class="spec-item">
+          <svg class="spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+          <span class="spec-title">File Readers</span>
+          <span class="spec-desc">PDF, DOCX, XLSX, images (vision), code, and text. Content-hash change detection. Real-time folder watching.</span>
+        </div>
+        <div class="spec-item">
+          <svg class="spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          <span class="spec-title">MCP Tools</span>
+          <span class="spec-desc">Full graph access from any MCP-compatible client. Query, propose, voice, verify, compress, tune - everything exposed.</span>
+        </div>
+      </div>
+
+      <!-- Agents -->
+      <div class="section-intro section-intro-inner anim-in">
+        <h3>29 subsystems. Three tiers. One pipeline.</h3>
+        <p>Every task is a separate AI agent. Assign frontier models where reasoning depth matters. Assign open-source weights everywhere else - most subsystems run brilliantly on a 20B at zero cost.</p>
+      </div>
+
+      <div class="tier-table anim-in">
+        <div class="tier-row">
+          <div class="tier-name">Frontier</div>
+          <div class="tier-models">Claude, GPT-4.5+, DeepSeek</div>
+          <div class="tier-detail">
+            <p>Deep reasoning, novel synthesis, code generation. 11 subsystems including voicing, chat, research, docs, breakthrough validation, EVM codegen and analysis.</p>
+          </div>
+        </div>
+        <div class="tier-row">
+          <div class="tier-name">Medium</div>
+          <div class="tier-models">Qwen 32B, Llama 70B, GPT-4o-mini</div>
+          <div class="tier-detail">
+            <p>Structured extraction, classification, curation. 11 subsystems including synthesis, compress, config tuning, EVM triage, and all 6 file readers.</p>
+          </div>
+        </div>
+        <div class="tier-row">
+          <div class="tier-name">Small</div>
+          <div class="tier-models">Llama 8B, Qwen 7B, Gemma 9B, Phi-3</div>
+          <div class="tier-detail">
+            <p>Keywords, dedup, autorating, context compression, proxy routing. 5 subsystems. Often runs locally at zero cost.</p>
+          </div>
+        </div>
+        <div class="tier-row">
+          <div class="tier-name">Dedicated</div>
+          <div class="tier-models">nomic-embed, mxbai-embed</div>
+          <div class="tier-detail">
+            <p>Embedding and image generation. 2 specialised non-chat models.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Budgeting -->
+      <div class="split anim-in">
+        <div class="split-text">
+          <h3>Control costs per subsystem</h3>
+          <p>Every one of the 29 agents has its own model assignment. Route frontier models to the subsystems that need deep reasoning - voicing, research, breakthrough validation. Run everything else on local open-source weights at zero cost. Reassign any subsystem to a different model in one click, and see the impact immediately.</p>
+          <p>Most Podbit deployments run 20+ subsystems on free local models. You pay for frontier calls only where the quality difference justifies it.</p>
+        </div>
+        <figure class="split-media product-shot">
+          <div class="product-shot-inner">
+            <span class="product-shot-label">Models - Subsystem Assignment &amp; Cost Control</span>
+          </div>
+        </figure>
+      </div>
+
+      <!-- Self-tuning -->
+      <div class="split split-reverse anim-in">
+        <div class="split-text">
+          <h3>Self-tuning via gold standards</h3>
+          <p>Frontier models define what excellent output looks like for each subsystem. Smaller models are scored against these benchmarks. Temperature, model parameters, and quality thresholds auto-adjust - reducing frontier dependency while maintaining quality.</p>
+          <p>When a subsystem agent's confidence drops below threshold, it doesn't guess - it escalates. A more capable model reviews the uncertain output, provides guidance, and returns control. Escalation is automatic, per-subsystem, and logged.</p>
+        </div>
+        <figure class="split-media product-shot">
+          <div class="product-shot-inner">
+            <span class="product-shot-label">Algorithm Parameters - Tuning Dashboard</span>
+          </div>
+        </figure>
+      </div>
+
+      <!-- Podbit Is AI -->
+      <div class="callout anim-in">
+        <h3>Podbit is AI.</h3>
+        <p>This isn't a tool that uses AI - it <em>is</em> AI. The genetic algorithm at its core breeds knowledge through recombination, mutation, fitness selection, and niching - producing emergent insight no single prompt or model would generate. Twenty-nine specialised agents, each with consulting escalation, each independently tuned, each validated against frontier-grade gold standards.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- ARCHITECTURE                                    -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="architecture">
+    <div class="contain">
+      <div class="section-intro anim-in">
+        <p class="section-label">Architecture</p>
+        <h2>Four tiers. Zero cloud dependency.</h2>
+        <p>Every node, every synthesis, every verification runs on your hardware.</p>
+      </div>
+
+      <div class="arch-layers anim-in">
+        <div class="arch-layer">
+          <div class="arch-layer-label">Clients</div>
+          <div class="arch-layer-items">
+            <span>GUI Dashboard</span>
+            <span>AI Agents / IDE</span>
+            <span>Any OpenAI Client</span>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-layer-label">Interface</div>
+          <div class="arch-layer-items">
+            <span>REST API <small>:3000</small></span>
+            <span>MCP Server <small>31 tools</small></span>
+            <span>Knowledge Proxy <small>:11435</small></span>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-layer-label">Core Engine</div>
+          <div class="arch-layer-items arch-layer-items-dense">
+            <span>Synthesis</span>
+            <span>Voicing</span>
+            <span>Scoring</span>
+            <span>Context</span>
+            <span>Models</span>
+            <span>Config</span>
+            <span>EVM</span>
+            <span>KB</span>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-layer-label">Infrastructure</div>
+          <div class="arch-layer-items">
+            <span>SQLite <small>WAL mode</small></span>
+            <span>Embeddings <small>Ollama / LM Studio</small></span>
+            <span>LLM Providers <small>Local / OpenAI / Z.AI</small></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tech-row anim-in">
+        <span>Node.js 18+</span>
+        <span>TypeScript</span>
+        <span>SQLite</span>
+        <span>React + Vite</span>
+        <span>MCP + REST + OpenAI</span>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- IDE INTEGRATION                                 -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="ide">
+    <div class="contain">
+      <div class="section-intro anim-in">
+        <p class="section-label">Chat, Control, Index</p>
+        <h2>Your knowledge, accessible everywhere</h2>
+        <p>The built-in GUI chat has full access to all 29 MCP tools. Ask questions, steer the engine, and manage your graph from the chat.</p>
+      </div>
+
+      <div class="split anim-in">
+        <div class="split-text">
+          <h3>Chat with your knowledge</h3>
+          <p>Ask questions and get answers grounded in your graph - not generic training data. Query nodes, compress domain knowledge into context, check graph health, inspect tensions and contradictions, and surface research gaps. Every response is traceable back to specific nodes with provenance chains.</p>
+        </div>
+        <figure class="split-media product-shot">
+          <div class="product-shot-inner">
+            <span class="product-shot-label">GUI Chat - Knowledge Graph Query</span>
+          </div>
+        </figure>
+      </div>
+
+      <div class="split split-reverse anim-in">
+        <div class="split-text">
+          <h3>Steer the engine</h3>
+          <p>Force new synthesis combinations. Create and bridge domains. Promote breakthroughs. Tune the 298 algorithm parameters. Start and stop autonomous cycles. Full control over the genetic algorithm - seed ideas, verify claims, and shape the direction of evolution in real-time.</p>
+        </div>
+        <figure class="split-media product-shot">
+          <div class="product-shot-inner">
+            <span class="product-shot-label">GUI - Synthesis Control &amp; Domain Bridging</span>
+          </div>
+        </figure>
+      </div>
+
+      <div class="split anim-in">
+        <div class="split-text">
+          <h3>Enrich your AI augmented IDE through MCP</h3>
+          <p>If you work in an MCP-compatible IDE, the same 31 tools are available there. Your coding agent gets direct access to domain knowledge, synthesis history, and verified breakthroughs - same capabilities, your choice of interface.</p>
+        </div>
+        <figure class="split-media product-shot">
+          <div class="product-shot-inner">
+            <span class="product-shot-label">IDE - MCP Integration</span>
+          </div>
+        </figure>
+      </div>
+
+      <div class="split split-reverse anim-in">
+        <div class="split-text">
+          <h3>Index your codebase</h3>
+          <p>Point the Knowledge Base at your source folders. The dual-folder pattern indexes your code twice: once as raw content for precise retrieval, and once as AI-curated knowledge - where an LLM reads your code, explains what it does, and creates searchable, synthesisable descriptions. Your codebase becomes part of the graph, discoverable alongside your research.</p>
+        </div>
+        <figure class="split-media product-shot">
+          <div class="product-shot-inner">
+            <span class="product-shot-label">Knowledge Base - Codebase Ingestion</span>
+          </div>
+        </figure>
+      </div>
+
+      <div class="split split-reverse anim-in">
+        <div class="split-text">
+          <h3>The orchestrator keeps it all alive</h3>
+          <p>A background orchestrator monitors the API server, MCP connections, and all autonomous cycles. If a service drops, it restarts. If a connection breaks, it reconnects. You don't babysit infrastructure - you seed knowledge and let the system run.</p>
+        </div>
+        <figure class="split-media product-shot">
+          <div class="product-shot-inner">
+            <span class="product-shot-label">Dashboard - System Health &amp; Orchestrator</span>
+          </div>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- COLLABORATION & TRUST                           -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="collaboration">
+    <div class="contain">
+      <div class="section-intro anim-in">
+        <p class="section-label">Collaboration & Trust</p>
+        <h2>Projects, partitions, and cryptographic trust</h2>
+        <p>Knowledge is organised into projects with isolated domains. Guest knowledge enters through transient partitions - seeding new insight only when you approve it. Every node is hash-chained.</p>
+      </div>
+
+      <div class="feature-blocks">
+        <div class="feature-block anim-in">
+          <h3>Project Isolation</h3>
+          <p>Each project gets its own database, domains, manifest, and synthesis cycles. Switch between research contexts without cross-contamination. Each project's knowledge stays isolated until you explicitly bridge domains.</p>
+        </div>
+        <div class="feature-block anim-in">
+          <h3>Transient Partitions</h3>
+          <p>Import guest knowledge from a central repository or another Podbit instance. Transient partitions bridge on arrival and depart when done - the guest data seeds new synthesis <em>only if you approve it</em>. Nothing enters your graph without your consent.</p>
+        </div>
+        <div class="feature-block anim-in">
+          <h3>Merkle Chain Integrity</h3>
+          <p>Every node is SHA-256 hashed - content, type, contributor, timestamp, and parent hashes combined into a cryptographic content hash. A tamper-evident integrity log chains every operation. Exports carry a Merkle root; imports verify it. If a hash doesn't match, you'll know.</p>
+        </div>
+      </div>
+
+      <div class="callout anim-in">
+        <h3>Trust without trusting.</h3>
+        <p>Guest knowledge is useful. Unverified guest knowledge is dangerous. Podbit's integrity system lets you import external partitions, run synthesis across them, and verify that nothing was silently modified. The hash chain is the proof.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- TIMELINE                                        -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="timeline-section">
+    <div class="contain">
+      <div class="section-intro anim-in">
+        <p class="section-label">What Happens</p>
+        <h2>The engine doesn't sleep.</h2>
+        <p>You seed two domains. Bridge them. Walk away. Here's what happens next.</p>
+      </div>
+
+      <div class="timeline anim-in">
+        <div class="tl-event">
+          <span class="tl-time">T+0</span>
+          <p>You seed 40 nodes across two domains and bridge them.</p>
+        </div>
+        <div class="tl-event">
+          <span class="tl-time">T+2 min</span>
+          <p>Synthesis engine pairs nodes by embedding similarity. First child nodes appear.</p>
+        </div>
+        <div class="tl-event">
+          <span class="tl-time">T+8 min</span>
+          <p>Tension cycle finds contradictions between your seeds and what the LLM knows. Question cycle generates research gaps.</p>
+        </div>
+        <div class="tl-event">
+          <span class="tl-time">T+15 min</span>
+          <p>EVM writes Python to verify a cross-domain claim. The math checks out. Node promoted.</p>
+        </div>
+        <div class="tl-event">
+          <span class="tl-time">T+30 min</span>
+          <p>Research agent searches the web for evidence supporting 3 research gaps. It generates its own nodes from what it finds - knowledge you never provided.</p>
+        </div>
+        <div class="tl-event">
+          <span class="tl-time">T+2 hr</span>
+          <p>Breakthrough detected. Three-gate pipeline confirms novelty. Registered in shared breakthrough registry.</p>
+        </div>
+        <div class="tl-event">
+          <span class="tl-time">T+overnight</span>
+          <p>You return to many more generations, and high-quality breakthroughs if found - knowledge no prompt would have produced.</p>
+        </div>
+      </div>
+
+      <p class="section-footer anim-in">Built for researchers, teams, and anyone whose work depends on knowledge they can trace and trust. Seed your domains. Bridge them. Let the engine run. What it finds is yours.</p>
+    </div>
+  </section>
+
+
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- BOTTOM CTA                                      -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="bottom-cta">
+    <div class="contain">
+      <div class="bottom-cta-inner anim-in">
+        <h2>Seed your domains. Bridge them. Let the engine run.</h2>
+        <div class="bottom-cta-buttons">
+          <a href="docs.html" class="cta cta-primary">Read the Docs</a>
+          <a href="https://github.com/placeholder/podbit" class="cta cta-outline" target="_blank" rel="noopener">View on GitHub</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- SPONSOR                                         -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="sponsor">
+    <div class="contain">
+      <div class="sponsor-inner anim-in">
+        <p class="section-label">Support the Project</p>
+        <h2>Podbit is free. Building it isn't.</h2>
+        <p class="sponsor-body">This is a solo project - one person, thousands of hours, zero funding. Every feature you see was built on evenings, weekends, and stubborn optimism. If Podbit saves you time, surfaces an insight you wouldn't have found, or just makes you think differently about what knowledge tools can be - consider supporting the work.</p>
+        <p class="sponsor-body sponsor-small">Sponsors get early access to new features, direct input on the roadmap, and a permanent place in the project's history.</p>
+        <div class="sponsor-buttons">
+          <a href="https://github.com/sponsors/hexitex" class="cta cta-primary" target="_blank" rel="noopener">Sponsor on GitHub</a>
+          <a href="https://ko-fi.com/hexitex" class="cta cta-outline" target="_blank" rel="noopener">Buy me a coffee</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- FOOTER                                          -->
+  <!-- ─────────────────────────────────────────────── -->
+  <footer id="site-footer">
+    <div class="contain">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <img src="podbit-logo.svg" alt="" width="24" height="20">
+            <span>Podbit</span>
+          </div>
+          <p>A genetic algorithm for knowledge.<br>Your research, your machine, your proof.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#architecture">Architecture</a></li>
+            <li><a href="#collaboration">Collaboration</a></li>
+            <li><a href="docs.html">Documentation</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://github.com/placeholder/podbit" target="_blank" rel="noopener">GitHub</a></li>
+            <li><a href="docs.html#doc-getting-started">Getting Started</a></li>
+            <li><a href="docs.html#doc-tools">API Reference</a></li>
+            <li><a href="docs.html#doc-architecture">MCP Setup</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Community</h4>
+          <ul>
+            <li><a href="https://github.com/placeholder/podbit/issues" target="_blank" rel="noopener">Issues</a></li>
+            <li><a href="https://github.com/placeholder/podbit/discussions" target="_blank" rel="noopener">Discussions</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Contact Form -->
+      <div class="footer-contact">
+        <h3>Get in Touch</h3>
+        <p class="footer-contact-sub">Questions, feedback, or collaboration ideas — drop a message.</p>
+        <form id="contact-form" novalidate>
+          <div class="contact-fields">
+            <div class="contact-field">
+              <label for="contact-name">Name</label>
+              <input type="text" id="contact-name" name="name" required maxlength="200" autocomplete="name">
+            </div>
+            <div class="contact-field">
+              <label for="contact-email">Email</label>
+              <input type="email" id="contact-email" name="email" required maxlength="254" autocomplete="email">
+            </div>
+          </div>
+          <div class="contact-field">
+            <label for="contact-message">Message</label>
+            <textarea id="contact-message" name="message" required minlength="10" maxlength="5000" rows="4"></textarea>
+          </div>
+          <!-- Honeypot — invisible to humans -->
+          <div class="contact-hp" aria-hidden="true">
+            <label for="contact-website">Website</label>
+            <input type="text" id="contact-website" name="website" tabindex="-1" autocomplete="off">
+          </div>
+          <button type="submit" class="cta cta-primary contact-submit">Send Message</button>
+          <p id="contact-status" class="contact-status" role="status"></p>
+        </form>
+      </div>
+
+      <div class="footer-bottom">
+        <p>Built by Rob McGlade</p>
+        <p>Open source, licensed under <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">AGPL-3.0</a> - free to use, modify, and distribute. If you run a modified version as a service, you share the source, or contact the author for an alternative licence.</p>
+        <p>&copy; 2025 Rob McGlade.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/canvas.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

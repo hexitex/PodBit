@@ -1,0 +1,159 @@
+{
+  "$schema": "./podbit.config.schema.json",
+
+  "timeouts": {
+    "evmVerificationMs": 270000,
+    "healthCheckMs": 3000,
+    "startupGraceMs": 30000,
+    "restartCooldownMs": 30000,
+    "sseHeartbeatMs": 30000,
+    "epipeExitDelayMs": 5000,
+    "watcherRestartBackoffMs": 10000,
+    "queuePollingMs": 5000,
+    "serviceTimeoutMs": 5000
+  },
+
+  "retries": {
+    "backoffBaseMs": 1000,
+    "backoffCapMs": 5000,
+    "evmBackoffBaseMs": 5000,
+    "evmBackoffCapMs": 30000,
+    "rateLimitBackoffMs": 120000
+  },
+
+  "intervals": {
+    "rateLimiterCleanupMs": 300000,
+    "budgetMonitorMs": 10000,
+    "costsCacheTtlMs": 60000
+  },
+
+  "contentLimits": {
+    "maxEmbeddingChars": 8000,
+    "summaryMinSearchOffset": 30,
+    "summaryMaxSearchOffset": 80,
+    "embeddingTruncationChars": 500,
+    "specificityTruncationChars": 200,
+    "keywordContentChars": 500,
+    "knowThyselfTruncationChars": 2000,
+    "kbDefaultChunkSize": 4000,
+    "kbCurationTokens": 2000,
+    "sandboxOutputPreviewChars": 10000,
+    "eliteOutputTruncationChars": 2000,
+    "eliteCodeTruncationChars": 4000,
+    "toolResultCharLimit": 3000,
+    "expressBodySizeLimit": "10mb",
+    "contentPreviewLength": 200,
+    "maxNodeWords": 200,
+    "stderrPreviewChars": 200
+  },
+
+  "queryLimits": {
+    "voicingCandidates": 5,
+    "researchContextLimit": 10,
+    "knowledgeQueryLimit": 30,
+    "knowledgeAltQueryLimit": 20,
+    "knowledgeContextLimit": 10,
+    "maxKeywordsToExtract": 30,
+    "eliteScanBatchSize": 100,
+    "eliteBridgingCandidates": 10,
+    "eliteQueryDefaultLimit": 50,
+    "patternSearchLimit": 10,
+    "patternSiblingLimit": 20,
+    "junkFilterPoolSize": 200,
+    "triageParentLimit": 3
+  },
+
+  "evm": {
+    "confidence": {
+      "runtimeError": 0.5,
+      "vacuousPassThreshold": 0.3,
+      "vacuousPassScore": 0.5,
+      "fallbackThreshold": 0.2,
+      "structuredMinConfidence": 0.3,
+      "malformedOutputThreshold": 0.2,
+      "booleanTrueConfidence": 0.8,
+      "booleanFalseConfidence": 0.7,
+      "booleanTrueScore": 1.0,
+      "booleanFalseScore": 0.0,
+      "unparseableConfidence": 0.3,
+      "numericalFailConfidence": 0.2,
+      "convergenceFailConfidence": 0.2,
+      "convergenceThresholdRatio": 0.5,
+      "convergenceNotConvergingConfidence": 0.3,
+      "patternMatchConfidence": 0.75,
+      "patternNoMatchConfidence": 0.6,
+      "patternMatchScore": 0.8,
+      "patternNoMatchScore": 0.0,
+      "patternFallbackConfidence": 0.2,
+      "defaultTriageConfidence": 0.5,
+      "triageDisabledConfidence": 1.0,
+      "minTriageScore": 0.3
+    }
+  },
+
+  "database": {
+    "systemDb": {
+      "busyTimeoutMs": 5000,
+      "cacheSizeKb": 16000,
+      "mmapSizeBytes": 67108864
+    },
+    "projectDb": {
+      "busyTimeoutMs": 5000,
+      "cacheSizeKb": 64000,
+      "mmapSizeBytes": 268435456
+    },
+    "readDb": {
+      "busyTimeoutMs": 5000,
+      "cacheSizeKb": 32000,
+      "mmapSizeBytes": 268435456
+    },
+    "stmtCacheMax": 256
+  },
+
+  "scoring": {
+    "goldStandardTierWeights": {
+      "tier1": 1.0,
+      "tier2": 0.85,
+      "tier3": 0.65
+    },
+    "goldStandardFallbackWeight": 0.5,
+    "behavioralWeights": {
+      "synthesisSuccessRate": 0.5,
+      "avgResonance": 0.2,
+      "avgSpecificity": 0.3
+    },
+    "behavioralNormalization": {
+      "synthesisSuccessRate": 1.0,
+      "avgResonance": 0.5,
+      "avgSpecificity": 5.0
+    },
+    "convergenceRatio": 2.0,
+    "minImpact": 0.01,
+    "environmentChangeThreshold": 0.3
+  },
+
+  "validation": {
+    "knowledgeReserveDefault": 0.15,
+    "knowledgeMinReserveDefault": 0.05,
+    "knowledgeReserveMin": 0.01,
+    "knowledgeReserveMax": 0.5,
+    "knowledgeMinReserveMin": 0.0,
+    "knowledgeMinReserveMax": 0.3,
+    "numericalTolerance": 0.01
+  },
+
+  "misc": {
+    "imageMaxDimension": 1024,
+    "imageQuality": 80,
+    "imageFormat": "jpeg",
+    "keywordTemperature": 0.3,
+    "junkAgeCutoffDays": 30,
+    "hashTruncationLength": 12,
+    "domainSlugWords": 3,
+    "logRateLimitWindowMs": 5000,
+    "logRateLimitMaxRepeats": 5,
+    "nodeReselectionCooldownMinutes": 10,
+    "eliteBridgePriorityBonus": 50,
+    "attractorThreshold": 30
+  }
+}

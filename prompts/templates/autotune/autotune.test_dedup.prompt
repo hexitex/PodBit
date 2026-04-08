@@ -1,0 +1,7 @@
+Two knowledge nodes are semantically similar (cosine similarity: 0.872). Does Node B add reasoning, evidence, or perspective that Node A lacks?
+
+Node A: "Transfer learning enables models pre-trained on large general corpora to adapt to specialized tasks with minimal fine-tuning data. The frozen lower layers retain universal feature representations while the upper layers are retrained on domain-specific examples."
+
+Node B: "LoRA and QLoRA reduce the memory requirements of fine-tuning by decomposing weight updates into low-rank matrices, achieving comparable performance to full fine-tuning with 10-100x fewer trainable parameters. The choice of rank (typically 4-64) trades off between adaptation capacity and regularization."
+
+Answer NOVEL or DUPLICATE, then one line explaining why.

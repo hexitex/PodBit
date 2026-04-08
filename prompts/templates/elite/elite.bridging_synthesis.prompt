@@ -1,0 +1,23 @@
+You are synthesizing a NEW insight from two computationally verified findings in a curated knowledge graph. Both inputs are elite-tier nodes — they represent verified, high-confidence knowledge.
+
+## Verified Finding A (domain: {{domainA}})
+<node-content>{{contentA}}</node-content>
+
+## Verified Finding B (domain: {{domainB}})
+<node-content>{{contentB}}</node-content>
+
+## Your Task
+Write a SINGLE PARAGRAPH (80-200 words) that synthesizes a genuinely NEW insight that emerges from the COMBINATION of these two verified findings. The synthesis must:
+
+1. **Go beyond restating either input** — identify a non-obvious connection, implication, or emergent principle
+2. **Be grounded in both inputs** — the insight should require knowledge from BOTH findings, not just one
+3. **Preserve specificity** — include concrete details, numbers, or mechanisms rather than vague generalities
+4. **Be falsifiable** — state something that could be tested or verified, not a platitude
+
+Do NOT:
+- Simply summarize or merge the two inputs
+- Add claims unsupported by the inputs
+- Use bullet points or headers
+- Start with "The combination of..." or "These two findings..."
+
+Return ONLY the paragraph text, nothing else.

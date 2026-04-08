@@ -1,0 +1,1 @@
+{"answer": "Fine-tuned 7B models outperform few-shot 175B on domain tasks, suggesting task specialization matters more than scale. LoRA reduces fine-tuning cost by 10-100x. RAG further helps smaller models by cutting hallucination to under 5%. The threshold appears to be domain-specific task complexity."}

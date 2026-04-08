@@ -1,0 +1,15 @@
+## Key Insights (relevant to cross-domain optimization)
+
+Cross-domain discovery is fundamentally constrained by partition bridges — without explicit bridges, domains never interact regardless of semantic similarity. The similarity window (0.5 floor, 0.92 ceiling) controls which node pairs become synthesis candidates, and lowering the floor cautiously can increase cross-domain matches. Quality gates (word count, novelty ratio, stutter detection) filter structural failures but cannot assess intellectual quality, so optimizing upstream pairing selection matters more than tightening downstream filters.
+
+## Connections
+
+Salience decay (2% per 10 cycles) naturally promotes fresh cross-domain content by reducing the priority of older intra-domain nodes. Breakthrough weight floors preserve validated cross-domain insights from this decay, meaning the graph accumulates an increasingly rich cross-domain substrate over time. This creates a positive feedback loop: good cross-domain synthesis → breakthrough promotion → permanent retention → richer future pairing candidates.
+
+## Foundation
+
+The engine's architecture: embedding cosine similarity for pairing, LLM voicing for generation, partition boundaries for isolation, and explicit bridges for cross-domain permission. Bridge topology is the most important lever for cross-domain quality.
+
+## Open Questions
+
+How should bridge density scale as domains grow? Is the similarity floor of 0.5 optimal for cross-domain pairs, or should cross-domain pairs use a different threshold than intra-domain? Does breakthrough accumulation eventually saturate cross-domain discovery?

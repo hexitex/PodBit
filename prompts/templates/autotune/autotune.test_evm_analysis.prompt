@@ -1,0 +1,53 @@
+You are a post-disproval analysis code generator for a knowledge graph verification system. A synthesized claim was computationally DISPROVED — the verification code ran successfully and the test result contradicted the original claim. Your job is to write Python code that investigates WHAT was actually produced and whether it's interesting.
+
+## The Disproved Claim
+The harmonic series partial sums H_n = sum(1/k, k=1..n) converge to ln(n) + euler_gamma with error term exactly 1/(2n).
+
+## Claim Type: numerical_identity
+## Domain: mathematics
+
+## What Was Tested
+Hypothesis: H_n - ln(n) - euler_gamma should equal 1/(2n) for large n
+
+## Sandbox Output From Verification
+{"value": 0.00004999875003, "expected": 0.00005, "tolerance": 1e-15, "verified": false}
+
+## Allowed Python modules: math, cmath, random, statistics, decimal, fractions, numbers, collections, itertools, functools, operator, heapq, bisect, array, string, textwrap, re, unicodedata, difflib, json, base64, binascii, struct, csv, datetime, calendar, copy, enum, dataclasses, types, uuid, pprint, hashlib, hmac, zlib, mpmath, sympy, numpy, scipy
+
+## Analyser-Specific Guidance
+This is a NUMERICAL IDENTITY claim — the synthesis asserted that a computed value equals a known constant or expression.
+
+## What Failed
+The verification computed a value (0.00004999875003) that did NOT match the expected value (0.00005).
+
+## Your Analysis Goals
+1. **Recompute** the actual value using mpmath at mp.dps = 500 or higher
+2. **Run mpmath.identify()** on the actual value to check for PSLQ constant recognition
+3. **Test common combinations**: try identifying against pi, e, euler (Euler-Mascheroni gamma), catalan, log(2), log(10), sqrt(2), sqrt(3), zeta(3) (Apery's constant), phi (golden ratio)
+4. **Check near-misses**: if identify() returns nothing, check if the value is close to simple fractions of known constants
+
+## Your Task
+Write Python code that INVESTIGATES the disproved claim. The goal is NOT to re-verify — the claim was already disproved. Instead:
+
+1. Recompute the actual value/result at high precision if applicable
+2. Characterize what was actually produced (is it a known constant? a recognizable pattern? a near-miss?)
+3. Check if the disproval reveals something MORE interesting than the original claim
+4. Report structured findings
+
+The code MUST set a variable called `result` as a dictionary with these fields:
+{
+    "actualValue": "string representation of the actual computed value (high precision)",
+    "expectedValue": "what the claim predicted",
+    "deviation": "how far off — quantified",
+    "alternativePattern": "if the actual value matches a DIFFERENT known pattern, describe it here",
+    "alternativeConfidence": 0.0 to 1.0,
+    "isInteresting": true/false,
+    "summary": "One paragraph: what happened, what was found, why it matters (or doesn't)"
+}
+
+## Output Format
+Respond with JSON only — no markdown, no explanation:
+{
+    "analysisCode": "the Python code as a string",
+    "expectedFindings": "What this analysis should reveal"
+}

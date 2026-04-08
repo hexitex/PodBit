@@ -1,0 +1,11 @@
+Domain: "machine-learning"
+
+Existing knowledge (do not repeat):
+- Transfer learning enables adaptation with minimal fine-tuning via frozen lower layers
+- LoRA decomposes weight updates into low-rank matrices (rank 4-64), achieving comparable performance with 10-100x fewer parameters
+- Attention mechanisms in transformers compute O(n²) pairwise token interactions
+- RLHF aligns model outputs with human preferences but introduces reward hacking risks
+
+Open research questions:
+- How do scaling laws change when retrieval augmentation supplements model parameters?
+- At what point does fine-tuning a small model become more cost-effective than prompting a large one?

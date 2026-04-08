@@ -1,0 +1,9 @@
+Topic: "distributed consensus"
+
+Nodes (sorted by importance):
+1. [breakthrough, w=1.8] Raft divides consensus into leader election, log replication, and safety — a cluster of N servers tolerates (N-1)/2 failures while maintaining linearizable consistency.
+2. [voiced, w=1.4] Because Raft requires majority quorum for commits and Paxos allows flexible quorums, hybrid protocols could optimize latency by using Paxos-style flexible quorums for reads while maintaining Raft's strict majority for writes.
+3. [seed, w=1.2] Paxos allows flexible quorum configurations where read and write quorums only need to overlap, enabling latency optimization at the cost of protocol complexity.
+4. [synthesis, w=1.1] Leader election via randomized timeouts prevents split votes — when a follower's timer expires without heartbeat, it becomes a candidate requesting votes from peers.
+5. [seed, w=1.0] Byzantine fault tolerance (BFT) protocols like PBFT require 3f+1 nodes to tolerate f Byzantine faults, compared to 2f+1 for crash-only protocols like Raft.
+6. [question, w=0.9] Under what network partition patterns does Raft's strict majority requirement cause unnecessary unavailability compared to flexible Paxos quorums?

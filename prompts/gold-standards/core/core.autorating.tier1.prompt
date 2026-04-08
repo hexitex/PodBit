@@ -1,0 +1,1 @@
+{"rating": 1, "reason": "Identifies a concrete, non-obvious failure mode — junk filter embedding similarity combined with KB domain flooding creates a self-poisoning feedback loop that permanently blocks future content on affected topics. Both parents are referenced and the insight emerges from their combination, not from either alone."}

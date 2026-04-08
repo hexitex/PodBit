@@ -1,0 +1,1 @@
+Raft leader election uses randomized timeouts (150-300ms) to prevent split votes. However, the basic protocol is vulnerable to disruptive servers that repeatedly trigger unnecessary elections. The Pre-Vote extension (Raft §9.6) adds a pre-election round where candidates verify they could win before incrementing the term, preventing term inflation from partitioned or slow nodes.

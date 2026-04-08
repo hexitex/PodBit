@@ -1,0 +1,52 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node", "better-sqlite3", "cors", "express"],
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "noEmit": true
+  },
+  "include": [
+    "*.ts",
+    "*.js",
+    "core/**/*.ts",
+    "core/**/*.js",
+    "db/**/*.ts",
+    "db/**/*.js",
+    "handlers/**/*.ts",
+    "handlers/**/*.js",
+    "routes/**/*.ts",
+    "routes/**/*.js",
+    "mcp/**/*.ts",
+    "mcp/**/*.js",
+    "proxy/**/*.ts",
+    "proxy/**/*.js",
+    "services/**/*.ts",
+    "evm/**/*.ts",
+    "kb/**/*.ts",
+    "config/**/*.ts",
+    "config-sections/**/*.ts",
+    "context/**/*.ts",
+    "utils/**/*.ts",
+    "vector/**/*.ts",
+    "models/**/*.ts",
+    "prompts/**/*.ts",
+    "scaffold/**/*.ts",
+    "migrations/**/*.ts",
+    "tools/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "gui",
+    "data",
+    "tests"
+  ]
+}

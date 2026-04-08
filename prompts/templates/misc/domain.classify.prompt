@@ -1,0 +1,14 @@
+Classify this text into a knowledge domain.
+
+Text: "{{text}}"
+
+Existing domains: {{existingDomains}}
+
+Rules:
+- If the text is SPECIFICALLY about an existing domain's core focus, return that exact domain name
+- If the text is about a RELATED but DISTINCT field, create a new domain — do NOT collapse related fields into one domain. For example: "game-theory" and "auction-theory" are related but distinct; "network-routing" and "graph-theory" are related but distinct.
+- If no existing domain fits, create a SHORT domain slug (1-3 words, kebab-case, e.g. "topic-area", "sub-topic-focus")
+- Domain names should be category-level labels, NOT the full topic
+- When in doubt, create a new domain rather than forcing content into a loosely related existing one
+
+Respond with ONLY JSON: {"domain": "domain-name"}

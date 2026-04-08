@@ -1,0 +1,15 @@
+This synthesis combines knowledge from {{domainCount}} domains:
+{{domainList}}
+
+Synthesis claim: {{synthesisContent}}
+
+For each domain listed, answer: if this domain's knowledge were completely removed, would the remaining claim need to change?
+
+Reply as JSON — an object with domain names as keys:
+{
+  "<domain>": { "loadBearing": true/false, "reason": "one sentence" },
+  ...
+}
+
+true = removing this domain would change the claim (load-bearing).
+false = the claim could stand without this domain (decorative).

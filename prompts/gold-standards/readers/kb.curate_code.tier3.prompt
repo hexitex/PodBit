@@ -1,0 +1,1 @@
+Three TypeScript functions for Fibonacci numbers: fibonacci computes the nth value with memoization, fibSequence generates a sequence, and isFibonacci tests membership.

@@ -1,0 +1,1 @@
+{"nodeA": 2, "nodeB": 4, "synthesis": "Knowledge graphs could represent Paxos quorum configurations as typed relationships, enabling multi-hop reasoning about valid quorum sets under failures that flat configuration cannot support.", "pattern": "structure-enables-reasoning"}

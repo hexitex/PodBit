@@ -1,0 +1,15 @@
+You are bootstrapping a knowledge graph for a new project.
+
+Project purpose: {{purpose}}
+Domains: {{domainList}}{{goalsText}}
+
+For EACH domain listed above, generate exactly {{seedsPerDomain}} foundational knowledge statements. These should capture the essential concepts, principles, and relationships that someone working in this project would need to understand.
+
+Requirements:
+- Each statement should be 1-3 sentences, self-contained, and conceptually rich
+- Cover the domain's core concepts, not trivial details
+- Statements should be useful as starting points for deeper synthesis
+- Think about what foundational knowledge enables further discovery
+
+Format: Output as a list. Prefix each line with the domain name in brackets, like:
+[domain-name] The foundational statement here.

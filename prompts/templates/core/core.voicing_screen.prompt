@@ -1,0 +1,24 @@
+FRAGMENT 1:
+{{parentA}}
+
+FRAGMENT 2:
+{{parentB}}
+
+Answer each question. Nothing else.
+
+1. In one sentence, what specific mechanism does Fragment 1 describe?
+2. In one sentence, what specific mechanism does Fragment 2 describe?
+3. Does the output of one mechanism directly affect the input of the other? YES or NO.
+4. List every technical term that appears in BOTH fragments.
+5. Explain the connection using NONE of the terms from your answer to question 4.
+6. What claim does combining them make that neither makes alone? One sentence.
+
+Respond as JSON:
+{
+  "Q1": "...",
+  "Q2": "...",
+  "Q3": "YES or NO",
+  "Q4": "term1, term2, ...",
+  "Q5": "...",
+  "Q6": "..."
+}

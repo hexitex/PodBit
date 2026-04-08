@@ -1,0 +1,28 @@
+## Original Claim (context — do NOT re-extract this)
+{{nodeContent}}
+
+## API: {{apiName}}
+## Domain: {{domain}}
+
+## API Response
+{{apiResponse}}
+
+## Why This API Was Called
+{{decisionReason}}
+
+## API-Specific Extraction Guide
+{{perApiPrompt}}
+
+Extract NEW factual claims from the API response that are not already stated in the original claim. Each fact should be a standalone knowledge statement suitable for a graph node in the "{{domain}}" domain.
+
+Respond with ONLY a JSON array:
+[
+  {
+    "content": "A standalone factual claim extracted from the API response",
+    "confidence": 0.0-1.0,
+    "category": "e.g., synthesis_route, property, relationship, mechanism, classification, identifier",
+    "source": "brief citation from the API response supporting this fact"
+  }
+]
+
+Return [] if no new facts can be extracted.

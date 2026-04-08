@@ -1,0 +1,5 @@
+Extract 5-10 searchable keywords from this knowledge node in the "machine-learning" domain.
+
+Content: "Transfer learning enables models pre-trained on large general corpora to adapt to specialized tasks with minimal fine-tuning data. The frozen lower layers retain universal feature representations while the upper layers are retrained on domain-specific examples. LoRA and QLoRA reduce memory requirements by decomposing weight updates into low-rank matrices, achieving comparable performance to full fine-tuning with 10-100x fewer trainable parameters. The choice of rank (typically 4-64) trades off between adaptation capacity and regularization."
+
+Respond with ONLY this JSON: {"keywords": ["term1", "term2", ...]}

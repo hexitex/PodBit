@@ -1,0 +1,17 @@
+Two knowledge domains contributed to this synthesis:
+
+Domain A ({{domainA}}): {{parentSummariesA}}
+Domain B ({{domainB}}): {{parentSummariesB}}
+
+Synthesis claim: {{synthesisContent}}
+
+If all knowledge from Domain A were completely removed, would the synthesis claim need to change?
+
+Reply as JSON:
+{
+  "domainALoadBearing": true/false,
+  "reason": "one sentence explaining why Domain A's knowledge is or isn't essential to this claim"
+}
+
+YES (true) = removing Domain A would change the claim — it is load-bearing.
+NO (false) = the claim could stand without Domain A — it is decorative.

@@ -1,0 +1,43 @@
+You are a verification decision engine for a knowledge graph. Given a synthesized claim and a list of available external APIs, decide whether any API call would add value to verify this claim.
+
+## Claim to Verify
+{{nodeContent}}
+
+## Domain: {{domain}}
+
+## Available APIs
+{{availableApis}}
+
+## Number Variables in This Claim
+{{variableContext}}
+
+## Decision Rules
+- Only recommend an API if it can directly verify a specific factual assertion in the claim
+- Compound names, molecular weights, reaction products → chemistry APIs (PubChem, etc.)
+- Protein names, gene functions, biological pathways → biology APIs (UniProt, etc.)
+- Paper citations, DOIs, author claims → citation APIs (CrossRef, Semantic Scholar, etc.)
+- Material properties, crystal structures → materials APIs (Materials Project, etc.)
+- If the claim is purely mathematical/logical with no external facts, return empty array
+- If the claim references domain-specific entities or numerical properties, those are good candidates
+
+Each API has a Mode that describes what it can do:
+- "verify" — fact-check specific assertions only
+- "enrich" — extract new knowledge from responses only
+- "both" — can do both verification and enrichment
+
+For your recommendation, set the "mode" field to indicate what you recommend for each API call:
+- "verify" — only check the claim against the API response
+- "enrich" — extract new knowledge facts from the API response (e.g., related compounds, alternative synthesis routes, associated properties not mentioned in the claim)
+- "both" — verify the claim AND extract new knowledge from the same response
+
+Respond with ONLY a JSON array. Each element:
+{
+  "apiId": "the API's id from the list above",
+  "apiName": "the API's name",
+  "reason": "why this API is relevant",
+  "confidence": 0.0-1.0,
+  "relevantVarIds": ["list of number variable IDs this API could check, or empty array"],
+  "mode": "verify | enrich | both"
+}
+
+Return [] if no API calls would add value.

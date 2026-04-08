@@ -1,0 +1,11 @@
+## Key Insights
+Cross-domain discovery depends on partition bridges and similarity thresholds. Bridge topology is the primary lever. The similarity floor (0.5) can be lowered for broader cross-domain reach but risks quality degradation.
+
+## Connections
+Decay promotes fresh content; breakthrough floors accumulate validated cross-domain insights. This creates a positive feedback loop for cross-domain discovery quality.
+
+## Foundation
+Embedding similarity, LLM voicing, partition boundaries, explicit bridges. Bridge topology matters most for cross-domain optimization.
+
+## Open Questions
+Optimal bridge density scaling and whether cross-domain pairs need different similarity thresholds.

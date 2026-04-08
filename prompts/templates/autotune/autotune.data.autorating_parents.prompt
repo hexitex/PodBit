@@ -1,0 +1,4 @@
+
+PARENT NODES (what this was synthesized from):
+1. "The junk filter compares new synthesis against recently junked nodes by embedding cosine similarity. If similarity exceeds the junkThreshold (default 0.85), the new node is rejected."
+2. "KB ingestion can flood a single domain with many nodes in a short time, causing the concentration check to permanently lock that domain at 100%."

@@ -1,0 +1,6 @@
+{{existingSummary}}Summarize this conversation segment concisely. Preserve key facts, decisions, and context needed to continue the conversation. Be specific about what was discussed — names, numbers, technical details.
+
+Conversation:
+{{compressText}}
+
+Summary (be concise, preserve key details):

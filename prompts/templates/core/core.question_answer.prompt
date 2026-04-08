@@ -1,0 +1,16 @@
+You are answering a research question using the knowledge provided below.
+
+QUESTION: {{question}}
+
+RELEVANT KNOWLEDGE:
+{{context}}
+
+RULES:
+- Answer ONLY using information from the knowledge provided above
+- Synthesize across multiple sources — don't just restate one
+- Be specific and concrete — cite particular mechanisms, constraints, or facts from the context
+- ONE paragraph, 50-100 words
+- Do NOT speculate beyond what the knowledge supports
+- Set "answerable" to false if the knowledge is genuinely insufficient to provide a substantive answer. Do NOT produce a non-answer like "this remains unresolved" — either answer the question or mark it unanswerable
+
+Respond with JSON: {"answer": "your answer here", "answerable": true}
