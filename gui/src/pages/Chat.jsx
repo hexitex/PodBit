@@ -180,6 +180,16 @@ function Message({ message, contextMeta }) {
 // =============================================================================
 
 function ContextPanel({ sessionId, contextData, budgetData, chatSettings, onUpdateChatSettings }) {
+  const knowledge = contextData?.knowledge || [];
+
+  // Batch-resolve knowledge node names (getCachedName used in render)
+  // Hooks must run before any early return — Rules of Hooks.
+  const [, _forceNames] = useState(0);
+  useEffect(() => {
+    const ids = knowledge.map(k => k.id).filter(Boolean);
+    if (ids.length > 0) resolveNodeNames(ids).then(() => _forceNames(n => n + 1));
+  }, [knowledge.length]);
+
   if (!contextData && !sessionId) {
     return (
       <div className="p-4 text-center text-gray-400 dark:text-gray-500 text-sm">
@@ -193,14 +203,6 @@ function ContextPanel({ sessionId, contextData, budgetData, chatSettings, onUpda
   const topics = contextData?.topics || [];
   const domains = contextData?.domains || [];
   const budget = contextData?.budget || budgetData;
-  const knowledge = contextData?.knowledge || [];
-
-  // Batch-resolve knowledge node names (getCachedName used in render)
-  const [, _forceNames] = useState(0);
-  useEffect(() => {
-    const ids = knowledge.map(k => k.id).filter(Boolean);
-    if (ids.length > 0) resolveNodeNames(ids).then(() => _forceNames(n => n + 1));
-  }, [knowledge.length]);
 
   return (
     <div className="p-3 space-y-4 text-sm overflow-y-auto h-full">

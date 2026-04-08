@@ -269,9 +269,11 @@ async function runComprehensiveConsultant(
         },
     });
 
-    // Sanitize control characters that some models emit inside JSON string values
+    // Sanitize control characters that some models emit inside JSON string values.
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: intentional — sanitizing raw LLM output before JSON.parse
+    const ctrlCharRe = /[\u0000-\u001f\u007f]/g;
     const jsonText = (raw.match(/\{[\s\S]*\}/)?.[0] || raw)
-        .replace(/[\x00-\x1f\x7f]/g, (ch: string) => ch === '\n' || ch === '\r' || ch === '\t' ? ' ' : '');
+        .replace(ctrlCharRe, (ch: string) => ch === '\n' || ch === '\r' || ch === '\t' ? ' ' : '');
     const parsed = JSON.parse(jsonText);
     const scores: Record<string, number> = {
         coherence: Math.max(0, Math.min(10, Number(parsed.scores?.coherence) || 0)),
@@ -383,8 +385,10 @@ async function runMinitruth(
         },
     });
 
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: intentional — sanitizing raw LLM output before JSON.parse
+    const ctrlCharRe = /[\u0000-\u001f\u007f]/g;
     const jsonText = (raw.match(/\{[\s\S]*\}/)?.[0] || raw)
-        .replace(/[\x00-\x1f\x7f]/g, (ch: string) => ch === '\n' || ch === '\r' || ch === '\t' ? ' ' : '');
+        .replace(ctrlCharRe, (ch: string) => ch === '\n' || ch === '\r' || ch === '\t' ? ' ' : '');
     const parsed = JSON.parse(jsonText);
 
     const verdict = ['accept', 'rework', 'reject'].includes(parsed.verdict) ? parsed.verdict : 'reject';
