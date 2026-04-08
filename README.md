@@ -27,11 +27,11 @@ cd gui && npm install && cd ..
 
 ### 2. Install the labs (optional but strongly recommended)
 
-The lab fleet lives in a sibling repo, [podbit-labs](https://github.com/<your-fork>/podbit-labs). Clone it next to Podbit so the orchestrator can auto-discover it:
+The lab fleet lives in a sibling repo, [podbit-labs](https://github.com/hexitex/podbit-labs). Clone it next to Podbit so the orchestrator can auto-discover it:
 
 ```bash
 cd ..
-git clone https://github.com/<your-fork>/podbit-labs.git
+git clone https://github.com/hexitex/podbit-labs.git
 cd podbit-labs
 npm install                                  # installs root + workspace deps
 cd lab-core && npm install && cd ..
