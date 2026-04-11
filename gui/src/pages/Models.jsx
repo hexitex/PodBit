@@ -308,7 +308,7 @@ function ModelForm({ initial, onSave, onCancel }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({
+    const coerced = {
       ...form,
       endpointUrl: form.endpointUrl || null,
       apiKey: form.apiKey || null,
@@ -328,7 +328,22 @@ function ModelForm({ initial, onSave, onCancel }) {
       tier: form.tier,
       noThink: !!form.noThink,
       supportsTools: !!form.supportsTools,
-    });
+    };
+    // Only send fields that actually changed to avoid clobbering values
+    // that were set outside this form (e.g. noThink reset when only
+    // concurrency was edited).
+    if (initial) {
+      const diff = {};
+      for (const [k, v] of Object.entries(coerced)) {
+        const orig = initial[k];
+        // Compare with type coercion for numbers/booleans vs strings
+        if (v !== orig && String(v) !== String(orig)) diff[k] = v;
+      }
+      if (Object.keys(diff).length > 0) onSave(diff);
+      else onCancel(); // nothing changed
+    } else {
+      onSave(coerced); // new model - send everything
+    }
   };
 
   const f = (key) => (e) => setForm(p => ({ ...p, [key]: e.target.value }));
@@ -367,7 +382,7 @@ function ModelForm({ initial, onSave, onCancel }) {
           <FormField label="Retry Window (min)" type="number" min="0.1" step="0.1" value={form.retryWindowMinutes} onChange={f('retryWindowMinutes')} title="Total time window in minutes for all retry attempts" />
           <FormField label="Max Concurrency" type="number" min="1" max="10" value={form.maxConcurrency} onChange={f('maxConcurrency')} title="Maximum simultaneous API calls. Set to 1 for models that only allow 1 connection (e.g. GLM 4.7)" />
           <FormField label="Request Pause (ms)" type="number" min="0" max="60000" step="100" value={form.requestPauseMs} onChange={f('requestPauseMs')} title="Minimum pause between consecutive API calls to this model (milliseconds). Prevents rate limiting. 0 = no pause." />
-          <FormField label="Request Timeout (s)" type="number" min="10" max="600" value={form.requestTimeout} onChange={f('requestTimeout')} title="Per-request fetch timeout in seconds. Increase for slow endpoints or complex codegen tasks" />
+          <FormField label="Request Timeout (s)" type="number" min="10" max="3600" value={form.requestTimeout} onChange={f('requestTimeout')} title="Per-request fetch timeout in seconds. Thinking models may need 900-1800s. Default 180s." />
           <FormField label="Rate Limit Backoff (ms)" type="number" min="1000" max="3600000" step="1000" value={form.rateLimitBackoffMs} onChange={f('rateLimitBackoffMs')} title="Default wait time (ms) after a rate-limit (429) error when the provider does not specify how long to wait. Default 120000 = 2 minutes." />
         </div>
       </div>
@@ -431,20 +446,26 @@ function ModelRegistry() {
     queryFn: models.registry,
   });
 
+  const [mutationError, setMutationError] = useState(null);
+
   const addMutation = useMutation({
     mutationFn: models.registerModel,
     onSuccess: () => {
+      setMutationError(null);
       queryClient.invalidateQueries({ queryKey: ['models'] });
       setShowForm(false);
     },
+    onError: (err) => setMutationError(err?.response?.data?.error || err?.message || 'Failed to add model'),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => models.updateModel(id, data),
     onSuccess: () => {
+      setMutationError(null);
       queryClient.invalidateQueries({ queryKey: ['models'] });
       setEditingId(null);
     },
+    onError: (err) => setMutationError(err?.response?.data?.error || err?.message || 'Failed to update model'),
   });
 
   const deleteMutation = useMutation({
@@ -492,9 +513,17 @@ function ModelRegistry() {
 
       {showDiscover && <DiscoverPanel onAdd={(data) => { addMutation.mutate(data); }} onClose={() => setShowDiscover(false)} />}
 
+      {mutationError && (
+        <div className="mb-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
+          <span className="shrink-0 mt-0.5">&#x26A0;</span>
+          <span>{mutationError}</span>
+          <button onClick={() => setMutationError(null)} className="ml-auto shrink-0 text-red-400 hover:text-red-600">&times;</button>
+        </div>
+      )}
+
       {showForm && !editingId && (
         <div className="mb-4">
-          <ModelForm onSave={(data) => addMutation.mutate(data)} onCancel={() => setShowForm(false)} />
+          <ModelForm onSave={(data) => { setMutationError(null); addMutation.mutate(data); }} onCancel={() => { setMutationError(null); setShowForm(false); }} />
         </div>
       )}
 
@@ -509,8 +538,8 @@ function ModelRegistry() {
               {editingId === model.id ? (
                 <ModelForm
                   initial={model}
-                  onSave={(data) => updateMutation.mutate({ id: model.id, data })}
-                  onCancel={() => setEditingId(null)}
+                  onSave={(data) => { setMutationError(null); updateMutation.mutate({ id: model.id, data }); }}
+                  onCancel={() => { setMutationError(null); setEditingId(null); }}
                 />
               ) : (
                 <div className={`flex items-center justify-between p-3 rounded-lg border ${

@@ -13,6 +13,7 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import type { PodbitConfig } from './types.js';
 
 dotenv.config();
@@ -21,7 +22,14 @@ dotenv.config();
 // port literals anywhere in this file — read them from PORTS.
 import { PORTS, localUrl } from './ports.js';
 
-const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8'));
+// Repo root derived from this file's location (config/defaults.ts → repo root is
+// one directory up). Stable regardless of process.cwd(), which varies depending on
+// how the process is spawned (CLI vs MCP server vs Cursor extension).
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const REPO_ROOT = path.resolve(__dirname, '..');
+
+const pkg = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf-8'));
 export const VERSION: string = pkg.version;
 
 // Build tsx command for service spawning — uses npx tsx which works across Node versions.
@@ -34,7 +42,7 @@ const tsxArgs = (script: string) => ['tsx', script];
 // working directory, which matches the conventional layout.
 const labsRoot: string = process.env.PODBIT_LABS_ROOT
     ? path.resolve(process.env.PODBIT_LABS_ROOT)
-    : path.resolve(process.cwd(), '..', 'podbit-labs');
+    : path.resolve(REPO_ROOT, '..', 'podbit-labs');
 
 const labCwd = (name: string): string => path.join(labsRoot, name);
 const labExists = (name: string): boolean => {
@@ -152,11 +160,11 @@ export const config: PodbitConfig = {
   },
 
   managedServices: {
-    resonance: {
+    podbit: {
       name: 'Podbit API',
       command: tsxCommand,
       args: tsxArgs('server.ts'),
-      cwd: process.cwd(),
+      cwd: REPO_ROOT,
       healthEndpoint: localUrl(PORTS.api, '/health'),
       required: true,
       autoStart: true,
@@ -168,7 +176,7 @@ export const config: PodbitConfig = {
       name: 'GUI Dev Server',
       command: 'npm',
       args: ['run', 'dev'],
-      cwd: path.join(process.cwd(), 'gui'),
+      cwd: path.join(REPO_ROOT, 'gui'),
       healthEndpoint: localUrl(PORTS.gui),
       required: false,
       autoStart: true,
@@ -178,7 +186,7 @@ export const config: PodbitConfig = {
       name: 'Knowledge Proxy',
       command: tsxCommand,
       args: tsxArgs('proxy-server.ts'),
-      cwd: process.cwd(),
+      cwd: REPO_ROOT,
       healthEndpoint: `http://${process.env.HOST || 'localhost'}:${parseInt(process.env.PROXY_PORT!, 10) || 11435}/health`,
       required: false,
       autoStart: true,
@@ -190,7 +198,7 @@ export const config: PodbitConfig = {
       name: 'Partition Pool',
       command: tsxCommand,
       args: tsxArgs('partition-server.ts'),
-      cwd: process.cwd(),
+      cwd: REPO_ROOT,
       healthEndpoint: localUrl(PORTS.partitionServer, '/health'),
       required: false,
       autoStart: false,
@@ -828,25 +836,7 @@ export const config: PodbitConfig = {
   },
 
   tokenLimits: {
-    defaultMaxTokens: 4096,
-    minTokenFloor: 512,
-    reasoningExtraTokens: parseInt(process.env.REASONING_EXTRA_TOKENS!, 10) || 2000,
     reasoningModelPatterns: ['reasoning', 'r1', 'glm', 'gpt-oss', 'o1', 'o3', 'o4-'],
-    contextCompression: 1024,
-    chatResponse: 2048,
-    voiceSynthesis: 2048,
-    researchSeeds: 4000,
-    configTune: 2000,
-    domainDigest: 200,
-    docsValidation: 100,
-    compressionRatio: 0.3,
-    profileLimits: {
-      micro:  { summarize: 100,  compress: 100 },
-      small:  { summarize: 200,  compress: 200 },
-      medium: { summarize: 800,  compress: 1000 },
-      large:  { summarize: 1200, compress: 1500 },
-      xl:     { summarize: 1500, compress: 2000 },
-    },
   },
 
   subsystemTemperatures: { ...DEFAULT_TEMPERATURES },
@@ -1032,6 +1022,11 @@ export const config: PodbitConfig = {
     specReview: {
       enabled: true,
       minConfidence: 0.7,
+    },
+    autoRetest: {
+      enabled: true,
+      maxRetests: 2,
+      confidenceThreshold: 0.75,
     },
     apiVerification: {
       enabled: false,

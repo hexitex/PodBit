@@ -8,6 +8,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { breakthroughRegistry, database } from '../lib/api';
 import { resolveNodeNames, getCachedName } from '../lib/node-names';
+import { formatLocal, formatLocalDate } from '../lib/datetime';
 
 function StatCard({ title, value, subtitle, icon: Icon, color = 'purple' }) {
   const colorClasses = {
@@ -208,7 +209,7 @@ function DocumentationPanel({ bt }) {
           ) : (
             <div className="space-y-2">
               <p className="text-[10px] text-gray-400">
-                Snapshot: {new Date(doc.snapshotAt).toLocaleString()} (v{doc.version})
+                Snapshot: {formatLocal(doc.snapshotAt)} (v{doc.version})
               </p>
 
               {/* Node Identity */}
@@ -225,7 +226,7 @@ function DocumentationPanel({ bt }) {
                     <span>Lifecycle:</span><span>{doc.node.lifecycleState || '—'}</span>
                     <span>Generation:</span><span>{doc.node.generation ?? 0}</span>
                     <span>Children:</span><span>{doc.node.totalChildren ?? 0}</span>
-                    <span>Created:</span><span>{doc.node.createdAt ? new Date(doc.node.createdAt).toLocaleString() : '—'}</span>
+                    <span>Created:</span><span>{doc.node.createdAt ? formatLocal(doc.node.createdAt) : '—'}</span>
                   </div>
                   {doc.node.contentHash && (
                     <p className="mt-1.5 text-[10px] text-gray-400 font-mono truncate">Hash: {doc.node.contentHash}</p>
@@ -310,7 +311,7 @@ function DocumentationPanel({ bt }) {
                         {a.weight_before != null && a.weight_after != null && (
                           <span>Weight: {Number(a.weight_before).toFixed(3)} → {Number(a.weight_after).toFixed(3)}</span>
                         )}
-                        {a.created_at && <span>{new Date(a.created_at).toLocaleString()}</span>}
+                        {a.created_at && <span>{formatLocal(a.created_at)}</span>}
                       </div>
                       {a.error && <p className="text-red-400 mt-1">{a.error}</p>}
                       {a.guidance && <p className="text-yellow-400 mt-1 italic">Guidance: {a.guidance}</p>}
@@ -346,7 +347,7 @@ function DocumentationPanel({ bt }) {
                               ? `${Number(f.weight_before).toFixed(2)} → ${Number(f.weight_after).toFixed(2)}`
                               : '—'}
                           </td>
-                          <td className="py-1">{f.created_at ? new Date(f.created_at).toLocaleDateString() : '—'}</td>
+                          <td className="py-1">{f.created_at ? formatLocalDate(f.created_at) : '—'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -374,7 +375,7 @@ function DocumentationPanel({ bt }) {
                           <td className="py-1 max-w-[150px] truncate">{d.old_value || '—'} → {d.new_value}</td>
                           <td className="py-1">{d.decided_by_tier}/{d.contributor}</td>
                           <td className="py-1 max-w-[200px] truncate">{d.reason || '—'}</td>
-                          <td className="py-1">{d.created_at ? new Date(d.created_at).toLocaleDateString() : '—'}</td>
+                          <td className="py-1">{d.created_at ? formatLocalDate(d.created_at) : '—'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -392,7 +393,7 @@ function DocumentationPanel({ bt }) {
                         {entry.content_hash_after?.slice(0, 12)}...
                       </span>
                       <span className="text-[10px] shrink-0">{entry.contributor}</span>
-                      <span className="text-[10px] shrink-0">{entry.timestamp ? new Date(entry.timestamp).toLocaleDateString() : ''}</span>
+                      <span className="text-[10px] shrink-0">{entry.timestamp ? formatLocalDate(entry.timestamp) : ''}</span>
                     </div>
                   ))}
                 </DocSection>
@@ -564,7 +565,7 @@ function BreakthroughCard({ bt }) {
             <Pencil size={14} />
           </button>
           <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
-            {bt.promoted_at ? new Date(bt.promoted_at).toLocaleDateString() : ''}
+            {bt.promoted_at ? formatLocalDate(bt.promoted_at) : ''}
           </span>
         </div>
       </div>

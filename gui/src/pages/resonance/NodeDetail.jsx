@@ -7,6 +7,7 @@ import {
   CheckCircle, HelpCircle, ShieldCheck, XCircle, Clock, Copy,
 } from 'lucide-react';
 import api, { resonance, feedback, evm } from '../../lib/api';
+import { formatLocal, formatLocalDate } from '../../lib/datetime';
 import TagSelector from '../../components/TagSelector';
 import VariableRefText from '../../components/VariableRefText';
 import { VerificationDetailModal, getOutcome, OUTCOME_CONFIG } from '../../components/VerificationDetail';
@@ -584,7 +585,7 @@ export default function NodeDetail({ node, onClose, onSelectNode, onShowTree, do
           <div className="bg-emerald-50 dark:bg-emerald-900/30 rounded-lg p-3 border border-emerald-100 dark:border-emerald-800">
             <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 text-xs font-medium mb-1">
               <CheckCircle size={12} /> Answered
-              {node.metadata.answeredAt && <span className="text-emerald-500 dark:text-emerald-400 font-normal ml-auto">{new Date(node.metadata.answeredAt).toLocaleDateString()}</span>}
+              {node.metadata.answeredAt && <span className="text-emerald-500 dark:text-emerald-400 font-normal ml-auto">{formatLocalDate(node.metadata.answeredAt)}</span>}
             </div>
             {node.metadata.answerPreview && <p className="text-sm text-emerald-800 dark:text-emerald-200 mt-1">{node.metadata.answerPreview}</p>}
             {node.metadata.contextNodeCount && <p className="text-xs text-emerald-500 dark:text-emerald-400 mt-1.5">{node.metadata.contextNodeCount} context nodes used</p>}
@@ -641,7 +642,7 @@ export default function NodeDetail({ node, onClose, onSelectNode, onShowTree, do
             )}
             {node.validation.validatedBy && (
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                Validated by {node.validation.validatedBy} on {new Date(node.validation.validatedAt).toLocaleDateString()}
+                Validated by {node.validation.validatedBy} on {formatLocalDate(node.validation.validatedAt)}
               </p>
             )}
           </div>
@@ -824,7 +825,7 @@ export default function NodeDetail({ node, onClose, onSelectNode, onShowTree, do
               <p className="text-gray-700 dark:text-gray-300 italic">{effectiveNode.feedback_note}</p>
               <div className="flex items-center gap-2 mt-1.5 text-gray-500 dark:text-gray-400">
                 {effectiveNode.feedback_source && <span className="capitalize">{effectiveNode.feedback_source}</span>}
-                {effectiveNode.feedback_at && <span>{new Date(effectiveNode.feedback_at).toLocaleString()}</span>}
+                {effectiveNode.feedback_at && <span>{formatLocal(effectiveNode.feedback_at)}</span>}
               </div>
             </div>
           )}
@@ -878,7 +879,7 @@ export default function NodeDetail({ node, onClose, onSelectNode, onShowTree, do
                     <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500">
                       <span className="capitalize">{fb.source}</span>
                       {fb.contributor && <span>{fb.contributor}</span>}
-                      <span>{new Date(fb.created_at).toLocaleString()}</span>
+                      <span>{formatLocal(fb.created_at)}</span>
                       {fb.weight_before != null && fb.weight_after != null && (
                         <span className={fb.weight_after > fb.weight_before ? 'text-green-500' : fb.weight_after < fb.weight_before ? 'text-red-500' : ''}>
                           {fb.weight_before.toFixed(2)} → {fb.weight_after.toFixed(2)}

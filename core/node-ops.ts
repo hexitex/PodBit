@@ -34,7 +34,7 @@ import { config } from './engine-config.js';
 import { measureSpecificity } from './specificity.js';
 import { l2Normalize, embeddingToBuffer, cosineSimilarity, parseEmbedding } from './scoring.js';
 import { getAccessibleDomains, ensurePartition, logDecision } from './governance.js';
-import { emitActivity } from '../services/event-bus.js';
+import { emitActivity, nodeLabel } from '../services/event-bus.js';
 import { computeContentHash, logOperation } from './integrity.js';
 import { RC } from '../config/constants.js';
 import type { CreateNodeOptions } from './types.js';
@@ -980,7 +980,7 @@ async function autorateNodeInline(nodeId: string, content: string, nodeType: str
     });
 
     const ratingLabel = result.rating === 1 ? 'useful' : result.rating === 0 ? 'not useful' : 'harmful';
-    emitActivity('cycle', 'autorating_inline', `Inline rated ${nodeId.slice(0, 8)} (${nodeType}) as ${ratingLabel}`, { nodeId, nodeType, domain, rating: result.rating, ratingLabel, reason: result.reason });
+    emitActivity('cycle', 'autorating_inline', `Inline rated ${nodeLabel(nodeId, content)} as ${ratingLabel}`, { nodeId, nodeType, domain, rating: result.rating, ratingLabel, reason: result.reason });
 }
 
 export {

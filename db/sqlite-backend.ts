@@ -620,7 +620,7 @@ export function clearStatementCache(): void {
  */
 function _queryExec(d: Database.Database, sql: string, params: any[]): any[] {
     // Handle RETURNING clause before translation
-    const returningMatch = sql.match(/\bRETURNING\s+(.+?)\s*$/i);
+    const returningMatch = sql.match(/\bRETURNING\s+(.+?)\s*$/is);
     if (returningMatch) {
         return handleReturning(d, sql, params, returningMatch);
     }
@@ -677,7 +677,7 @@ function _queryExec(d: Database.Database, sql: string, params: any[]): any[] {
  * @returns First row object for SELECTs, or `null` for mutations / empty results.
  */
 function _queryOneExec(d: Database.Database, sql: string, params: any[]): any | null {
-    const returningMatch = sql.match(/\bRETURNING\s+(.+?)\s*$/i);
+    const returningMatch = sql.match(/\bRETURNING\s+(.+?)\s*$/is);
     if (returningMatch) {
         const rows = handleReturning(d, sql, params, returningMatch);
         return rows[0] || null;

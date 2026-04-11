@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Radio, Search, Loader, X } from 'lucide-react';
 import { activity } from '../lib/api';
 import { resolveNodeNames, getCachedName } from '../lib/node-names';
+import { utcDate } from '../lib/datetime';
 
 const CATEGORY_COLORS = {
   synthesis:  { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-600 dark:text-purple-400', dot: 'bg-purple-500' },
@@ -22,7 +23,8 @@ const CATEGORY_COLORS = {
 
 function formatTimestamp(iso) {
   if (!iso) return '';
-  const d = new Date(iso);
+  const d = utcDate(iso);
+  if (!d) return '';
   const now = new Date();
   const diffMs = now - d;
   const diffMins = Math.floor(diffMs / 60000);
@@ -37,7 +39,7 @@ function formatTimestamp(iso) {
 
 function formatFullTimestamp(iso) {
   if (!iso) return '';
-  return new Date(iso).toLocaleString('en-GB', {
+  return utcDate(iso)?.toLocaleString('en-GB', {
     day: 'numeric', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit', second: '2-digit',
   });

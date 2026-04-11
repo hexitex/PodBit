@@ -3,6 +3,7 @@
  * including number variables filtering, integrity Merkle recomputation, and nodeCount/edgeCount.
  */
 import { jest, describe, it, expect } from '@jest/globals';
+import { dbDateMs } from '../../utils/datetime.js';
 
 // Mock the integrity module that filterGenerationalReturn dynamically imports
 jest.unstable_mockModule('../../core/integrity.js', () => ({
@@ -73,7 +74,7 @@ async function filterGenerationalReturn(exportData: any, activatedAt: string): P
     }
 
     const survivingNodes = nodes.filter((n: any) => {
-        const createdAt = new Date(n.created_at).getTime();
+        const createdAt = dbDateMs(n.created_at);
         if (createdAt >= activatedTime) return true;
         if (!parentNodeIds.has(n.id)) return true;
         return false;

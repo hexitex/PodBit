@@ -15,7 +15,7 @@ import { logDecision } from '../core/governance.js';
 import type { Subsystem, RegisteredModel, ModelEntry, CallOptions } from './types.js';
 import { VALID_SUBSYSTEMS, isValidSubsystem, normalizeProvider, getModelProvider } from './types.js';
 import { callSingleModel } from './providers.js';
-import { applyReasoningBonus, logUsage } from './cost.js';
+import { isReasoningModel, logUsage } from './cost.js';
 import { isBudgetExceeded } from './budget.js';
 import { getProjectAbortSignal } from '../handlers/projects.js';
 import { acquireModelSlot, reportRateLimit } from './semaphore.js';
@@ -658,12 +658,10 @@ export async function callConsultantModel(
         _requestPauseMs: assigned.requestPauseMs,
     };
 
-    const baseMaxTokens = options.maxTokens
-        || assigned.maxTokens
-        || (assigned.contextSize ? Math.min(Math.floor(assigned.contextSize * 0.25), 16384) : undefined);
-    const effectiveMaxTokens = baseMaxTokens == null ? undefined
-        : assigned.noThink ? baseMaxTokens
-        : applyReasoningBonus(assigned.modelId, baseMaxTokens);
+    // Max tokens: caller override > registry value > 16384 floor.
+    const MIN_MAX_TOKENS = 16384;
+    const rawMaxTokens = options.maxTokens || assigned.maxTokens || MIN_MAX_TOKENS;
+    const effectiveMaxTokens = Math.max(rawMaxTokens, MIN_MAX_TOKENS);
 
     // Consultant models use their own inference params, separate from primary models.
     const effectiveTemperature = options.temperature ?? appConfig.consultantTemperatures?.[subsystem] ?? 0.15;
@@ -731,24 +729,26 @@ export async function callConsultantModel(
                 // and retry within the time window, regardless of attempt count.
                 if (isRateLimitError(err)) {
                     const parsed = parseRateLimitWaitMs(err.message);
-                    const delay = parsed ?? (assigned.rateLimitBackoffMs ?? RC.retries.rateLimitBackoffMs);
+                    const rawDelay = parsed ?? (assigned.rateLimitBackoffMs ?? RC.retries.rateLimitBackoffMs);
+                    const remaining = Math.max(0, retryWindowMs - elapsed);
+                    const delay = Math.min(rawDelay, remaining);
                     reportRateLimit(assigned.id, delay);
-                    if (elapsed + delay >= retryWindowMs) {
+                    if (delay < 1000) {
                         console.error(`[llm] Consultant "${subsystem}" rate-limited and retry window exhausted after ${attempt} attempt(s): ${err.message}`);
-                        emitActivity('llm', 'consultant_failed', `${consultantLabel} → ${assigned.name} FAILED (rate-limited, window exhausted): ${err.message.slice(0, 100)}`, {
+                        emitActivity('llm', 'consultant_failed', `${consultantLabel} -> ${assigned.name} FAILED (rate-limited, window exhausted): ${err.message.slice(0, 100)}`, {
                             subsystem, consultant: true, model: assigned.name, elapsed, error: err.message.slice(0, 200),
                         });
                         break;
                     }
-                    console.warn(`[llm] Consultant "${subsystem}" rate-limited — waiting ${(delay / 1000).toFixed(1)}s${parsed ? ' (from error)' : ' (default backoff)'}`);
-                    emitActivity('llm', 'call_rate_limited', `${consultantLabel} → ${assigned.name} rate-limited, backoff ${(delay / 1000).toFixed(0)}s`, { subsystem, attempt, delay });
+                    console.warn(`[llm] Consultant "${subsystem}" rate-limited - waiting ${(delay / 1000).toFixed(1)}s${parsed ? ' (from error)' : ' (default backoff)'}${delay < rawDelay ? ` (clamped from ${(rawDelay/1000).toFixed(0)}s)` : ''}`);
+                    emitActivity('llm', 'call_rate_limited', `${consultantLabel} -> ${assigned.name} rate-limited, backoff ${(delay / 1000).toFixed(0)}s`, { subsystem, attempt, delay });
                     attempt--;
                     await new Promise(resolve => setTimeout(resolve, delay));
                     continue;
                 }
 
                 if (attempt >= maxRetries || elapsed >= retryWindowMs) {
-                    emitActivity('llm', 'consultant_failed', `${consultantLabel} → ${assigned.name} FAILED: ${err.message.slice(0, 100)}`, {
+                    emitActivity('llm', 'consultant_failed', `${consultantLabel} -> ${assigned.name} FAILED: ${err.message.slice(0, 100)}`, {
                         subsystem, consultant: true, model: assigned.name, elapsed, error: err.message.slice(0, 200),
                     });
                     break;
@@ -889,19 +889,13 @@ export async function callSubsystemModel(
         _requestPauseMs: assigned.requestPauseMs,
     };
 
-    // Resolve max tokens: caller override > per-model registry > derived from context size > undefined.
-    // Leave undefined when unknown — let the provider use its own default rather than capping at an arbitrary value.
-    // Anthropic provider handles its own required max_tokens fallback.
-    const baseMaxTokens = options.maxTokens
-        || assigned.maxTokens
-        || (assigned.contextSize ? Math.min(Math.floor(assigned.contextSize * 0.25), 16384) : undefined);
-
-    // Reasoning models need extra tokens for chain-of-thought.
-    // Skip the bonus when noThink is active — we're stripping reasoning output anyway.
-    const effectiveMaxTokens = baseMaxTokens == null ? undefined
-        : assigned.noThink ? baseMaxTokens
-        : applyReasoningBonus(assigned.modelId, baseMaxTokens);
-    const isReasoning = !assigned.noThink && (effectiveMaxTokens ?? 0) > (baseMaxTokens ?? 0);
+    // Max tokens: caller override > registry value > 16384 floor.
+    // Reasoning models burn most output tokens on chain-of-thought — anything under 16k
+    // risks finish_reason=length with empty content. Never let the floor drop below 16384.
+    const MIN_MAX_TOKENS = 16384;
+    const rawMaxTokens = options.maxTokens || assigned.maxTokens || MIN_MAX_TOKENS;
+    const effectiveMaxTokens = Math.max(rawMaxTokens, MIN_MAX_TOKENS);
+    const isReasoning = !assigned.noThink && isReasoningModel(assigned.modelId);
 
     // Resolve temperature: caller override > per-subsystem config > undefined (let model decide)
     const effectiveTemperature = options.temperature
@@ -922,7 +916,7 @@ export async function callSubsystemModel(
     const retryWindowMs = (assigned.retryWindowMinutes ?? 2) * 60 * 1000;
     const startTime = Date.now();
 
-    console.log(`[llm] Subsystem "${subsystem}" → assigned: ${assigned.name} (${getModelProvider(assigned.modelId)}, endpoint: ${model.endpoint || 'default'}), maxTokens: ${effectiveMaxTokens ?? 'dynamic'}${isReasoning ? ' (reasoning +' + appConfig.tokenLimits.reasoningExtraTokens + ')' : ''}, temp: ${effectiveTemperature ?? 'model-default'}, maxRetries: ${maxRetries}, retryWindow: ${assigned.retryWindowMinutes ?? 2}m`);
+    console.log(`[llm] Subsystem "${subsystem}" → assigned: ${assigned.name} (${getModelProvider(assigned.modelId)}, endpoint: ${model.endpoint || 'default'}), maxTokens: ${effectiveMaxTokens ?? 'provider-default'}${isReasoning ? ' (reasoning)' : ''}, temp: ${effectiveTemperature ?? 'model-default'}, maxRetries: ${maxRetries}, retryWindow: ${assigned.retryWindowMinutes ?? 2}m`);
     emitActivity('llm', 'call_start', `${subsystem} → ${assigned.name}`, { subsystem, model: assigned.name, provider: getModelProvider(assigned.modelId), maxTokens: effectiveMaxTokens, reasoning: isReasoning });
 
     // Semaphore is acquired inside callSingleModel (keyed by _registryId) — no
@@ -981,16 +975,21 @@ export async function callSubsystemModel(
                 // and retry within the time window, regardless of attempt count.
                 if (isRateLimitError(err)) {
                     const parsed = parseRateLimitWaitMs(err.message);
-                    const delay = parsed ?? (assigned.rateLimitBackoffMs ?? RC.retries.rateLimitBackoffMs);
+                    const rawDelay = parsed ?? (assigned.rateLimitBackoffMs ?? RC.retries.rateLimitBackoffMs);
+                    // Clamp backoff to remaining window so a misconfigured backoff > window
+                    // still gets at least one retry instead of giving up immediately.
+                    const remaining = Math.max(0, retryWindowMs - elapsed);
+                    const delay = Math.min(rawDelay, remaining);
                     // Propagate cooldown to ALL callers for this model
                     reportRateLimit(assigned.id, delay);
-                    if (elapsed + delay >= retryWindowMs) {
+                    if (delay < 1000) {
+                        // Less than 1s remaining - no point retrying
                         console.error(`[llm] Subsystem "${subsystem}" rate-limited and retry window exhausted after ${attempt} attempt(s): ${err.message}`);
-                        emitActivity('llm', 'call_failed', `${subsystem} → ${assigned.name} FAILED (rate-limited, window exhausted): ${err.message.slice(0, 100)}`, { subsystem, model: assigned.name, elapsed, error: err.message.slice(0, 200) });
+                        emitActivity('llm', 'call_failed', `${subsystem} -> ${assigned.name} FAILED (rate-limited, window exhausted): ${err.message.slice(0, 100)}`, { subsystem, model: assigned.name, elapsed, error: err.message.slice(0, 200) });
                         break;
                     }
-                    console.warn(`[llm] Subsystem "${subsystem}" rate-limited — waiting ${(delay / 1000).toFixed(1)}s${parsed ? ' (from error)' : ' (default backoff)'}`);
-                    emitActivity('llm', 'call_rate_limited', `${subsystem} → ${assigned.name} rate-limited, backoff ${(delay / 1000).toFixed(0)}s`, { subsystem, attempt, delay });
+                    console.warn(`[llm] Subsystem "${subsystem}" rate-limited - waiting ${(delay / 1000).toFixed(1)}s${parsed ? ' (from error)' : ' (default backoff)'}${delay < rawDelay ? ` (clamped from ${(rawDelay/1000).toFixed(0)}s)` : ''}`);
+                    emitActivity('llm', 'call_rate_limited', `${subsystem} -> ${assigned.name} rate-limited, backoff ${(delay / 1000).toFixed(0)}s`, { subsystem, attempt, delay });
                     // Don't count rate-limit retries against maxRetries
                     attempt--;
                     await new Promise(resolve => setTimeout(resolve, delay));
@@ -999,7 +998,7 @@ export async function callSubsystemModel(
 
                 if (attempt >= maxRetries || elapsed >= retryWindowMs) {
                     console.error(`[llm] Subsystem "${subsystem}" failed after ${attempt} attempt(s): ${err.message}`);
-                    emitActivity('llm', 'call_failed', `${subsystem} → ${assigned.name} FAILED: ${err.message.slice(0, 100)}`, { subsystem, model: assigned.name, elapsed, error: err.message.slice(0, 200) });
+                    emitActivity('llm', 'call_failed', `${subsystem} -> ${assigned.name} FAILED: ${err.message.slice(0, 100)}`, { subsystem, model: assigned.name, elapsed, error: err.message.slice(0, 200) });
                     break;
                 }
                 const delay = Math.min(RC.retries.backoffBaseMs * attempt, RC.retries.backoffCapMs);

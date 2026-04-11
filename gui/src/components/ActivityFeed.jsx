@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Radio, ChevronDown, ChevronUp, Pause, Play, Trash2 } from 'lucide-react';
 import { getSecurityKey } from '../lib/api';
 import { resolveNodeNames, getCachedName } from '../lib/node-names';
+import { utcDate } from '../lib/datetime';
 
 const CATEGORY_COLORS = {
   synthesis:  { bg: 'bg-purple-500', text: 'text-purple-400', dot: 'bg-purple-400', bar: '#a855f7' },
@@ -23,7 +24,8 @@ const CATEGORIES = Object.keys(CATEGORY_COLORS);
 const MAX_EVENTS = 200;
 
 function formatTime(iso) {
-  const d = new Date(iso);
+  const d = utcDate(iso);
+  if (!d) return '';
   return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 

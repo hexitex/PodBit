@@ -616,7 +616,7 @@ app.post('/services/start-all', async (_req, res) => {
 });
 
 // Stop all running services (orchestrator, API, and GUI stay alive)
-const STOP_ALL_EXEMPT = new Set(['resonance', 'gui']);
+const STOP_ALL_EXEMPT = new Set(['podbit', 'gui']);
 app.post('/services/stop-all', async (_req, res) => {
     const stopped: string[] = [];
     const alreadyStopped: string[] = [];

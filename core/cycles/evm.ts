@@ -13,7 +13,7 @@
 
 import { query, queryOne } from '../../db.js';
 import { config as appConfig } from '../../config.js';
-import { emitActivity } from '../../services/event-bus.js';
+import { emitActivity, nodeLabel } from '../../services/event-bus.js';
 import { getExcludedDomainsForCycle } from '../governance.js';
 
 /**
@@ -79,7 +79,7 @@ async function runEvmCycleSingle(): Promise<void> {
     if (!candidate) return;
 
     emitActivity('cycle', 'evm_candidate',
-        `Lab verification: ${((candidate as any).id as string).slice(0, 8)} (weight: ${(candidate as any).weight.toFixed(3)})`,
+        `Lab verification: ${nodeLabel((candidate as any).id, (candidate as any).content)} (weight: ${(candidate as any).weight.toFixed(3)})`,
         { nodeId: (candidate as any).id, weight: (candidate as any).weight, domain: (candidate as any).domain });
 
     // Submit to the lab pipeline — spec extraction, lab execution, evaluation, and
@@ -115,15 +115,15 @@ async function runEvmCycleSingle(): Promise<void> {
 
     if (result.status === 'completed') {
         emitActivity('cycle', 'evm_verified',
-            `Lab ${claimSupported ? 'SUPPORTED' : 'REFUTED'}: ${((candidate as any).id as string).slice(0, 8)} (confidence: ${confidence.toFixed(2)})`,
+            `Lab ${claimSupported ? 'SUPPORTED' : 'REFUTED'}: ${nodeLabel((candidate as any).id, (candidate as any).content)} (confidence: ${confidence.toFixed(2)})`,
             { nodeId: (candidate as any).id, claimSupported, confidence, domain: (candidate as any).domain });
     } else if (result.status === 'skipped') {
         emitActivity('cycle', 'evm_skipped',
-            `Not reducible: ${((candidate as any).id as string).slice(0, 8)} — ${(result.error || '').slice(0, 80)}`,
+            `Not reducible: ${nodeLabel((candidate as any).id, (candidate as any).content)} — ${(result.error || '').slice(0, 80)}`,
             { nodeId: (candidate as any).id, reason: result.error, domain: (candidate as any).domain });
     } else if (result.status === 'failed') {
         emitActivity('cycle', 'evm_failed',
-            `Lab failed: ${((candidate as any).id as string).slice(0, 8)} — ${(result.error || '').slice(0, 80)}`,
+            `Lab failed: ${nodeLabel((candidate as any).id, (candidate as any).content)} — ${(result.error || '').slice(0, 80)}`,
             { nodeId: (candidate as any).id, error: result.error, domain: (candidate as any).domain });
     }
 }

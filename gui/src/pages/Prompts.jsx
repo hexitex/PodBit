@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { prompts as promptsApi } from '../lib/api';
 import { Save, RotateCcw, ChevronDown, ChevronRight, Eye, Award, RefreshCw, Trash2, FileText, Download, Upload, Lock, Unlock, Pencil, X } from 'lucide-react';
 import { useConfirmDialog } from '../components/ConfirmDialog';
+import { formatLocalDate } from '../lib/datetime';
 import { PageRelationshipBanner, SubsystemBadge, ConfigLink } from '../components/RelatedLinks';
 import { PROMPT_TO_SUBSYSTEMS, SUBSYSTEM_MAP, SUPER_GROUPS, PROMPT_CATEGORY_TO_GROUP, SUBSYSTEM_TO_GROUP } from '../lib/subsystem-map';
 import { useScrollToHash } from '../lib/useScrollToHash';
@@ -131,7 +132,7 @@ function GoldStandardItem({ std, promptId }) {
           </span>
         )}
         <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">
-          {std.model_used}{std.generated_at ? ` · ${new Date(std.generated_at).toLocaleDateString()}` : ''}
+          {std.model_used}{std.generated_at ? ` · ${formatLocalDate(std.generated_at)}` : ''}
         </span>
       </div>
 
@@ -817,7 +818,7 @@ export default function Prompts() {
             {backupInfo?.exists && (
               <span className="text-xs text-gray-400 dark:text-gray-500 mr-1">
                 Backup: {backupInfo.count} overrides
-                {backupInfo.exported_at && ` \u00b7 ${new Date(backupInfo.exported_at).toLocaleDateString()}`}
+                {backupInfo.exported_at && ` \u00b7 ${formatLocalDate(backupInfo.exported_at)}`}
               </span>
             )}
             <button

@@ -104,7 +104,8 @@ export function handleUpdateReturning(
     if (!tableMatch) throw new Error('Could not parse table name from UPDATE for RETURNING');
     const tableName = tableMatch[1];
 
-    const whereMatch = sql.match(/\bWHERE\b(.+)$/i);
+    // dotAll flag (s) so . matches newlines in multi-line SQL template literals
+    const whereMatch = sql.match(/\bWHERE\b(.+)$/is);
     let affectedIds: any[] = [];
 
     if (whereMatch) {
@@ -116,7 +117,7 @@ export function handleUpdateReturning(
             ) as any[];
             affectedIds = rows.map((r: any) => r.id);
         } catch {
-            // Pre-select failed — update proceeds without RETURNING data
+            // Pre-select failed - update proceeds without RETURNING data
         }
     }
 
@@ -156,7 +157,7 @@ export function handleDeleteReturning(
     if (!tableMatch) throw new Error('Could not parse table name from DELETE for RETURNING');
     const tableName = tableMatch[1];
 
-    const whereMatch = sql.match(/\bWHERE\b(.+)$/i);
+    const whereMatch = sql.match(/\bWHERE\b(.+)$/is);
     const selectCols = columns === '*' ? '*' : columns;
     let rows: any[] = [];
 
@@ -166,7 +167,7 @@ export function handleDeleteReturning(
             const whereParams = (params as any[]).slice(-countPlaceholders(whereMatch[0]));
             rows = database.prepare(selectSql).all(...whereParams) as any[];
         } catch {
-            // Pre-select failed — delete proceeds, caller gets empty RETURNING result
+            // Pre-select failed - delete proceeds, caller gets empty RETURNING result
         }
     } else {
         try {

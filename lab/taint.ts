@@ -56,13 +56,12 @@ export async function propagateTaint(refutedNodeId: string, maxDepth: number = 5
             [refutedNodeId, new Date().toISOString(), ...childIds]
         );
 
-        // Count affected rows (result is array for UPDATE...RETURNING or we check changes)
-        // For better-sqlite3 via our query wrapper, UPDATEs return []
-        // Count by checking how many are now tainted
+        // Count affected rows -- better-sqlite3 UPDATEs return [], so count explicitly
+        const countPlaceholders = childIds.map((_, i) => `$${i + 2}`).join(', ');
         const countResult = await queryOne(
             `SELECT COUNT(*) as cnt FROM nodes
              WHERE lab_status = 'tainted' AND lab_taint_source_id = $1
-               AND id IN (${taintPlaceholders})`,
+               AND id IN (${countPlaceholders})`,
             [refutedNodeId, ...childIds]
         ) as { cnt: number } | null;
 

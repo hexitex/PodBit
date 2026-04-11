@@ -260,6 +260,20 @@ export interface VerifyHints {
      * where critique-lab review is the desired outcome rather than a fallback.
      */
     allowCritique?: boolean;
+    /** Wall-clock budget (ms) for the entire verification including lab polling.
+     *  Comes from config.lab.freezeTimeoutMs via the queue worker. The poll loop
+     *  in submitSpec derives its maxPollAttempts from this so it never exceeds the
+     *  freeze timeout. */
+    pollBudgetMs?: number;
+    /** Abort signal for lab polling only. When this fires (freeze timeout),
+     *  the poll loop cancels. Spec extraction runs without this signal so
+     *  semaphore wait time doesn't eat into the lab's polling budget. */
+    signal?: AbortSignal;
+    /** AbortController for the lab phase - the queue worker creates it,
+     *  verifyNodeInternal starts the timer just before lab submission. */
+    labAbort?: AbortController;
+    /** Freeze timeout in ms - used to start the lab abort timer. */
+    freezeTimeoutMs?: number;
 }
 
 /** LLM diagnosis of a failed verification — used by the "suggest" action */

@@ -96,6 +96,7 @@ async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: numbe
 export async function submitExperiment(
     template: LabTemplate,
     payload: LabSubmitRequest,
+    options?: { signal?: AbortSignal },
 ): Promise<LabSubmitResponse> {
     const exec = template.executionConfig;
     const url = buildUrl(exec.url, exec.submitEndpoint || '/submit');
@@ -111,6 +112,35 @@ export async function submitExperiment(
 
     if (!response.ok) {
         const text = await response.text().catch(() => '');
+        // 429 = lab queue full. Wait for a slot to open rather than failing.
+        // The caller's abort signal (from freezeTimeoutMs) bounds how long we wait.
+        if (response.status === 429) {
+            const signal = options?.signal;
+            const retryAfter = parseInt(response.headers.get('retry-after') || '', 10);
+            const pollMs = (retryAfter > 0 ? retryAfter * 1000 : 15_000);
+            console.error(`[lab-client] Lab queue full - polling every ${Math.round(pollMs / 1000)}s until a slot opens`);
+
+            while (true) {
+                if (signal?.aborted) throw new Error('Lab submit aborted while waiting for queue slot');
+                await new Promise(r => setTimeout(r, pollMs));
+                const retry = await fetchWithTimeout(url, { method, headers, body: JSON.stringify(payload) }, timeoutMs);
+                if (retry.ok) {
+                    const body = await retry.json() as any;
+                    const idField = exec.responseIdField || 'jobId';
+                    const jobId = getNestedField(body, idField);
+                    if (jobId == null || jobId === '') throw new Error(`Lab submit response missing "${idField}" field`);
+                    return { jobId: String(jobId), accepted: body.accepted ?? true, queuePosition: body.queuePosition, estimatedCompletionMs: body.estimatedCompletionMs, resourceLock: body.resourceLock ?? false };
+                }
+                if (retry.status !== 429) {
+                    const retryText = await retry.text().catch(() => '');
+                    const err = new Error(`Lab submit failed (${retry.status}): ${retryText.slice(0, 500)}`);
+                    (err as any).labRejected = retry.status === 400;
+                    (err as any).statusCode = retry.status;
+                    throw err;
+                }
+                // Still 429 - keep waiting
+            }
+        }
         const err = new Error(`Lab submit failed (${response.status}): ${text.slice(0, 500)}`);
         // Tag rejection errors so callers can try a different lab
         (err as any).labRejected = response.status === 400;
@@ -122,7 +152,7 @@ export async function submitExperiment(
     const idField = exec.responseIdField || 'jobId';
     const jobId = getNestedField(body, idField);
 
-    if (!jobId) {
+    if (jobId == null || jobId === '') {
         throw new Error(`Lab submit response missing "${idField}" field`);
     }
 
@@ -340,7 +370,7 @@ export async function submitSpec(
     spec: import('./types.js').ExperimentSpec,
     templateId: string = 'math-lab',
     labInfo?: { labId: string; labName: string },
-    options?: { resumeJobId?: string; onJobId?: (jobId: string) => void },
+    options?: { resumeJobId?: string; onJobId?: (jobId: string) => void; pollBudgetMs?: number; signal?: AbortSignal },
 ): Promise<LabExperimentResult> {
     const { getTemplate } = await import('./templates.js');
     const { getLab } = await import('./registry.js');
@@ -360,7 +390,7 @@ export async function submitSpec(
             systemTemplate: false,
             executionConfig: { url: liveLab.url, authType: liveLab.authType, authKey: liveLab.authCredential || undefined, authHeader: liveLab.authHeader || undefined },
             triageConfig: null,
-            pollConfig: { strategy: 'interval', pollIntervalMs: 2000, maxPollAttempts: 300, completionValues: ['completed', 'failed'], failureValues: ['failed'] },
+            pollConfig: { strategy: 'interval', pollIntervalMs: 2000, completionValues: ['completed', 'failed'], failureValues: ['failed'] },
             interpretConfig: null,
             outcomeConfig: { freezeOnStart: true, taintOnRefute: true },
             evidenceSchema: null,
@@ -396,7 +426,7 @@ export async function submitSpec(
         console.error(`[lab-client] Resuming poll for existing job ${jobId}`);
     } else {
         // Submit spec to lab
-        const submitResponse = await submitExperiment(template, { spec });
+        const submitResponse = await submitExperiment(template, { spec }, { signal: options?.signal });
         jobId = submitResponse.jobId;
         hasResourceLock = submitResponse.resourceLock ?? false;
 
@@ -411,25 +441,51 @@ export async function submitSpec(
         acquireResourceLock(labInfo.labId, labInfo.labName, jobId, config.lab.freezeTimeoutMs);
     }
 
-    // Poll until done — keep polling as long as the lab reports the job is running.
-    // The lab server has its own execution timeout; Podbit just watches.
+    // Poll until done. The poll loop must fit inside the caller's wall-clock budget
+    // (freezeTimeoutMs from the queue worker). If no budget is provided, derive from
+    // config.lab.freezeTimeoutMs so the poll timeout is never shorter than the freeze window.
     const poll = template.pollConfig;
     const intervalMs = poll.pollIntervalMs || 2000;
-    const maxPollAttempts = poll.maxPollAttempts || 600; // ~20 min at 2s intervals
+    const POLL_BUFFER_MS = 30_000; // 30s buffer for spec extraction + result fetch overhead
+    const budgetMs = options?.pollBudgetMs;
+    let maxPollAttempts: number;
+    if (budgetMs) {
+        maxPollAttempts = Math.max(10, Math.floor((budgetMs - POLL_BUFFER_MS) / intervalMs));
+    } else {
+        // No explicit budget - derive from config so the timeout stays in sync
+        const { config: cfg } = await import('../config.js');
+        const fallbackBudgetMs = cfg.lab?.freezeTimeoutMs ?? 600_000;
+        maxPollAttempts = Math.max(10, Math.floor((fallbackBudgetMs - POLL_BUFFER_MS) / intervalMs));
+    }
     let consecutiveErrors = 0;
     const maxConsecutiveErrors = 10;
     let pollCount = 0;
 
+    const signal = options?.signal;
+
     try {
         while (pollCount < maxPollAttempts) {
             pollCount++;
-            await new Promise(r => setTimeout(r, intervalMs));
 
+            // Abortable sleep - wakes immediately when signal fires (freeze timeout)
+            await new Promise<void>((resolve) => {
+                const timer = setTimeout(resolve, intervalMs);
+                if (signal) {
+                    const onAbort = () => { clearTimeout(timer); resolve(); };
+                    signal.addEventListener('abort', onAbort, { once: true });
+                }
+            });
+
+            // Check status BEFORE checking abort. If the lab already finished,
+            // return the result even if the freeze timeout fired - don't throw
+            // away a completed result just because the budget expired.
             let status;
             try {
                 status = await checkStatus(template, jobId);
                 consecutiveErrors = 0;
             } catch (pollErr: any) {
+                // If aborted AND the lab is unreachable, give up
+                if (signal?.aborted) throw new Error(`Verification aborted during lab polling for job ${jobId}`);
                 consecutiveErrors++;
                 if (consecutiveErrors >= maxConsecutiveErrors) {
                     throw new Error(`Lab unreachable during polling (${maxConsecutiveErrors} consecutive failures): ${pollErr.message}`);
@@ -441,7 +497,18 @@ export async function submitSpec(
                 const result = await fetchResult(template, jobId);
                 return { jobId, templateId, result, resourceLock: hasResourceLock };
             }
+
+            // Only abort AFTER confirming the job isn't done yet
+            if (signal?.aborted) throw new Error(`Verification aborted during lab polling for job ${jobId}`);
         }
+        // Max attempts reached - one final status check before giving up
+        try {
+            const finalStatus = await checkStatus(template, jobId);
+            if (finalStatus.status === 'completed' || finalStatus.status === 'failed') {
+                const result = await fetchResult(template, jobId);
+                return { jobId, templateId, result, resourceLock: hasResourceLock };
+            }
+        } catch { /* lab unreachable - fall through to throw */ }
         throw new Error(`Lab polling exceeded ${maxPollAttempts} attempts (${Math.round(maxPollAttempts * intervalMs / 1000)}s) for job ${jobId}`);
     } finally {
         // Always release resource lock when polling ends (success, failure, or timeout)

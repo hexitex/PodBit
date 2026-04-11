@@ -1,6 +1,6 @@
 {
   "name": "podbit",
-  "version": "0.5.1",
+  "version": "0.6.1",
   "description": "data synthesis engine for LLMs — knowledge graph, and research augmentation",
   "type": "module",
   "main": "server.ts",
@@ -53,6 +53,7 @@
     "node-stream-zip": "^1.15.0",
     "pdf-parse": "^2.4.5",
     "sharp": "^0.34.5",
+    "undici": "^8.0.2",
     "uuid": "^9.0.1",
     "xlsx": "^0.18.5"
   },

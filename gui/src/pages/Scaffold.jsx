@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { docs, seeds } from '../lib/api';
 import TagSelector from '../components/TagSelector';
+import { formatLocalDate } from '../lib/datetime';
 import { useConfirmDialog } from '../components/ConfirmDialog';
 import Markdown from '../components/Markdown';
 
@@ -186,7 +187,7 @@ function JobList({ onSelect, selectedId, onResume, resumingId, onDelete }) {
             <div className="flex items-center gap-2 mt-1">
               <StatusBadge status={job.status} />
               <span className="text-xs text-gray-400 dark:text-gray-500">
-                {new Date(job.updated_at || job.created_at).toLocaleDateString()}
+                {formatLocalDate(job.updated_at || job.created_at)}
               </span>
               <div className="ml-auto flex items-center gap-1">
                 {(job.status === 'partial' || job.status === 'failed') && (

@@ -12,7 +12,7 @@ const mockEmitActivity = jest.fn<() => void>();
 const mockGetPrompt = jest.fn<() => Promise<string>>().mockResolvedValue('prompt');
 const mockLogDecision = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
 const mockCallSingleModel = jest.fn<() => Promise<any>>().mockResolvedValue({ text: '' });
-const mockApplyReasoningBonus = jest.fn((t: any) => t);
+const mockIsReasoningModel = jest.fn<() => boolean>().mockReturnValue(false);
 const mockLogUsage = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
 const mockIsBudgetExceeded = jest.fn<() => boolean>().mockReturnValue(false);
 const mockGetProjectAbortSignal = jest.fn<() => AbortSignal | undefined>().mockReturnValue(undefined);
@@ -47,7 +47,7 @@ jest.unstable_mockModule('../../models/providers.js', () => ({
 }));
 
 jest.unstable_mockModule('../../models/cost.js', () => ({
-    applyReasoningBonus: mockApplyReasoningBonus,
+    isReasoningModel: mockIsReasoningModel,
     logUsage: mockLogUsage,
 }));
 
@@ -201,7 +201,7 @@ beforeEach(async () => {
     mockGetPrompt.mockResolvedValue('prompt');
     mockLogDecision.mockResolvedValue(undefined);
     mockCallSingleModel.mockResolvedValue({ text: '' });
-    mockApplyReasoningBonus.mockImplementation((t: any) => t);
+    mockIsReasoningModel.mockReturnValue(false);
     mockLogUsage.mockResolvedValue(undefined);
     mockIsBudgetExceeded.mockReturnValue(false);
     mockGetProjectAbortSignal.mockReturnValue(undefined);

@@ -23,7 +23,7 @@ import { queryOne, query } from '../core.js';
 import { config } from '../config.js';
 import { recordVerification, getNodeVerifications, getEVMStats, getRecentExecutions } from './feedback.js';
 import { isBudgetExceeded } from '../models/budget.js';
-import { emitActivity } from '../services/event-bus.js';
+import { emitActivity, nodeLabel } from '../services/event-bus.js';
 import { resolveContent } from '../core/number-variables.js';
 import { extractExperimentSpec } from './spec-extractor.js';
 import { submitSpec } from '../lab/client.js';
@@ -119,7 +119,7 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
         spec = hints.chainSpec;
         extractionClaimType = spec.claimType;
         emitActivity('system', 'evm_chain_spec',
-            `${nodeId.slice(0, 8)}: using chain spec (${hints.chainType}, depth ${hints.chainDepth ?? 0})`,
+            `${nodeLabel(nodeId, node.content)}: using chain spec (${hints.chainType}, depth ${hints.chainDepth ?? 0})`,
             { nodeId, chainType: hints.chainType, chainDepth: hints.chainDepth, specType: spec.specType });
     } else {
         // ─── NORMAL PATH: EXTRACTION ─────────────────────────────────
@@ -131,7 +131,7 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
                 const apiResult = await runApiVerification(nodeId, node.content, node.domain);
                 if (apiResult.totalCorrections > 0) {
                     emitActivity('api', 'pre_lab_corrections',
-                        `Pre-lab: ${apiResult.totalCorrections} correction(s) for ${nodeId.slice(0, 8)}`,
+                        `Pre-lab: ${apiResult.totalCorrections} correction(s) for ${nodeLabel(nodeId, node.content)}`,
                         { nodeId, corrections: apiResult.totalCorrections, impact: apiResult.overallImpact });
                 }
             } catch (e: any) {
@@ -154,7 +154,7 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
                     const labs = await getLabsForSpecType(priorSpec.specType);
                     if (labs.length === 0) {
                         emitActivity('system', 'lab_no_lab',
-                            `${nodeId.slice(0, 8)}: still no lab for "${priorSpec.specType}" — skipping without re-extraction`,
+                            `${nodeLabel(nodeId, node.content)}: still no lab for "${priorSpec.specType}" — skipping without re-extraction`,
                             { nodeId, specType: priorSpec.specType });
                         return {
                             nodeId, status: 'skipped',
@@ -167,7 +167,7 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
         } catch { /* non-fatal */ }
 
         // STAGE 1: EXTRACTION (bias surface)
-        emitActivity('system', 'evm_start', `Spec extraction for ${nodeId.slice(0, 8)}`, { nodeId });
+        emitActivity('system', 'evm_start', `Spec extraction for ${nodeLabel(nodeId, node.content)}`, { nodeId });
 
         let priorRejections: string | undefined;
         try {
@@ -223,6 +223,9 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
 
         let extraction;
         try {
+            // No abort signal for spec extraction - let it run without a deadline.
+            // The freeze timeout only governs the lab polling phase so semaphore
+            // wait time during LLM calls doesn't eat into the polling budget.
             extraction = await extractExperimentSpec(
                 nodeId, resolvedClaim, resolvedParents, node.domain,
                 {
@@ -233,6 +236,21 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
                 },
             );
         } catch (e: any) {
+            // Rate-limit / overloaded errors are transient — don't permanently
+            // fail the node. Return 'skipped' so the node stays eligible for
+            // retry on the next EVM cycle instead of being marked as failed.
+            const msg = (e.message || '').toLowerCase();
+            const isTransient = msg.includes('429') || msg.includes('rate limit') || msg.includes('rate_limit')
+                || msg.includes('overloaded') || msg.includes('too many requests') || msg.includes('temporarily');
+            if (isTransient) {
+                console.warn(`[evm] Spec extraction for ${nodeLabel(nodeId, node.content)} hit a transient error — will retry next cycle: ${e.message.slice(0, 200)}`);
+                const result: VerificationResult = {
+                    nodeId, status: 'skipped', error: `Spec extraction deferred (transient): ${e.message}`,
+                    weightBefore: node.weight, startedAt, completedAt: new Date().toISOString(),
+                };
+                await recordVerification(result);
+                return result;
+            }
             const result: VerificationResult = {
                 nodeId, status: 'failed', error: `Spec extraction failed: ${e.message}`,
                 weightBefore: node.weight, startedAt, completedAt: new Date().toISOString(),
@@ -255,7 +273,7 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
             await recordVerification(result);
 
             emitActivity('system', 'evm_not_reducible',
-                `${nodeId.slice(0, 8)}: not reducible to experiment — ${extraction.reason?.slice(0, 80)}`,
+                `${nodeLabel(nodeId, node.content)}: not reducible to experiment — ${extraction.reason?.slice(0, 80)}`,
                 { nodeId, claimType: extraction.claimType, reason: extraction.reason });
 
             return result;
@@ -281,7 +299,7 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
             };
             await recordVerification(result, { spec: JSON.stringify(spec) });
             emitActivity('system', 'evm_critique_blocked',
-                `${nodeId.slice(0, 8)}: critique-lab fallback blocked for autonomous call`,
+                `${nodeLabel(nodeId, node.content)}: critique-lab fallback blocked for autonomous call`,
                 { nodeId, specType: spec.specType });
             return result;
         }
@@ -350,7 +368,7 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
     }
 
     emitActivity('system', 'evm_spec_extracted',
-        `${nodeId.slice(0, 8)}: experiment spec — ${spec.specType}`,
+        `${nodeLabel(nodeId, node.content)}: experiment spec — ${spec.specType}`,
         { nodeId, specType: spec.specType, hypothesis: spec.hypothesis?.slice(0, 80) });
 
     // ─── PRE-CHECK: verify a lab exists for this spec type ────────────
@@ -368,7 +386,7 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
         };
         await recordVerification(result, { spec: JSON.stringify(spec) });
         emitActivity('system', 'lab_no_lab',
-            `${nodeId.slice(0, 8)}: no lab for "${spec.specType}" — skipped`,
+            `${nodeLabel(nodeId, node.content)}: no lab for "${spec.specType}" — skipped`,
             { nodeId, specType: spec.specType });
         return result;
     }
@@ -385,19 +403,29 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
         chosenLabName = chosenLab.name;
 
         emitActivity('lab', 'routed',
-            `${nodeId.slice(0, 8)}: routed to lab "${chosenLab.name}"`,
+            `${nodeLabel(nodeId, node.content)}: routed to lab "${chosenLab.name}"`,
             { nodeId, labId: chosenLab.id, labName: chosenLab.name, specType: spec.specType });
+
+        // Start the freeze timeout NOW - just before lab submission.
+        // Spec extraction and routing ran without a deadline so semaphore
+        // wait time doesn't eat into the lab's polling budget.
+        if (hints?.labAbort && hints?.freezeTimeoutMs) {
+            setTimeout(() => hints.labAbort!.abort(), hints.freezeTimeoutMs);
+        }
+        const labSignal = hints?.labAbort?.signal ?? hints?.signal;
 
         const templateId = chosenLab.templateId || chosenLab.id;
         labExperiment = await submitSpec(spec, templateId, { labId: chosenLab.id, labName: chosenLab.name }, {
             resumeJobId: hints?.resumeJobId,
             onJobId: hints?.onJobId,
+            pollBudgetMs: hints?.freezeTimeoutMs ?? hints?.pollBudgetMs,
+            signal: labSignal,
         });
     } catch (e: any) {
         const isRejection = (e as any).labRejected === true;
         if (isRejection) {
             emitActivity('lab', 'lab_rejected',
-                `${nodeId.slice(0, 8)}: lab "${chosenLabName || '?'}" rejected spec: ${e.message.slice(0, 100)}`,
+                `${nodeLabel(nodeId, node.content)}: lab "${chosenLabName || '?'}" rejected spec: ${e.message.slice(0, 100)}`,
                 { nodeId, labId: chosenLabId, labName: chosenLabName, error: e.message });
             const rejResult: VerificationResult = {
                 nodeId, status: 'skipped',
@@ -440,8 +468,10 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
         evaluation: isComplete ? {
             verified: claimSupported,
             // Inconclusive = neither supported nor refuted — do NOT penalize
+            // Preserve the lab's actual confidence so the GUI can display it accurately.
+            // Weight/archive/taint logic guards on the inconclusive flag, not on confidence=0.
             claimSupported: isInconclusive ? null as any : claimSupported,
-            confidence: isInconclusive ? 0 : labData.confidence,
+            confidence: labData.confidence,
             score: isInconclusive ? 0 : labData.confidence,
             mode: 'boolean' as any,
             details: labData.details || `Lab verdict: ${labData.verdict}`,
@@ -486,12 +516,12 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
             const { pullArtifactZip } = await import('../lab/evidence.js');
             artifactZipId = await pullArtifactZip(lab, labJobId, nodeId, node.domain, null);
             emitActivity('lab', 'artifacts_pulled',
-                `${nodeId.slice(0, 8)}: pulled artifact zip from "${chosenLabName}" (job ${labJobId.slice(0, 8)})`,
+                `${nodeLabel(nodeId, node.content)}: pulled artifact zip from "${chosenLabName}"`,
                 { nodeId, labJobId, labId: chosenLabId, artifactZipId });
         }
     } catch (e: any) {
         emitActivity('lab', 'artifact_pull_failed',
-            `${nodeId.slice(0, 8)}: artifact pull failed: ${e.message}`,
+            `${nodeLabel(nodeId, node.content)}: artifact pull failed: ${e.message}`,
             { nodeId, labJobId, error: e.message });
     }
 
@@ -516,8 +546,11 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
         } catch { /* non-fatal */ }
     }
 
+    const verdictMsg = isError
+        ? `ERROR via ${chosenLabName || 'unknown'}: ${labData.error || 'unknown'}`
+        : `${claimSupported ? 'SUPPORTED' : 'REFUTED'} (confidence: ${labData.confidence?.toFixed(2) || '?'}) via ${chosenLabName || 'unknown'}${deferConsequences ? ' [deferred — awaiting critique]' : ''}`;
     emitActivity('system', 'lab_complete',
-        `${nodeId.slice(0, 8)}: ${claimSupported ? 'SUPPORTED' : isError ? 'ERROR' : 'REFUTED'} (${labData.verdict}, confidence: ${labData.confidence?.toFixed(2) || '?'}) via ${chosenLabName || 'unknown'} job ${labJobId.slice(0, 8)}${deferConsequences ? ' [deferred — awaiting critique]' : ''}`,
+        `${nodeLabel(nodeId, node.content)}: ${verdictMsg}`,
         { nodeId, claimSupported, confidence: labData.confidence, specType: spec.specType,
           labJobId, labId: chosenLabId, labName: chosenLabName, verdict: labData.verdict,
           deferred: deferConsequences });
@@ -525,7 +558,7 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
     // Timeline marker for journal
     try {
         const { createTimelineMarker } = await import('../core/journal.js');
-        await createTimelineMarker('lab_verdict', `Lab: ${claimSupported ? 'SUPPORTED' : isError ? 'ERROR' : 'REFUTED'} — ${node.content?.slice(0, 80)}`, {
+        await createTimelineMarker('lab_verdict', `Lab: ${isError ? 'ERROR' : claimSupported ? 'SUPPORTED' : 'REFUTED'} — ${node.content?.slice(0, 80)}`, {
             nodeId, verdict: labData.verdict, confidence: labData.confidence,
             specType: spec.specType, labName: chosenLabName,
             deferred: deferConsequences,
@@ -549,7 +582,7 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
         } catch (e: any) {
             console.error(`[chaining] Failed to handle critique result: ${e.message}`);
             emitActivity('lab', 'chain_critique_error',
-                `${nodeId.slice(0, 8)}: critique result handling failed: ${e.message}`,
+                `${nodeLabel(nodeId, node.content)}: critique result handling failed: ${e.message}`,
                 { nodeId, error: e.message });
         }
         return result;
@@ -574,7 +607,7 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
         } catch (e: any) {
             console.error(`[chaining] Failed to enqueue critique: ${e.message}`);
             emitActivity('lab', 'chain_enqueue_error',
-                `${nodeId.slice(0, 8)}: failed to enqueue critique — applying consequences immediately`,
+                `${nodeLabel(nodeId, node.content)}: failed to enqueue critique — applying consequences immediately`,
                 { nodeId, error: e.message });
             // Fallback: if chaining fails, apply consequences immediately
             if (deferConsequences && result.evaluation) {
@@ -604,7 +637,7 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
             const apiResult = await runApiVerification(nodeId, node.content, node.domain);
             if (apiResult.totalCorrections > 0 || apiResult.totalEnrichments > 0) {
                 emitActivity('api', 'api_verification_complete',
-                    `API verification for ${nodeId.slice(0, 8)}: ${apiResult.totalCorrections} corrections, ${apiResult.totalEnrichments} enrichments`,
+                    `API verification for ${nodeLabel(nodeId, node.content)}: ${apiResult.totalCorrections} corrections, ${apiResult.totalEnrichments} enrichments`,
                     { nodeId, corrections: apiResult.totalCorrections, enrichments: apiResult.totalEnrichments });
             }
         } catch (e: any) {
@@ -619,6 +652,42 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
             await promoteToElite(nodeId, result);
         } catch (e: any) {
             emitActivity('system', 'elite_promotion_error', `Elite promotion failed: ${e.message}`, { nodeId });
+        }
+    }
+
+    // ─── AUTO-RETEST: feed lab suggestions back as guidance ────────────
+    // When the lab returns a verdict with suggestedFollowUp and confidence
+    // is below threshold, re-enqueue the node with the suggestions as
+    // guidance so the spec extractor produces a stronger test next time.
+    const autoRetest = config.labVerify.autoRetest;
+    if (autoRetest?.enabled && isComplete && !isInconclusive && result.evaluation) {
+        const suggestions = result.evaluation.structuredDetails?.suggestedFollowUp as string | undefined;
+        const conf = result.evaluation.confidence ?? 1;
+        const threshold = autoRetest.confidenceThreshold ?? 0.75;
+        const maxRetests = autoRetest.maxRetests ?? 2;
+
+        if (suggestions && conf < threshold) {
+            try {
+                // Count how many completed executions this node already has to cap retests
+                const priorCount = await query(
+                    `SELECT COUNT(*) as c FROM lab_executions WHERE node_id = $1 AND status = 'completed'`,
+                    [nodeId],
+                ) as any[];
+                const completedCount = priorCount[0]?.c ?? 0;
+
+                if (completedCount <= maxRetests) {
+                    const { enqueue } = await import('./queue.js');
+                    const retestGuidance = `Previous test (confidence ${(conf * 100).toFixed(0)}%) suggested improvements:\n${suggestions}`;
+                    await enqueue(nodeId, {
+                        guidance: retestGuidance,
+                        queuedBy: 'autonomous',
+                        priority: -1, // lower priority than manual requests
+                    });
+                    emitActivity('lab', 'auto_retest',
+                        `${nodeLabel(nodeId, node.content)}: auto-retest enqueued (confidence ${(conf * 100).toFixed(0)}% < ${(threshold * 100).toFixed(0)}%, attempt ${completedCount + 1}/${maxRetests + 1})`,
+                        { nodeId, confidence: conf, threshold, attempt: completedCount + 1, suggestions: suggestions.slice(0, 200) });
+                }
+            } catch { /* non-fatal */ }
         }
     }
 

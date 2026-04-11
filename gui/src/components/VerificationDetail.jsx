@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, XCircle, AlertTriangle, Clock, Code2, Terminal, FlaskConical, ArrowRight, ExternalLink, SkipForward, Bug, Microscope, Loader2, Eye, GraduationCap, RefreshCw, ThumbsUp, ThumbsDown, RotateCcw, X, Database, Target, Minimize2, Lightbulb, Sparkles, MessageSquare, Send, Scissors, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertTriangle, Clock, Code2, Terminal, FlaskConical, ArrowRight, ExternalLink, SkipForward, Bug, Microscope, Loader2, Eye, GraduationCap, RefreshCw, ThumbsUp, ThumbsDown, RotateCcw, X, Database, Target, Minimize2, Lightbulb, Sparkles, MessageSquare, Send, Scissors, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
 import { evm } from '../lib/api';
 import api from '../lib/api';
 import { formatNodeTime } from '../pages/resonance/node-utils';
@@ -17,6 +17,10 @@ import VariableRefText from './VariableRefText';
 export function getOutcome(exec) {
   if (exec.status === 'analysis') return 'analysis';
   if (exec.status === 'completed') {
+    // Inconclusive: claim_supported is NULL (not 0) — lab couldn't determine a verdict
+    if (exec.claim_supported == null && exec.verified != null) {
+      return 'inconclusive';
+    }
     // If neither claim_supported nor verified was set (LLM eval auto-approve), infer from weight change
     if (exec.claim_supported == null && exec.verified == null) {
       return (exec.weight_after ?? 0) >= (exec.weight_before ?? 0) ? 'supported' : 'disproved';
@@ -36,6 +40,7 @@ export function getOutcome(exec) {
 export const OUTCOME_CONFIG = {
   supported:             { label: 'Supported',       icon: CheckCircle2,  bg: 'bg-green-100 dark:bg-green-900/30',   text: 'text-green-700 dark:text-green-400' },
   disproved:             { label: 'Refuted',         icon: XCircle,       bg: 'bg-red-100 dark:bg-red-900/30',       text: 'text-red-700 dark:text-red-400' },
+  inconclusive:          { label: 'Inconclusive',    icon: HelpCircle,    bg: 'bg-gray-100 dark:bg-gray-800',        text: 'text-gray-600 dark:text-gray-400' },
   code_error:            { label: 'Lab Error',       icon: Bug,           bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-700 dark:text-orange-400' },
   error:                 { label: 'Error',           icon: AlertTriangle, bg: 'bg-amber-100 dark:bg-amber-900/30',   text: 'text-amber-700 dark:text-amber-400' },
   skipped:               { label: 'Not Reducible',   icon: SkipForward,   bg: 'bg-gray-100 dark:bg-gray-800',        text: 'text-gray-600 dark:text-gray-400' },
@@ -974,11 +979,25 @@ export function OutcomeBadge({ exec }) {
   );
 }
 
-/** Renders a horizontal bar and percentage for confidence 0–1. */
-export function ConfidenceBar({ value }) {
+/** Renders a horizontal bar and percentage for confidence 0-1.
+ *  When impact is provided, bar color reflects the finding type rather than
+ *  using a green-means-good scale (which is misleading for "no evidence" results). */
+export function ConfidenceBar({ value, impact }) {
   if (value == null) return <span className="text-gray-400 dark:text-gray-500 text-xs">-</span>;
   const pct = Math.round(value * 100);
-  const color = pct >= 70 ? 'bg-green-500' : pct >= 40 ? 'bg-yellow-500' : 'bg-red-500';
+  let color;
+  if (impact) {
+    // Color reflects the finding type, not a good/bad spectrum
+    const impactColors = {
+      structural_validation: 'bg-green-500',
+      value_correction: 'bg-amber-500',
+      structural_refutation: 'bg-red-500',
+      inconclusive: 'bg-gray-400 dark:bg-gray-500',
+    };
+    color = impactColors[impact] || 'bg-gray-400';
+  } else {
+    color = pct >= 70 ? 'bg-green-500' : pct >= 40 ? 'bg-yellow-500' : 'bg-red-500';
+  }
   return (
     <div className="flex items-center gap-2">
       <div className="w-16 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -1288,10 +1307,10 @@ export function VerificationDetailModal({ exec, onClose, onReviewed, navControls
             </div>
           )}
           <div className="flex flex-wrap gap-2">
-            {(outcome === 'supported' || outcome === 'disproved') && (
+            {(outcome === 'supported' || outcome === 'disproved' || outcome === 'inconclusive') && (
               <>
                 <ReverifyButton nodeId={exec.node_id} />
-                {outcome === 'disproved' && <AnalyseButton nodeId={exec.node_id} />}
+                {(outcome === 'disproved' || outcome === 'inconclusive') && <AnalyseButton nodeId={exec.node_id} />}
               </>
             )}
             {(outcome === 'error' || outcome === 'code_error' || outcome === 'skipped') && (
@@ -1307,7 +1326,7 @@ export function VerificationDetailModal({ exec, onClose, onReviewed, navControls
               </>
             )}
           </div>
-          {['code_error', 'error', 'disproved', 'skipped', 'needs_review', 'needs_expert'].includes(outcome) && (
+          {['code_error', 'error', 'disproved', 'inconclusive', 'skipped', 'needs_review', 'needs_expert'].includes(outcome) && (
             <GuidedRestatementPanel nodeId={exec.node_id} onRetryStarted={onClose} />
           )}
           {exec.node_id && <DecomposePanel nodeId={exec.node_id} />}

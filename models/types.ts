@@ -65,7 +65,7 @@ export interface ImageInput {
  * Sampling parameters are resolved in priority order: caller override > per-subsystem config > model default.
  */
 export interface CallOptions {
-    /** Maximum output tokens. Resolved from caller > registry > derived from context size > 8192 fallback. */
+    /** Maximum output tokens. Resolved from caller > registry > undefined (provider decides). */
     maxTokens?: number;
     /** Sampling temperature. */
     temperature?: number;

@@ -25,6 +25,7 @@
 import crypto from 'crypto';
 import { promisify } from 'util';
 import { systemQuery, systemQueryOne } from '../db.js';
+import { dbDateMs } from '../utils/datetime.js';
 
 const scryptAsync = promisify(crypto.scrypt);
 
@@ -421,7 +422,7 @@ export async function validateRefreshToken(token: string): Promise<{ family: str
     }
 
     // Check expiry
-    if (new Date(row.expires_at) < new Date()) {
+    if (dbDateMs(row.expires_at) < Date.now()) {
         return null;
     }
 

@@ -18,6 +18,25 @@
 import { interceptConsole } from './utils/logger.js';
 interceptConsole();
 
+// Extend undici's default headersTimeout so thinking/reasoning models that take
+// minutes before emitting the first response byte don't get silently killed.
+// Node 20+ uses undici for global fetch() with headersTimeout: 300_000 (5 min).
+// A reasoning model can easily exceed that. Set to 1 hour to match the max
+// request timeout users can configure in the model registry (3600s).
+// undici is bundled in Node but has no @types — use createRequire to bypass tsc.
+import { createRequire } from 'module';
+try {
+    const _require = createRequire(import.meta.url);
+    const undici = _require('undici');
+    undici.setGlobalDispatcher(new undici.Agent({
+        headersTimeout: 3_600_000,  // 1 hour — let application-level AbortSignal handle real timeouts
+        bodyTimeout: 3_600_000,     // 1 hour — streaming responses from thinking models can stall between chunks
+        connectTimeout: 30_000,     // 30s — connection establishment should be fast
+    }));
+} catch {
+    console.warn('[server] Could not configure undici dispatcher — using Node defaults');
+}
+
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';

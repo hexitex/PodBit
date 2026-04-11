@@ -3,10 +3,10 @@
  *
  * MCP tool JSON Schema definitions. Core tools have rich schemas for
  * reliable LLM tool-calling. All other tools are accessible via the
- * generic `podbit.api` gateway (tools/schema/call/routes/http actions).
+ * generic `podbit_api` gateway (tools/schema/call/routes/http actions).
  *
  * Core tools (8): query, get, propose, compress, projects, partitions, stats, config
- * Gateway (1): podbit.api — discover and call any tool or HTTP endpoint
+ * Gateway (1): podbit_api — discover and call any tool or HTTP endpoint
  */
 
 export const tools = [
@@ -15,7 +15,7 @@ export const tools = [
     // =========================================================================
 
     {
-        name: 'podbit.query',
+        name: 'podbit_query',
         description: 'Search nodes in the knowledge graph. Returns nodes matching the criteria, sorted by relevance.',
         inputSchema: {
             type: 'object',
@@ -37,7 +37,7 @@ export const tools = [
     },
 
     {
-        name: 'podbit.get',
+        name: 'podbit_get',
         description: 'Get a specific node by ID with full content, metadata, lineage counts, and partition info.',
         inputSchema: {
             type: 'object',
@@ -49,7 +49,7 @@ export const tools = [
     },
 
     {
-        name: 'podbit.propose',
+        name: 'podbit_propose',
         description: 'Propose a new node to the graph. Use for seeds (foundational content), synthesis, or breakthroughs.',
         inputSchema: {
             type: 'object',
@@ -70,7 +70,7 @@ export const tools = [
     },
 
     {
-        name: 'podbit.compress',
+        name: 'podbit_compress',
         description: 'Generate a compressed meta-prompt capturing expert knowledge about a topic. Cached without task param; task-aware calls skip cache for relevance-reranked output.',
         inputSchema: {
             type: 'object',
@@ -89,7 +89,7 @@ export const tools = [
     },
 
     {
-        name: 'podbit.projects',
+        name: 'podbit_projects',
         description: 'Manage knowledge graph projects. Actions: "list", "current", "save", "load", "new" (with bootstrap), "delete", "update", "interview" (LLM-guided creation), "manifest", "updateManifest".',
         inputSchema: {
             type: 'object',
@@ -115,7 +115,7 @@ export const tools = [
     },
 
     {
-        name: 'podbit.partitions',
+        name: 'podbit_partitions',
         description: 'Manage domain partitions and bridges. Actions: list, get, create, update, delete, addDomain, removeDomain, renameDomain, listBridges, createBridge, deleteBridge, export, import.',
         inputSchema: {
             type: 'object',
@@ -142,7 +142,7 @@ export const tools = [
     },
 
     {
-        name: 'podbit.stats',
+        name: 'podbit_stats',
         description: 'Graph health statistics — node counts, domain distribution, synthesis metrics, activity.',
         inputSchema: {
             type: 'object',
@@ -154,7 +154,7 @@ export const tools = [
     },
 
     {
-        name: 'podbit.config',
+        name: 'podbit_config',
         description: 'Read, tune, and manage algorithm configuration. Actions: "get", "sections" (parameter metadata), "tune" (AI suggestions), "apply" (with audit trail), "metrics" (quality dashboard), "snapshot" (save/restore/list), "history" (change log).',
         inputSchema: {
             type: 'object',
@@ -195,7 +195,7 @@ export const tools = [
     // =========================================================================
 
     {
-        name: 'podbit.api',
+        name: 'podbit_api',
         description: 'Generic API gateway. Discover and execute ANY Podbit tool or HTTP endpoint. Actions: "tools" (list all MCP tools), "schema" (get full parameter schema for a tool), "call" (execute any tool by name), "routes" (list all HTTP API endpoints), "http" (call any HTTP endpoint directly). Use this for tools not in the core set: voice, promote, validate, tensions, question, lineage, remove, edit, dedup, synthesis, summarize, context, feedback, labVerify, elite, kb, lab, journal, apiRegistry, pending, complete, patterns, docs.*',
         inputSchema: {
             type: 'object',
@@ -207,7 +207,7 @@ export const tools = [
                 },
                 tool: {
                     type: 'string',
-                    description: 'For schema/call: tool name (e.g., "podbit.voice", "podbit.tensions")',
+                    description: 'For schema/call: tool name (e.g., "podbit_voice", "podbit_tensions")',
                 },
                 params: {
                     type: 'object',

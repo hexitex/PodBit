@@ -15,7 +15,7 @@ import { callSubsystemModel } from '../../models.js';
 import { getPrompt } from '../../prompts.js';
 import { getProjectContextBlock } from '../project-context.js';
 import { handleRate } from '../../handlers/feedback.js';
-import { emitActivity } from '../../services/event-bus.js';
+import { emitActivity, nodeLabel } from '../../services/event-bus.js';
 import { resolveContent } from '../number-variables.js';
 import { buildProvenanceTag } from '../provenance.js';
 
@@ -113,7 +113,7 @@ async function autorateOneNode(node: any, projectContext: string): Promise<boole
     }
 
     console.error(`[autorating] Rated node ${node.id.slice(0, 8)} (${node.node_type}/${node.domain}) as ${ratingLabel}${result.rating <= 0 ? ' → archived' : ''}: ${result.reason}`);
-    emitActivity('cycle', 'autorating_rated', `Autorated ${node.id.slice(0, 8)} (${node.node_type}) as ${ratingLabel}`, { nodeId: node.id, nodeType: node.node_type, domain: node.domain, rating: result.rating, ratingLabel, reason: result.reason });
+    emitActivity('cycle', 'autorating_rated', `Autorated ${nodeLabel(node.id, node.content)} as ${ratingLabel}`, { nodeId: node.id, nodeType: node.node_type, domain: node.domain, rating: result.rating, ratingLabel, reason: result.reason });
 
     await queryOne(`
         INSERT INTO dream_cycles (

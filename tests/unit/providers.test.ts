@@ -30,7 +30,7 @@ jest.unstable_mockModule('../../models/api-keys.js', () => ({
 
 jest.unstable_mockModule('../../models/cost.js', () => ({
   logUsage: jest.fn(),
-  applyReasoningBonus: jest.fn((_, t: number) => t),
+  isReasoningModel: jest.fn().mockReturnValue(false),
 }));
 
 jest.unstable_mockModule('../../models/semaphore.js', () => ({

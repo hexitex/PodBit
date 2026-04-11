@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Globe, Plus, Trash2, Edit2, Play, ChevronDown, ChevronUp, ToggleLeft, ToggleRight, AlertTriangle, CheckCircle, XCircle, History, MessageSquare, Send, Loader } from 'lucide-react';
 import { apiRegistry } from '../lib/api';
 import { useConfirmDialog } from '../components/ConfirmDialog';
+import { formatLocal } from '../lib/datetime';
 
 const AUTH_LABELS = { none: 'None', api_key: 'API Key', bearer: 'Bearer Token' };
 
@@ -296,7 +297,7 @@ function PromptHistoryPanel({ apiId }) {
               <div key={v.id} className="bg-gray-50 dark:bg-gray-800 rounded p-2 text-xs">
                 <div className="flex justify-between text-gray-500 dark:text-gray-400 mb-1">
                   <span>v{v.version} by {v.contributor || 'unknown'}</span>
-                  <span>{new Date(v.created_at).toLocaleString()}</span>
+                  <span>{formatLocal(v.created_at)}</span>
                 </div>
                 {v.reason && <p className="text-gray-600 dark:text-gray-300 italic mb-1">{v.reason}</p>}
                 <pre className="whitespace-pre-wrap text-gray-700 dark:text-gray-200 max-h-24 overflow-y-auto">{v.content}</pre>

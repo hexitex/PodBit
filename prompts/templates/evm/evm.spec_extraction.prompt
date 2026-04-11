@@ -58,6 +58,19 @@ EVERY physics claim contains at least one testable relationship — a quantity t
 TAUTOLOGY GUARD — A TEST MUST BE CAPABLE OF DISPROVING THE HYPOTHESIS:
 A "test" that defines a formula mirroring the hypothesis is circular reasoning, not verification. If you write `result = f(x)` where f is chosen to guarantee the claimed outcome, that is restating the hypothesis as arithmetic, not testing it. The setup must have at least one parameter or sweep value at which the claimed effect could plausibly fail to appear. If you cannot construct such a setup without encoding the conclusion into the structure, the claim IS still reducible — but the spec must use a *general* mechanism (e.g. solve a standard equation, run a standard algorithm) and let the result fall out of computation, not assumption.
 
+ANALYTICAL FORMULA TAUTOLOGY — the most common failure mode:
+When a claim describes a physical effect that has a well-known closed-form solution (e.g. n_eff = n +/- kappa for chiral media, E = hbar*omega for harmonic oscillators, Bragg condition 2d*sin(theta)=n*lambda), the codegen LLM will ALWAYS take the shortcut of plugging numbers into the formula rather than solving the underlying equations. This produces a "test" that verifies arithmetic, not physics.
+
+To prevent this, the spec MUST require the codegen to DERIVE the result from first principles:
+- Wave/cavity claims: require solving an eigenvalue problem, transfer matrix, or boundary value problem — NOT evaluating dispersion relations directly
+- Splitting/degeneracy claims: require building a Hamiltonian or wave equation and computing eigenvalues — NOT computing frequencies from effective indices
+- Topological claims: require computing Berry phases, Chern numbers, or winding numbers from the actual band structure — NOT asserting topological properties from known formulas
+- Transport claims: require solving equations of motion or scattering problems — NOT evaluating conductance formulas
+
+The hypothesis should name the COMPUTATIONAL METHOD (e.g. "solving Maxwell's equations via transfer matrix in a chiral medium yields distinct resonant frequencies") not just the EXPECTED OUTCOME ("frequencies split proportionally to kappa"). The setup should include parameters for the computational method (grid size, boundary conditions, matrix dimensions) that the codegen MUST use, and the observable should be something that EMERGES from the computation rather than something that can be computed from a textbook formula in one line.
+
+Ask yourself: "Could the codegen implement this spec in under 10 lines of direct formula evaluation?" If yes, the spec is not forcing a real computation. Restructure it so the claimed effect must emerge from solving equations.
+
 REJECTION BAR — before returning reducible:false you MUST:
 1. Write out (in your reasoning) the smallest discrete numerical proxy you can imagine for the claim's mechanism
 2. State explicitly why that proxy fails to capture the mechanism (NOT why the framing is fancy)

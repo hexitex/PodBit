@@ -45,7 +45,7 @@ const mockTelegraphicConfig = {
     evm: { allowedModules: ['math', 'mpmath'] },
     numberVariables: { enabled: false },
     consultantReview: { enabled: false },
-    tokenLimits: { reasoningExtraTokens: 4096 },
+    tokenLimits: { reasoningModelPatterns: [] },
 };
 
 jest.unstable_mockModule('../../config.js', () => ({
@@ -184,7 +184,7 @@ jest.unstable_mockModule('../../models/providers.js', () => ({
 }));
 
 jest.unstable_mockModule('../../models/cost.js', () => ({
-    applyReasoningBonus: jest.fn().mockImplementation((_m: string, t: number) => t),
+    isReasoningModel: jest.fn().mockReturnValue(false),
     logUsage: jest.fn().mockResolvedValue(undefined),
 }));
 

@@ -163,27 +163,27 @@ export async function enqueue(nodeId: string, opts: EnqueueOptions = {}): Promis
 
 /**
  * Get next pending entry eligible for processing.
- * Atomically claims it by setting status = 'processing'.
+ * Atomically claims it by setting status = 'processing' in a single UPDATE.
  */
 export async function nextPending(): Promise<QueueEntry | null> {
-    // Find next eligible entry
-    const entry = await queryOne(`
-        SELECT * FROM lab_queue
-        WHERE status = 'pending'
-          AND (next_eligible_at IS NULL OR next_eligible_at <= datetime('now'))
-        ORDER BY priority DESC, queued_at ASC
-        LIMIT 1
+    // Atomic claim: find the next eligible entry AND set it to 'processing' in one query.
+    // This prevents two workers from claiming the same entry.
+    const rows = await query(`
+        UPDATE lab_queue
+        SET status = 'processing', started_at = datetime('now')
+        WHERE id = (
+            SELECT id FROM lab_queue
+            WHERE status = 'pending'
+              AND (next_eligible_at IS NULL OR next_eligible_at <= datetime('now'))
+            ORDER BY priority DESC, queued_at ASC
+            LIMIT 1
+        )
+        RETURNING *
     `, []);
 
-    if (!entry) return null;
+    if (rows.length === 0) return null;
 
-    // Claim it
-    await query(
-        "UPDATE lab_queue SET status = 'processing', started_at = datetime('now') WHERE id = $1",
-        [(entry as any).id],
-    );
-
-    return { ...entry, status: 'processing', started_at: new Date().toISOString() } as QueueEntry;
+    return rows[0] as QueueEntry;
 }
 
 /**
@@ -211,13 +211,14 @@ export async function setExternalJobId(id: number, externalJobId: string): Promi
 
 /**
  * Release a processing entry back to pending without counting as an attempt.
- * Used when budget is exceeded mid-pipeline.
+ * Used when budget is exceeded mid-pipeline. Only releases entries currently
+ * in 'processing' state to prevent resurrecting completed/failed entries.
  *
  * @param id - Queue entry ID to release
  */
 export async function releaseEntry(id: number): Promise<void> {
     await query(
-        "UPDATE lab_queue SET status = 'pending', started_at = NULL WHERE id = $1",
+        "UPDATE lab_queue SET status = 'pending', started_at = NULL WHERE id = $1 AND status = 'processing'",
         [id],
     );
 }
@@ -244,11 +245,17 @@ export async function requeueFailed(id: number): Promise<{ requeued: boolean; en
     const newRetryCount = o.retry_count + 1;
     const backoffSeconds = newRetryCount * 30; // 30s, 60s, 90s...
 
+    // Carry forward template_id and chain metadata so routing and chain context
+    // are consistent across retries. Do NOT carry forward external_job_id -- the
+    // previous lab job failed, so the retry must submit a fresh job.
     const rows = await query(`
-        INSERT INTO lab_queue (node_id, status, priority, retry_count, max_retries, guidance, queued_by, next_eligible_at)
-        VALUES ($1, 'pending', $2, $3, $4, $5, 'retry', datetime('now', '+' || $6 || ' seconds'))
+        INSERT INTO lab_queue (node_id, status, priority, retry_count, max_retries, guidance, queued_by,
+                               next_eligible_at, template_id, chain_parent_id, chain_depth, chain_type, chain_spec)
+        VALUES ($1, 'pending', $2, $3, $4, $5, 'retry', datetime('now', '+' || $6 || ' seconds'), $7, $8, $9, $10, $11)
         RETURNING *
-    `, [o.node_id, o.priority, newRetryCount, o.max_retries, o.guidance || null, backoffSeconds]);
+    `, [o.node_id, o.priority, newRetryCount, o.max_retries, o.guidance || null, backoffSeconds,
+        o.template_id || null, o.chain_parent_id || null, o.chain_depth || 0,
+        o.chain_type || null, o.chain_spec || null]);
 
     return { requeued: true, entry: rows[0] as QueueEntry };
 }
@@ -374,6 +381,12 @@ export async function getQueueStats(): Promise<QueueStats> {
  * @returns Number of entries recovered
  */
 export async function recoverStuck(): Promise<number> {
+    // Clear external_job_id on ALL pending/processing entries — any lab job from a
+    // previous process is orphaned and must not be resumed. The worker will submit fresh.
+    await query(
+        "UPDATE lab_queue SET external_job_id = NULL WHERE status IN ('pending', 'processing') AND external_job_id IS NOT NULL",
+        [],
+    );
     const rows = await query(
         "UPDATE lab_queue SET status = 'pending', started_at = NULL WHERE status = 'processing' RETURNING id",
         [],

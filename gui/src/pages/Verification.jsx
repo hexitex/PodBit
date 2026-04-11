@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, Link } from 'react-router-dom';
-import { ShieldCheck, CheckCircle2, XCircle, AlertTriangle, Bug, SkipForward, Loader2, Eye, FlaskConical, RotateCcw, Trash2, X, ThumbsUp, ThumbsDown, Search, Clock, ListOrdered, Globe, } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, XCircle, AlertTriangle, Bug, SkipForward, Loader2, Eye, FlaskConical, RotateCcw, Trash2, X, ThumbsUp, ThumbsDown, Search, Clock, ListOrdered, Globe, HelpCircle } from 'lucide-react';
 import { evm, apiRegistry } from '../lib/api';
 import { TEST_CATEGORY_LABELS, OutcomeBadge, ConfidenceBar, VerificationDetailModal } from '../components/VerificationDetail';
 import VariableRefText from '../components/VariableRefText';
 import { resolveNodeNames, getCachedName } from '../lib/node-names';
+import { utcMs } from '../lib/datetime';
 
 function StatCard({ title, value, subtitle, icon: Icon, color = 'blue' }) {
   const colorClasses = {
@@ -121,10 +122,10 @@ function PruneDialog({ open, onClose, onConfirm, isPending }) {
 // ─── API Verification Sub-View ─────────────────────────────────────────────
 
 const API_IMPACT_STYLES = {
-  value_correction:       { label: 'Value Correction',       color: 'text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30' },
-  structural_validation:  { label: 'Structural Validation',  color: 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30' },
-  structural_refutation:  { label: 'Structural Refutation',  color: 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30' },
-  inconclusive:           { label: 'Inconclusive',           color: 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800' },
+  value_correction:       { label: 'Value Correction',       color: 'text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30', hint: 'API found numeric discrepancies' },
+  structural_validation:  { label: 'Structural Validation',  color: 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30', hint: 'API confirmed key entities/relationships' },
+  structural_refutation:  { label: 'Structural Refutation',  color: 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30', hint: 'API contradicts the claim' },
+  inconclusive:           { label: 'No Evidence',            color: 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800', hint: 'API had no relevant information' },
 };
 
 const API_STATUS_STYLES = {
@@ -134,8 +135,8 @@ const API_STATUS_STYLES = {
   skipped:   { label: 'Skipped',   color: 'text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800' },
 };
 
-function ApiBadge({ style, label }) {
-  return <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${style}`}>{label}</span>;
+function ApiBadge({ style, label, hint }) {
+  return <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${style}`} title={hint}>{label}</span>;
 }
 
 function ApiVerificationsView({ days }) {
@@ -200,11 +201,11 @@ function ApiVerificationsView({ days }) {
           {apis.map(a => <option key={a.id} value={a.id}>{a.displayName}</option>)}
         </select>
         <select className={selectClass} value={impactFilter} onChange={e => { setImpactFilter(e.target.value); setPage(0); }}>
-          <option value="">All Impacts</option>
+          <option value="">All Findings</option>
           <option value="value_correction">Value Correction</option>
           <option value="structural_validation">Structural Validation</option>
           <option value="structural_refutation">Structural Refutation</option>
-          <option value="inconclusive">Inconclusive</option>
+          <option value="inconclusive">No Evidence</option>
         </select>
         <select className={selectClass} value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(0); }}>
           <option value="">All Statuses</option>
@@ -231,11 +232,11 @@ function ApiVerificationsView({ days }) {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Impact</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Finding</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Claim</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">API</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Confidence</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400" title="How certain the interpreter is about the finding">Certainty</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Mode</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 text-right">Corrections</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 text-right">Enriched</th>
@@ -256,7 +257,7 @@ function ApiVerificationsView({ days }) {
                         onClick={() => hasDetail && setExpandedApiRow(isExpanded ? null : row.id)}
                       >
                         <td className="px-4 py-3">
-                          {impactStyle ? <ApiBadge style={impactStyle.color} label={impactStyle.label} /> : <span className="text-gray-400 dark:text-gray-500">—</span>}
+                          {impactStyle ? <ApiBadge style={impactStyle.color} label={impactStyle.label} hint={impactStyle.hint} /> : <span className="text-gray-400 dark:text-gray-500">--</span>}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 max-w-sm">
                           <div className="line-clamp-2">{row.node_content_preview || row.node_id?.slice(0, 12) || <span className="text-gray-400 italic">No content</span>}</div>
@@ -268,7 +269,7 @@ function ApiVerificationsView({ days }) {
                           {statusStyle ? <ApiBadge style={statusStyle.color} label={statusStyle.label} /> : <span className="text-xs">{row.status}</span>}
                         </td>
                         <td className="px-4 py-3">
-                          <ConfidenceBar value={row.confidence} />
+                          <ConfidenceBar value={row.confidence} impact={row.verification_impact} />
                         </td>
                         <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                           {row.decision_mode && row.decision_mode !== 'verify' ? (
@@ -336,7 +337,7 @@ function ApiVerificationsView({ days }) {
                               )}
                               <div className="flex items-center gap-4 text-gray-500 dark:text-gray-500 mt-1">
                                 <Link to={`/graph?node=${row.node_id}`} className="text-blue-500 hover:text-blue-400 hover:underline font-mono">{getCachedName(row.node_id)}</Link>
-                                {row.decision_confidence != null && <span>Decision confidence: {(row.decision_confidence * 100).toFixed(0)}%</span>}
+                                {row.decision_confidence != null && <span>Interpreter certainty: {(row.decision_confidence * 100).toFixed(0)}%</span>}
                               </div>
                             </div>
                           </td>
@@ -519,6 +520,7 @@ export default function Verification() {
       ...(outcomeFilter === 'attention' ? { status: 'attention' } : {}),
       ...(outcomeFilter === 'supported' ? { verified: true } : {}),
       ...(outcomeFilter === 'disproved' ? { verified: false } : {}),
+      ...(outcomeFilter === 'inconclusive' ? { status: 'inconclusive' } : {}),
       ...(outcomeFilter === 'code_error' ? { status: 'code_error' } : {}),
       ...(outcomeFilter === 'error' ? { status: 'failed' } : {}),
       ...(outcomeFilter === 'skipped' ? { status: 'skipped' } : {}),
@@ -541,13 +543,30 @@ export default function Verification() {
     refetchInterval: 5000,
   });
   const queueActive = (queueStats?.pending ?? 0) + (queueStats?.processing ?? 0);
+  // Keep polling for 2 minutes after queue empties so recently-finished entries stay visible
+  const [queueCooldown, setQueueCooldown] = useState(false);
+  useEffect(() => {
+    if (queueActive > 0) {
+      setQueueCooldown(true);
+    } else if (queueCooldown) {
+      const timer = setTimeout(() => setQueueCooldown(false), 120_000);
+      return () => clearTimeout(timer);
+    }
+  }, [queueActive > 0]);
   const { data: queueData } = useQuery({
     queryKey: ['lab-queue'],
     queryFn: () => evm.queue({ limit: 50 }),
     refetchInterval: 5000,
-    enabled: queueActive > 0 || outcomeFilter === 'in_queue',
+    enabled: queueActive > 0 || outcomeFilter === 'in_queue' || queueCooldown,
   });
   const queueEntries = (queueData?.entries || []).filter(e => e.status === 'pending' || e.status === 'processing');
+  // Show recently completed/failed queue entries so users see outcomes instead of silent disappearance
+  const recentlyFinished = (queueData?.entries || []).filter(e => {
+    if (e.status !== 'completed' && e.status !== 'failed') return false;
+    if (!e.completed_at) return false;
+    const age = Date.now() - utcMs(e.completed_at);
+    return age < 120_000; // show for 2 minutes after completion
+  });
   const cancelQueueMutation = useMutation({
     mutationFn: (id) => evm.cancelQueue(id),
     onSuccess: () => {
@@ -756,10 +775,11 @@ export default function Verification() {
       </div>
 
       {/* Lab Stat cards — hidden when API view is active */}
-      {outcomeFilter !== 'api' && <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 mb-6">
+      {outcomeFilter !== 'api' && <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4 mb-6">
         <StatCard title="Experiments" value={stats?.total ?? '-'} subtitle={`Last ${days} days`} icon={ShieldCheck} color="blue" />
         <StatCard title="Supported" value={stats?.verified ?? '-'} subtitle={supportedOfTested ? `${supportedOfTested}% of tested` : undefined} icon={CheckCircle2} color="green" />
         <StatCard title="Refuted" value={stats?.disproved ?? stats?.failed ?? '-'} subtitle="Claim contradicted by data" icon={XCircle} color="red" />
+        <StatCard title="Inconclusive" value={stats?.inconclusive ?? '-'} subtitle="Lab couldn't determine" icon={HelpCircle} color="gray" />
         <StatCard title="Not Reducible" value={stats?.skipped ?? '-'} subtitle="Can't be tested empirically" icon={SkipForward} color="gray" />
         <StatCard title="Errors" value={(stats?.codeErrors ?? 0) + (stats?.errors ?? 0) || '-'} subtitle="Lab or pipeline failures" icon={AlertTriangle} color="amber" />
         <StatCard title="In Queue" value={queueActive || '-'} subtitle={queueActive > 0 ? `${queueStats?.processing ?? 0} running` : undefined} icon={queueActive > 0 ? Loader2 : ListOrdered} color={queueActive > 0 ? 'blue' : 'gray'} />
@@ -770,7 +790,7 @@ export default function Verification() {
       {outcomeFilter !== 'api' && stats?.categories && Object.keys(stats.categories).length > 0 && (
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow dark:shadow-gray-950/50 p-4 mb-6">
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Experiment Types</h3>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-4 max-h-[10vh] overflow-y-auto">
             {Object.entries(stats.categories).map(([cat, count]) => (
               <div key={cat} className="flex items-center gap-2">
                 <span className={`text-xs font-medium ${TEST_CATEGORY_LABELS[cat]?.color || 'text-gray-500'}`}>{TEST_CATEGORY_LABELS[cat]?.label || cat}</span>
@@ -781,13 +801,13 @@ export default function Verification() {
         </div>
       )}
 
-      {/* Queue panel — visible only when items are queued and not in API view */}
-      {outcomeFilter !== 'api' && queueEntries.length > 0 && (
+      {/* Queue panel — visible when items are queued or recently finished, not in API view */}
+      {outcomeFilter !== 'api' && (queueEntries.length > 0 || recentlyFinished.length > 0) && (
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow dark:shadow-gray-950/50 p-4 mb-6">
           <div className="flex items-center gap-2 mb-3">
             <ListOrdered size={16} className="text-blue-500" />
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Verification Queue</h3>
-            <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">{queueEntries.length}</span>
+            {queueEntries.length > 0 && <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">{queueEntries.length}</span>}
           </div>
           <div className="space-y-1.5">
             {queueEntries.map((entry) => (
@@ -813,6 +833,26 @@ export default function Verification() {
                 )}
               </div>
             ))}
+            {recentlyFinished.map((entry) => (
+              <div key={`done-${entry.id}`} className={`flex items-center gap-3 px-3 py-2 rounded-md ${
+                entry.status === 'completed' ? 'bg-green-50 dark:bg-green-900/10' : 'bg-red-50 dark:bg-red-900/10'
+              } opacity-80`}>
+                {entry.status === 'completed' ? (
+                  <CheckCircle2 size={14} className="text-green-500 shrink-0" />
+                ) : (
+                  <AlertTriangle size={14} className="text-red-500 shrink-0" />
+                )}
+                <span className="text-xs text-gray-700 dark:text-gray-300 truncate flex-1 min-w-0">
+                  {entry.node_content || entry.node_id?.slice(0, 12)}
+                </span>
+                <span className={`text-[10px] font-medium shrink-0 ${
+                  entry.status === 'completed' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                }`}>
+                  {entry.status === 'completed' ? 'Done' : 'Failed'}{entry.error ? ` - ${entry.error.slice(0, 40)}` : ''}
+                </span>
+                <span className="text-[10px] text-gray-400 dark:text-gray-500 shrink-0">{timeAgo(entry.completed_at)}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -824,6 +864,7 @@ export default function Verification() {
             { value: 'attention', label: 'Needs Attention' }, { value: '', label: 'All' },
             { value: 'in_queue', label: 'In Queue', count: queueActive || 0 },
             { value: 'supported', label: 'Supported' }, { value: 'disproved', label: 'Refuted' },
+            { value: 'inconclusive', label: 'Inconclusive' },
             { value: 'skipped', label: 'Not Reducible' },
             { value: 'error', label: 'Errors' },
             { value: 'analysis', label: 'Post-Rejection' },

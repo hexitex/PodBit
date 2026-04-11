@@ -34,7 +34,7 @@ export { callSingleModel, callWithMessages, setConversationalLogging, isConversa
 export { getEmbeddingModelName, getEmbedding } from './embedding.js';
 
 // Cost tracking
-export { getCostSummary, getCostTimeSeries, getCostDetails, getCostExportRows, resetCostTracker, applyReasoningBonus, logUsage } from './cost.js';
+export { getCostSummary, getCostTimeSeries, getCostDetails, getCostExportRows, resetCostTracker, isReasoningModel, logUsage } from './cost.js';
 export type { LogUsageParams, CostSummaryOptions, TimeSeriesOptions, CostDetailsOptions, Granularity } from './cost.js';
 
 // Registry CRUD

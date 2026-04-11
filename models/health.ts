@@ -29,6 +29,7 @@ export async function checkModelHealth(model: ModelEntry): Promise<void> {
                 'x-api-key': key,
                 'anthropic-version': '2023-06-01',
             },
+            signal: AbortSignal.timeout(10_000),
         });
         if (!res.ok) throw new Error(`Anthropic API returned ${res.status}`);
         return;

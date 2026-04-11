@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Clock, Loader, ChevronDown, ChevronRight } from 'lucide-react';
 import { configApi } from '../../lib/api';
+import { formatLocal } from '../../lib/datetime';
 
 function isComplex(v) {
   if (v == null) return false;
@@ -148,7 +149,7 @@ export default function ConfigHistory() {
                   {c.contributor || c.changedBy}
                 </span>
                 <span className="text-gray-300 dark:text-gray-600 ml-auto shrink-0">
-                  {new Date(c.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  {formatLocal(c.createdAt, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
               {/* Parameter name */}

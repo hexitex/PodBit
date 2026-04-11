@@ -287,20 +287,12 @@ export async function getCostExportRows(options: { days?: number; subsystem?: st
 // =============================================================================
 
 /**
- * Adds extra token allowance for reasoning models (e.g. o1, DeepSeek R1) per config.
- * Reasoning models consume the majority of output tokens on chain-of-thought,
- * so the visible output requires a larger token budget.
- * @param modelId - The model identifier to check against reasoningModelPatterns
- * @param maxTokens - The base max token count
- * @returns maxTokens + reasoningExtraTokens if the model matches a reasoning pattern, else maxTokens
+ * Check whether a model ID matches known reasoning model patterns.
+ * Used for logging only -- max_tokens come from the model registry, not from Podbit guessing.
  */
-export function applyReasoningBonus(modelId: string, maxTokens: number): number {
+export function isReasoningModel(modelId: string): boolean {
     const id = (modelId || '').toLowerCase();
-    const isReasoning = appConfig.tokenLimits.reasoningModelPatterns.some(
+    return appConfig.tokenLimits.reasoningModelPatterns.some(
         pat => id.includes(pat.toLowerCase())
     );
-    if (isReasoning && appConfig.tokenLimits.reasoningExtraTokens > 0) {
-        return maxTokens + appConfig.tokenLimits.reasoningExtraTokens;
-    }
-    return maxTokens;
 }

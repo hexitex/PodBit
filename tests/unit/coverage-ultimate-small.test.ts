@@ -86,7 +86,7 @@ jest.unstable_mockModule('../../config.js', () => ({
         subsystemTopP: {}, subsystemMinP: {}, subsystemTopK: {},
         consultantTemperatures: {}, consultantRepeatPenalties: {},
         consultantTopP: {}, consultantMinP: {}, consultantTopK: {},
-        tokenLimits: { reasoningExtraTokens: 4096 },
+        tokenLimits: { reasoningModelPatterns: [] },
         evm: { allowedModules: ['math', 'numpy'] },
         numberVariables: { enabled: false },
         knowledgeBase: { maxChunkSize: 4000, minChunkLength: 50, postIngestionSummary: true, curationMaxTokens: 2000 },
@@ -163,7 +163,7 @@ jest.unstable_mockModule('../../models/types.js', () => ({
 jest.unstable_mockModule('../../models/providers.js', () => ({ callSingleModel: jest.fn() }));
 
 jest.unstable_mockModule('../../models/cost.js', () => ({
-    applyReasoningBonus: jest.fn((_: string, t: number) => t),
+    isReasoningModel: jest.fn().mockReturnValue(false),
     logUsage: jest.fn<any>().mockResolvedValue(undefined),
 }));
 

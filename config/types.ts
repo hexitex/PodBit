@@ -382,21 +382,9 @@ export interface PodbitConfig {
     maxSize: number;
     defaultWarmupLimit: number;
   };
-  /** Token budget limits — per-subsystem max tokens, reasoning model detection, profile-specific limits. */
+  /** Token limits -- reasoning model detection for logging. Max tokens come from the model registry only. */
   tokenLimits: {
-    defaultMaxTokens: number;
-    minTokenFloor: number;
-    reasoningExtraTokens: number;
     reasoningModelPatterns: string[];
-    contextCompression: number;
-    chatResponse: number;
-    voiceSynthesis: number;
-    researchSeeds: number;
-    configTune: number;
-    domainDigest: number;
-    docsValidation: number;
-    compressionRatio: number;
-    profileLimits: Record<string, { summarize: number; compress: number }>;
   };
   /** Per-subsystem temperature overrides (heuristic pipeline). */
   subsystemTemperatures: Record<string, number>;
@@ -562,6 +550,15 @@ export interface PodbitConfig {
       enabled: boolean;
       /** Minimum confidence from the reviewer to reject a spec as rigged (0–1) */
       minConfidence: number;
+    };
+    /** Auto-retest - re-enqueue nodes when lab suggests a stronger test */
+    autoRetest: {
+      /** Enable auto-retest on low-confidence verdicts with suggestions */
+      enabled: boolean;
+      /** Max number of retests per node (prevents infinite loops) */
+      maxRetests: number;
+      /** Re-enqueue when confidence is below this threshold (0-1) */
+      confidenceThreshold: number;
     };
     /** API reconnaissance — pre/post-lab fact checking and enrichment */
     apiVerification: {

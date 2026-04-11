@@ -7,7 +7,7 @@
  * 2. `Logger` class — structured API with levels, child loggers, and metadata.
  *    Use for new code; gradually replace console calls over time.
  *
- * Log files are written to `data/logs/resonance-YYYY-MM-DD[.N].log` (one per
+ * Log files are written to `data/logs/podbit-YYYY-MM-DD[.N].log` (one per
  * day, size-rotated at 5 MB with up to {@link MAX_DAILY_PARTS} part files per
  * day). Daily total is capped at 25 MB across all processes sharing the log
  * directory. Old files are pruned after 7 days (configurable via
@@ -98,14 +98,14 @@ let lastMessageTime = 0;
 const RATE_LIMIT_WINDOW_MS = RC.misc.logRateLimitWindowMs;
 const RATE_LIMIT_MAX_REPEATS = RC.misc.logRateLimitMaxRepeats;
 
-/** Returns the log filename for a given date and optional part number (e.g. resonance-2025-03-06.log). */
+/** Returns the log filename for a given date and optional part number (e.g. podbit-2025-03-06.log). */
 function getLogFileName(date: Date, part = 0): string {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const d = String(date.getDate()).padStart(2, '0');
     return part === 0
-        ? `resonance-${y}-${m}-${d}.log`
-        : `resonance-${y}-${m}-${d}.${part}.log`;
+        ? `podbit-${y}-${m}-${d}.log`
+        : `podbit-${y}-${m}-${d}.${part}.log`;
 }
 
 /** Creates the log directory if it does not exist. */
@@ -162,7 +162,7 @@ function getStream(): fs.WriteStream | null {
 
         // Sum existing log file sizes for today to survive process restarts
         try {
-            const todayPrefix = `resonance-${today}`;
+            const todayPrefix = `podbit-${today}`;
             const files = fs.readdirSync(LOG_DIR).filter(f => f.startsWith(todayPrefix));
             for (const file of files) {
                 try {
@@ -174,7 +174,7 @@ function getStream(): fs.WriteStream | null {
         // Find the highest part number for today to continue from
         let maxPart = 0;
         try {
-            const todayPrefix = `resonance-${today}`;
+            const todayPrefix = `podbit-${today}`;
             const files = fs.readdirSync(LOG_DIR).filter(f => f.startsWith(todayPrefix));
             for (const file of files) {
                 const partMatch = file.match(/\.(\d+)\.log$/);
@@ -200,7 +200,7 @@ function getStream(): fs.WriteStream | null {
     if (bytesWritten >= MAX_LOG_SIZE) {
         let diskPartCount = 0;
         try {
-            const todayPrefix = `resonance-${currentLogDate}`;
+            const todayPrefix = `podbit-${currentLogDate}`;
             diskPartCount = fs.readdirSync(LOG_DIR).filter(f => f.startsWith(todayPrefix)).length;
         } catch {}
         if (diskPartCount >= MAX_DAILY_PARTS) {
@@ -276,7 +276,7 @@ export function cleanOldLogs(): { deleted: number; remaining: number; totalSizeK
     const cutoff = Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000;
 
     try {
-        const files = fs.readdirSync(LOG_DIR).filter(f => /^resonance-\d{4}-\d{2}-\d{2}(\.\d+)?\.log$/.test(f));
+        const files = fs.readdirSync(LOG_DIR).filter(f => /^(?:podbit|resonance)-\d{4}-\d{2}-\d{2}(\.\d+)?\.log$/.test(f));
         for (const file of files) {
             const filePath = path.join(LOG_DIR, file);
             const stat = fs.statSync(filePath);

@@ -11,6 +11,7 @@ import { conversations, partitions as partitionsApi, seeds, models, getSecurityK
 import TagSelector from '../components/TagSelector';
 import { useConfirmDialog } from '../components/ConfirmDialog';
 import Markdown from '../components/Markdown';
+import { utcMs } from '../lib/datetime';
 import { resolveNodeNames, getCachedName } from '../lib/node-names';
 
 // Alias for backwards compat within this file
@@ -37,7 +38,7 @@ function useActivityStream(active) {
       try {
         const evt = JSON.parse(e.data);
         // Only show events that happened after we started listening
-        const evtTime = evt.timestamp ? new Date(evt.timestamp).getTime() : Date.now();
+        const evtTime = evt.timestamp ? utcMs(evt.timestamp) : Date.now();
         if (evtTime < startTime - 1000) return;
         // Only show relevant categories
         if (['llm', 'synthesis', 'voicing', 'cycle', 'system', 'mcp'].includes(evt.category)) {

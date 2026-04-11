@@ -2,6 +2,7 @@
  * Tests for db/pool-db.ts — computeFitness (re-implemented).
  */
 import { describe, it, expect } from '@jest/globals';
+import { dbDateMs } from '../../utils/datetime.js';
 
 // computeFitness from db/pool-db.ts — reads from pool DB
 // Re-implement the fitness formula for isolated testing
@@ -41,7 +42,7 @@ interface Recruitment {
 }
 
 function shouldReturn(r: Recruitment, now: Date): { should: boolean; reason: string } {
-    const dueAt = new Date(r.return_due_at).getTime();
+    const dueAt = dbDateMs(r.return_due_at);
     if (now.getTime() > dueAt) {
         return { should: true, reason: 'time_expired' };
     }

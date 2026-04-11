@@ -64,7 +64,7 @@ export async function proxyToolCall(
 
         // After project switch, reload MCP process DB so subsequent calls
         // (including fallback-to-direct) use the correct project.
-        if (name === 'podbit.projects') {
+        if (name === 'podbit_projects') {
             const action = params.action;
             if ((action === 'load' || action === 'new') && data.success) {
                 try {

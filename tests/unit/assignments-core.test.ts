@@ -11,7 +11,7 @@ const mockEmitActivity = jest.fn<() => void>();
 const mockGetPrompt = jest.fn<() => Promise<string>>().mockResolvedValue('prompt');
 const mockLogDecision = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
 const mockCallSingleModel = jest.fn<() => Promise<any>>().mockResolvedValue({ text: 'ok', usage: null });
-const mockApplyReasoningBonus = jest.fn<(modelId: any, base: any) => any>().mockImplementation((_m: any, b: any) => b);
+const mockIsReasoningModel = jest.fn<() => boolean>().mockReturnValue(false);
 const mockLogUsage = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
 const mockIsBudgetExceeded = jest.fn<() => boolean>().mockReturnValue(false);
 const mockGetProjectAbortSignal = jest.fn<() => AbortSignal | undefined>().mockReturnValue(undefined);
@@ -26,7 +26,7 @@ jest.unstable_mockModule('../../config.js', () => ({
     config: {
         autonomousCycles: {},
         consultantReview: { enabled: false },
-        tokenLimits: { reasoningExtraTokens: 4096 },
+        tokenLimits: { reasoningModelPatterns: [] },
         subsystemTemperatures: {},
         subsystemRepeatPenalties: {},
         subsystemTopP: {},
@@ -57,7 +57,7 @@ jest.unstable_mockModule('../../models/providers.js', () => ({
 }));
 
 jest.unstable_mockModule('../../models/cost.js', () => ({
-    applyReasoningBonus: mockApplyReasoningBonus,
+    isReasoningModel: mockIsReasoningModel,
     logUsage: mockLogUsage,
 }));
 
@@ -240,7 +240,7 @@ beforeEach(async () => {
     mockGetPrompt.mockResolvedValue('prompt');
     mockLogDecision.mockResolvedValue(undefined);
     mockCallSingleModel.mockResolvedValue({ text: 'ok', usage: null });
-    mockApplyReasoningBonus.mockImplementation((_m: any, b: any) => b);
+    mockIsReasoningModel.mockReturnValue(false);
     mockLogUsage.mockResolvedValue(undefined);
     mockIsBudgetExceeded.mockReturnValue(false);
     mockGetProjectAbortSignal.mockReturnValue(undefined);
@@ -287,7 +287,7 @@ describe('callSubsystemModel', () => {
         expect(callArgs.maxTokens).toBe(1024);
     });
 
-    it('derives maxTokens from contextSize when maxTokens not set on model', async () => {
+    it('leaves maxTokens undefined when registry has no maxTokens (ignores contextSize)', async () => {
         mockCacheLoad([makeAssignmentRow({ max_tokens: null, context_size: 32000 })]);
         await loadAssignmentCache();
         mockCallSingleModel.mockResolvedValue({ text: 'ok', usage: null });
@@ -295,8 +295,7 @@ describe('callSubsystemModel', () => {
         await callSubsystemModel('voice', 'test');
 
         const callArgs = (mockCallSingleModel.mock.calls[0] as any[])[2];
-        // 32000 * 0.25 = 8000, capped at 16384 → 8000
-        expect(callArgs.maxTokens).toBe(8000);
+        expect(callArgs.maxTokens).toBeUndefined();
     });
 
     it('leaves maxTokens undefined when neither maxTokens nor contextSize available', async () => {
@@ -310,8 +309,8 @@ describe('callSubsystemModel', () => {
         expect(callArgs.maxTokens).toBeUndefined();
     });
 
-    it('caps derived maxTokens at 16384', async () => {
-        // Large context: 200000 * 0.25 = 50000, should be capped to 16384
+    it('does not derive maxTokens from contextSize', async () => {
+        // With no registry maxTokens, should be undefined regardless of contextSize
         mockCacheLoad([makeAssignmentRow({ max_tokens: null, context_size: 200000 })]);
         await loadAssignmentCache();
         mockCallSingleModel.mockResolvedValue({ text: 'ok', usage: null });
@@ -319,30 +318,18 @@ describe('callSubsystemModel', () => {
         await callSubsystemModel('voice', 'test');
 
         const callArgs = (mockCallSingleModel.mock.calls[0] as any[])[2];
-        expect(callArgs.maxTokens).toBe(16384);
+        expect(callArgs.maxTokens).toBeUndefined();
     });
 
-    it('applies reasoning bonus when noThink is false', async () => {
-        mockCacheLoad([makeAssignmentRow({ no_think: 0, sa_no_think: null })]);
+    it('passes registry maxTokens directly without reasoning bonus', async () => {
+        mockCacheLoad([makeAssignmentRow({ max_tokens: 8192, no_think: 0, sa_no_think: null })]);
         await loadAssignmentCache();
-        mockApplyReasoningBonus.mockReturnValue(12288);
         mockCallSingleModel.mockResolvedValue({ text: 'ok', usage: null });
 
         await callSubsystemModel('voice', 'test');
 
-        expect(mockApplyReasoningBonus).toHaveBeenCalledWith('gpt-4', 4096);
         const callArgs = (mockCallSingleModel.mock.calls[0] as any[])[2];
-        expect(callArgs.maxTokens).toBe(12288);
-    });
-
-    it('skips reasoning bonus when noThink is true', async () => {
-        mockCacheLoad([makeAssignmentRow({ sa_no_think: 1 })]);
-        await loadAssignmentCache();
-        mockCallSingleModel.mockResolvedValue({ text: 'ok', usage: null });
-
-        await callSubsystemModel('voice', 'test');
-
-        expect(mockApplyReasoningBonus).not.toHaveBeenCalled();
+        expect(callArgs.maxTokens).toBe(8192);
     });
 
     it('passes semaphore info to callSingleModel', async () => {
@@ -648,7 +635,7 @@ describe('callConsultantModel', () => {
         expect(modelArg._requestPauseMs).toBe(300);
     });
 
-    it('derives maxTokens from consultant contextSize', async () => {
+    it('leaves maxTokens undefined when consultant has no maxTokens (ignores contextSize)', async () => {
         mockCacheLoad([makeConsultantRow({ cr_max_tokens: null, cr_context_size: 40000 })]);
         await loadAssignmentCache();
         mockCallSingleModel.mockResolvedValue({ text: 'ok', usage: null });
@@ -656,8 +643,7 @@ describe('callConsultantModel', () => {
         await callConsultantModel('voice', 'test');
 
         const callArgs = (mockCallSingleModel.mock.calls[0] as any[])[2];
-        // 40000 * 0.25 = 10000, capped at 16384 → 10000
-        expect(callArgs.maxTokens).toBe(10000);
+        expect(callArgs.maxTokens).toBeUndefined();
     });
 
     it('leaves maxTokens undefined when consultant has no maxTokens or contextSize', async () => {

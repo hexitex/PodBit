@@ -24,7 +24,7 @@ jest.unstable_mockModule('../../models.js', () => ({
 
 jest.unstable_mockModule('../../config.js', () => ({
     config: {
-        tokenLimits: { docsValidation: 500 },
+        tokenLimits: { reasoningModelPatterns: [] },
     },
 }));
 

@@ -230,7 +230,16 @@ export async function handleCritiqueResult(
     );
 
     if (!parentExec) {
-        console.error(`[chaining] Parent execution ${parentExecutionId} not found`);
+        console.error(`[chaining] Parent execution ${parentExecutionId} not found -- clearing stuck pending_review`);
+        // Don't leave the node stuck in pending_review forever
+        await query(
+            `UPDATE nodes SET verification_status = NULL, updated_at = datetime('now')
+             WHERE id = $1 AND verification_status = 'pending_review'`,
+            [nodeId],
+        );
+        emitActivity('lab', 'chain_orphaned',
+            `${nodeId.slice(0, 8)}: parent execution ${parentExecutionId} not found -- cleared pending_review`,
+            { nodeId, parentExecutionId });
         return;
     }
 
@@ -253,6 +262,13 @@ export async function handleCritiqueResult(
             break;
 
         case 'correct': {
+            if (!decision.correctedVerdict || !['supported', 'refuted', 'inconclusive'].includes(decision.correctedVerdict)) {
+                // Malformed correction -- treat as inconclusive rather than silently defaulting to refuted
+                emitActivity('lab', 'chain_correction_malformed',
+                    `${nodeId.slice(0, 8)}: critique returned action='correct' without valid correctedVerdict (got "${decision.correctedVerdict}") -- treating as inconclusive`,
+                    { nodeId, parentExecutionId, rawVerdict: decision.correctedVerdict });
+                decision.correctedVerdict = 'inconclusive';
+            }
             const correctedSupported = decision.correctedVerdict === 'supported';
             const correctedConfidence = decision.correctedConfidence ?? 0.5;
             // Apply consequences with the corrected verdict
@@ -556,7 +572,7 @@ function parseCritiqueDecision(result: LabResultResponse): CritiqueDecision {
             if (parsed.action) return parsed as CritiqueDecision;
         } catch {
             // Details might be a narrative string with embedded JSON
-            const jsonMatch = result.details.match(/\{[\s\S]*"action"\s*:\s*"[^"]+[\s\S]*\}/);
+            const jsonMatch = result.details.match(/\{[\s\S]*?"action"\s*:\s*"[^"]+[\s\S]*?\}/);
             if (jsonMatch) {
                 try {
                     const parsed = JSON.parse(jsonMatch[0]);

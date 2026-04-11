@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { labRegistry } from '../lib/api';
 import { FlaskConical, Plus, RefreshCw, Trash2, Power, PowerOff, Activity, ExternalLink, Pencil, Save } from 'lucide-react';
 import api from '../lib/api';
+import { formatLocal } from '../lib/datetime';
 
 // ─── Health Status Dot ───────────────────────────────────────────────────────
 
@@ -528,7 +529,7 @@ export default function Labs() {
                         <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 text-xs">
                           <span className="text-gray-500 dark:text-gray-400">Last health check: </span>
                           <span className="text-gray-700 dark:text-gray-300">{lab.healthMessage}</span>
-                          {lab.healthCheckedAt && <span className="text-gray-400 ml-2">({new Date(lab.healthCheckedAt).toLocaleString()})</span>}
+                          {lab.healthCheckedAt && <span className="text-gray-400 ml-2">({formatLocal(lab.healthCheckedAt)})</span>}
                         </div>
                       )}
                     </td>
@@ -555,7 +556,7 @@ export default function Labs() {
                 <span className="text-gray-500 dark:text-gray-400">{l.healthMessage}</span>
                 {l.healthCheckedAt && (
                   <span className="text-gray-400 dark:text-gray-500 ml-auto">
-                    {new Date(l.healthCheckedAt).toLocaleTimeString()}
+                    {formatLocal(l.healthCheckedAt)}
                   </span>
                 )}
               </div>

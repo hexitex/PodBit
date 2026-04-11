@@ -1,7 +1,7 @@
 /**
  * Unit tests for models/cost.ts — usage logging, cost summaries, time series,
  * details, export, and reset.
- * Complements cost.test.ts which covers applyReasoningBonus.
+ * Complements cost.test.ts which covers isReasoningModel.
  */
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
@@ -11,7 +11,6 @@ jest.unstable_mockModule('../../config.js', () => ({
     config: {
         tokenLimits: {
             reasoningModelPatterns: ['o1'],
-            reasoningExtraTokens: 16000,
         },
     },
 }));

@@ -96,7 +96,7 @@ router.get('/models/available', async (_req, res) => {
     // Try LM Studio (check both LLM_ENDPOINT and LMSTUDIO_ENDPOINT)
     try {
         const lmEndpoint = process.env.LLM_ENDPOINT || process.env.LMSTUDIO_ENDPOINT || 'http://127.0.0.1:1234/v1';
-        const response = await fetch(`${lmEndpoint}/models`);
+        const response = await fetch(`${lmEndpoint}/models`, { signal: AbortSignal.timeout(10_000) });
         if (response.ok) {
             const data = await response.json();
             results.lmstudio = data.data?.map((m: any) => ({
@@ -112,7 +112,7 @@ router.get('/models/available', async (_req, res) => {
     // Try Ollama
     try {
         const ollamaEndpoint = process.env.OLLAMA_ENDPOINT || 'http://127.0.0.1:11434';
-        const response = await fetch(`${ollamaEndpoint}/api/tags`);
+        const response = await fetch(`${ollamaEndpoint}/api/tags`, { signal: AbortSignal.timeout(10_000) });
         if (response.ok) {
             const data = await response.json();
             results.ollama = data.models?.map((m: any) => ({
@@ -706,7 +706,7 @@ router.post('/llm/call', asyncHandler(async (req, res) => {
         res.json({ content, subsystem, role: isConsultant ? 'consultant' : 'primary' });
     } catch (err: any) {
         // If the client gave up while we were waiting for a slot or while the LLM was
-        // running, the abort surfaces here — there's nothing to send back. Log nothing
+        // running, the abort surfaces here - there's nothing to send back. Log nothing
         // noisy: the slot has already been released by the provider's finally block.
         if (abortCtrl.signal.aborted && !res.headersSent) {
             return; // Express will close the connection

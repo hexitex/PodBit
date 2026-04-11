@@ -86,6 +86,21 @@ function forwardToHttpServer(category: string, type: string, message: string, de
     }).catch(() => {});
 }
 
+// --- Helpers ---
+
+/**
+ * Format a node reference for activity log messages.
+ * Returns `"abcd1234 'first few words...'"` instead of a bare hex prefix.
+ * Content is optional -- falls back to just the truncated ID when unavailable.
+ */
+export function nodeLabel(nodeId: string, content?: string | null, maxWords = 6): string {
+    const short = nodeId.slice(0, 8);
+    if (!content) return short;
+    const words = content.replace(/\s+/g, ' ').trim().split(' ').slice(0, maxWords).join(' ');
+    const ellipsis = content.split(/\s+/).length > maxWords ? '...' : '';
+    return `${short} "${words}${ellipsis}"`;
+}
+
 // --- Singleton ---
 
 const bus = new EventEmitter();

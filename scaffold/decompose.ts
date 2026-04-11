@@ -95,7 +95,7 @@ export async function decompose(request: string, taskType: string, options: Reco
         });
 
         try {
-            const validation = await callSubsystemModel('docs', validationPrompt, { maxTokens: config.tokenLimits.docsValidation });
+            const validation = await callSubsystemModel('docs', validationPrompt, {});
             const isValid = validation.toLowerCase().includes('yes');
 
             if (isValid) {

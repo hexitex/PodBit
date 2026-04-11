@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { AlertTriangle, DollarSign, X, Ban } from 'lucide-react';
 import { budget } from '../lib/api';
+import { utcDate } from '../lib/datetime';
 
 /** Banner showing budget status and option to resume when exceeded. */
 export default function BudgetBanner() {
@@ -55,7 +56,7 @@ export default function BudgetBanner() {
             Period: {status.exceededPeriod}
             {status.config.pausedAt && (
               <span className="ml-2">
-                — paused since {new Date(status.config.pausedAt).toLocaleTimeString()}
+                — paused since {utcDate(status.config.pausedAt)?.toLocaleTimeString() || '--'}
               </span>
             )}
           </p>

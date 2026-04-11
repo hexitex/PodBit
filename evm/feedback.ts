@@ -164,7 +164,7 @@ export async function recordVerification(result: VerificationResult, options?: R
         result.sandbox?.exitCode ?? null,
         result.sandbox?.executionTimeMs ?? null,
         result.evaluation?.verified ? 1 : 0,
-        result.evaluation?.claimSupported ? 1 : 0,
+        result.evaluation?.claimSupported == null ? null : (result.evaluation.claimSupported ? 1 : 0),
         result.codegen?.assertionPolarity ?? 'positive',
         result.evaluation?.confidence ?? null,
         result.evaluation?.score ?? null,
@@ -253,7 +253,7 @@ export async function recordVerification(result: VerificationResult, options?: R
     // code_error, failed, skipped → no weight change.
     // INCONCLUSIVE → no weight change (the lab couldn't determine a verdict).
     // Uses claimSupported (not raw verified) — accounts for assertion polarity.
-    const isInconclusive = (result.evaluation as any)?.inconclusive === true;
+    const isInconclusive = (result.evaluation as any)?.inconclusive === true || result.evaluation?.claimSupported == null;
     if (!options?.skipWeightAdjust && result.evaluation && result.weightBefore != null && result.status === 'completed' && !isInconclusive) {
         let weightDelta = 0;
         if (result.evaluation.claimSupported) {

@@ -53,7 +53,7 @@ export async function extractExperimentSpec(
     resolvedClaim: string,
     resolvedParents: string[],
     domain: string,
-    hints?: { guidance?: string; precisionHint?: number; priorRejections?: string; priorLabErrors?: string },
+    hints?: { guidance?: string; precisionHint?: number; priorRejections?: string; priorLabErrors?: string; signal?: AbortSignal },
 ): Promise<ExtractionResult> {
     const parentContext = resolvedParents.length > 0
         ? `SOURCE CONTEXT:\n${resolvedParents.map((p, i) => `Source ${i + 1}: ${p}`).join('\n')}\n`
@@ -126,19 +126,40 @@ export async function extractExperimentSpec(
     const raw = await callSubsystemModel('spec_extraction', prompt, {
         jsonSchema: EXTRACTION_SCHEMA,
         temperature: 0.1,
+        signal: hints?.signal,
     });
 
-    let parsed: any;
-    try {
-        parsed = JSON.parse(raw);
-    } catch {
-        const match = raw.match(/\{[\s\S]*\}/);
-        if (match) {
-            try { parsed = JSON.parse(match[0]); } catch { /* fall through */ }
+    let parsed: any = tryParseExtractionResponse(raw);
+    let lastRaw = raw;
+
+    // Retry up to 3 times — feed the broken output back so the LLM can correct itself
+    const MAX_PARSE_RETRIES = 3;
+    for (let retry = 1; retry <= MAX_PARSE_RETRIES && !parsed; retry++) {
+        const diagnosis = diagnoseParseFailure(lastRaw);
+        console.warn(`[spec-extractor] Parse failure ${retry}/${MAX_PARSE_RETRIES} for ${nodeId.slice(0, 8)}: ${diagnosis} — retrying`);
+        try {
+            const retryPrompt = prompt +
+                `\n\nYOUR PREVIOUS RESPONSE COULD NOT BE PARSED AS JSON (attempt ${retry}). Here is what you returned:\n` +
+                `${lastRaw.slice(0, 500)}\n\n` +
+                `ERROR: ${diagnosis}\n\n` +
+                `You MUST respond with a valid JSON object. No markdown fences, no prose, no explanation — just the raw JSON object starting with { and ending with }.`;
+            const retryRaw = await callSubsystemModel('spec_extraction', retryPrompt, {
+                jsonSchema: EXTRACTION_SCHEMA,
+                temperature: 0.1,
+                signal: hints?.signal,
+            });
+            parsed = tryParseExtractionResponse(retryRaw);
+            lastRaw = retryRaw;
+        } catch (retryErr: any) {
+            // Propagate abort errors immediately instead of burning more retries
+            if (hints?.signal?.aborted || retryErr?.name === 'AbortError') throw retryErr;
+            /* other retry failures -- continue to next attempt */
         }
-        if (!parsed) {
-            return { reducible: false, reason: 'Failed to parse extraction response', claimType: 'not_testable' };
-        }
+    }
+
+    if (!parsed) {
+        const diagnosis = diagnoseParseFailure(lastRaw);
+        return { reducible: false, reason: `Parse failure (after ${MAX_PARSE_RETRIES} retries): ${diagnosis}`, claimType: 'not_testable' };
     }
 
     if (!parsed.reducible) {
@@ -194,6 +215,7 @@ export async function extractExperimentSpec(
         parsed.hypothesis || resolvedClaim.slice(0, 200),
         parsed.setup,
         specType,
+        hints?.signal,
     );
     if (falsifiabilityReason) {
         return {
@@ -217,6 +239,39 @@ export async function extractExperimentSpec(
         spec,
         claimType: parsed.claimType,
     };
+}
+
+// =============================================================================
+// PARSE HELPERS
+// =============================================================================
+
+/** Try to extract a parsed JSON object from an LLM response. Returns null on failure. */
+function tryParseExtractionResponse(raw: string): any | null {
+    try {
+        return JSON.parse(raw);
+    } catch {
+        const match = raw.match(/\{[\s\S]*\}/);
+        if (match) {
+            try { return JSON.parse(match[0]); } catch { /* fall through */ }
+        }
+        return null;
+    }
+}
+
+/** Diagnose why an LLM response couldn't be parsed as JSON. */
+function diagnoseParseFailure(raw: string): string {
+    const preview = (raw || '').slice(0, 200).replace(/\n/g, ' ');
+    if (!raw || raw.trim().length === 0) {
+        return 'LLM returned empty response (likely finish_reason=length with all tokens consumed by reasoning)';
+    }
+    if (raw.trim().length < 20) {
+        return `LLM returned too-short response (${raw.trim().length} chars): "${preview}"`;
+    }
+    if (!raw.includes('{')) {
+        return `LLM returned prose instead of JSON (no opening brace found): "${preview}"`;
+    }
+    const truncated = raw.trimEnd().endsWith('}') ? '' : ' - response appears truncated (no closing brace)';
+    return `Malformed JSON from LLM${truncated}. Preview: "${preview}"`;
 }
 
 // =============================================================================
@@ -315,6 +370,7 @@ async function reviewFalsifiability(
     hypothesis: string,
     setup: any,
     specType: string,
+    signal?: AbortSignal,
 ): Promise<string | null> {
     // Check config toggle
     try {
@@ -340,6 +396,7 @@ async function reviewFalsifiability(
         const raw = await callSubsystemModel('spec_review', prompt, {
             jsonSchema: REVIEW_SCHEMA,
             temperature: 0.2,
+            signal,
         });
 
         let result: any;

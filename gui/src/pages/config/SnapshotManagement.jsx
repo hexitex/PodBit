@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader, Download, Upload, Globe } from 'lucide-react';
 import { configApi } from '../../lib/api';
 import { useConfirmDialog } from '../../components/ConfirmDialog';
+import { formatLocal } from '../../lib/datetime';
 
 /** Config snapshots: save, list, restore, and delete. */
 export default function SnapshotManagement() {
@@ -144,7 +145,7 @@ export default function SnapshotManagement() {
                     {isOtherProject && (
                       <span className="text-blue-500 dark:text-blue-400 font-medium">{s.projectName}</span>
                     )}
-                    <span>{new Date(s.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                    <span>{formatLocal(s.createdAt, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                     {s.synthSuccessRate != null && (
                       <span className="text-emerald-600 dark:text-emerald-400">
                         {(s.synthSuccessRate * 100).toFixed(0)}% synth

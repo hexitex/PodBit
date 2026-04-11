@@ -48,40 +48,40 @@ import { emitActivity } from '../services/event-bus.js';
 
 /** Direct handler registry — used by HTTP server and as MCP fallback. */
 const toolHandlers: Record<string, (params: Record<string, any>) => Promise<any>> = {
-    'podbit.query': handleQuery,
-    'podbit.get': handleGet,
-    'podbit.lineage': handleLineage,
-    'podbit.propose': handlePropose,
-    'podbit.remove': handleRemove,
-    'podbit.edit': handleEdit,
-    'podbit.dedup': handleDedup,
-    'podbit.voice': handleVoice,
-    'podbit.promote': handlePromote,
-    'podbit.stats': handleStats,
-    'podbit.tensions': handleTensions,
-    'podbit.question': handleQuestion,
-    'podbit.validate': handleValidate,
-    'podbit.patterns': handleAbstractPatterns,
-    'podbit.pending': handlePending,
-    'podbit.complete': handleComplete,
-    'podbit.synthesis': handleSynthesisEngine,
-    'podbit.summarize': handleSummarize,
-    'podbit.compress': handleCompress,
-    'podbit.partitions': handlePartitions,
-    'podbit.context': handleContext,
-    'podbit.config': handleConfig,
-    'podbit.feedback': handleFeedback,
-    'podbit.labVerify': handleLabVerify,
-    'podbit.elite': handleElite,
-    'podbit.kb': handleKnowledgeBase,
-    'podbit.projects': handleProjects,
-    'podbit.api': handleGenericApi,
-    'podbit.apiRegistry': handleApiRegistry,
-    'podbit.lab': handleLab,
-    'podbit.journal': handleJournal,
-    'docs.templates': handleScaffoldTemplates,
-    'docs.decompose': handleScaffoldDecompose,
-    'docs.generate': handleScaffoldGenerate,
+    'podbit_query': handleQuery,
+    'podbit_get': handleGet,
+    'podbit_lineage': handleLineage,
+    'podbit_propose': handlePropose,
+    'podbit_remove': handleRemove,
+    'podbit_edit': handleEdit,
+    'podbit_dedup': handleDedup,
+    'podbit_voice': handleVoice,
+    'podbit_promote': handlePromote,
+    'podbit_stats': handleStats,
+    'podbit_tensions': handleTensions,
+    'podbit_question': handleQuestion,
+    'podbit_validate': handleValidate,
+    'podbit_patterns': handleAbstractPatterns,
+    'podbit_pending': handlePending,
+    'podbit_complete': handleComplete,
+    'podbit_synthesis': handleSynthesisEngine,
+    'podbit_summarize': handleSummarize,
+    'podbit_compress': handleCompress,
+    'podbit_partitions': handlePartitions,
+    'podbit_context': handleContext,
+    'podbit_config': handleConfig,
+    'podbit_feedback': handleFeedback,
+    'podbit_labVerify': handleLabVerify,
+    'podbit_elite': handleElite,
+    'podbit_kb': handleKnowledgeBase,
+    'podbit_projects': handleProjects,
+    'podbit_api': handleGenericApi,
+    'podbit_apiRegistry': handleApiRegistry,
+    'podbit_lab': handleLab,
+    'podbit_journal': handleJournal,
+    'docs_templates': handleScaffoldTemplates,
+    'docs_decompose': handleScaffoldDecompose,
+    'docs_generate': handleScaffoldGenerate,
 };
 
 /**
@@ -98,7 +98,7 @@ async function handleToolCall(name: string, params: Record<string, any>) {
     }
 
     // Activity event (emitted by caller — HTTP server or MCP stdio)
-    const shortName = name.replace('podbit.', '').replace('docs.', '');
+    const shortName = name.replace('podbit_', '').replace('docs_', '');
     const suffix = params.action ? `.${params.action}` : '';
     const textHint = params.text ? ` — "${params.text.slice(0, 60)}"` : '';
     const domainHint = params.domain ? ` [${params.domain}]` : '';

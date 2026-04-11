@@ -4,6 +4,7 @@ import { Loader, Trash2, Plus, Link2, Unlink, X, Download, Pencil, ArrowUpFromLi
 import { partitions, pool } from '../../lib/api';
 import { CollapsibleSection } from '../../components/ConfigPrimitives';
 import { useConfirmDialog } from '../../components/ConfirmDialog';
+import { formatLocalDate } from '../../lib/datetime';
 
 // ---------------------------------------------------------------------------
 // Modal: generic backdrop + centered card
@@ -901,7 +902,7 @@ function PartitionTimeline({ partitionId }) {
               {h.fitness > 0 && (
                 <span className="text-gray-400 ml-1.5">fitness {h.fitness}</span>
               )}
-              <div className="text-gray-400">{h.timestamp ? new Date(h.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</div>
+              <div className="text-gray-400">{h.timestamp ? formatLocalDate(h.timestamp) : ''}</div>
             </div>
           </div>
         );
@@ -1282,7 +1283,7 @@ function PoolSection({ allPartitions, showMessage }) {
                             <span>{r.procreation_hours}h</span>
                             {r.status === 'active' && r.return_due_at && (
                               <span className="text-orange-500">
-                                due {new Date(r.return_due_at).toLocaleDateString()}
+                                due {formatLocalDate(r.return_due_at)}
                               </span>
                             )}
                           </div>

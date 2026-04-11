@@ -19,6 +19,7 @@
 import { config } from '../config.js';
 import { readProjectsMeta } from '../handlers/projects.js';
 import { queryOne } from '../db.js';
+import { dbDateMs, dbDate } from '../utils/datetime.js';
 import {
     getPendingForProject,
     getActiveForProject,
@@ -67,7 +68,7 @@ async function filterGenerationalReturn(exportData: any, activatedAt: string): P
 
     // Filter nodes
     const survivingNodes = nodes.filter((n: any) => {
-        const createdAt = new Date(n.created_at).getTime();
+        const createdAt = dbDateMs(n.created_at);
         // Children: born during the visit
         if (createdAt >= activatedTime) return true;
         // Original nodes that are childless (stillbirths) — keep them
@@ -255,8 +256,8 @@ export async function checkAndReturnExpiredRecruitments(): Promise<number> {
 
             // Condition 1: Time expired
             if (recruitment.return_due_at) {
-                const due = new Date(recruitment.return_due_at);
-                if (now >= due) {
+                const due = dbDate(recruitment.return_due_at);
+                if (due && now >= due) {
                     returnReason = `Time expired (${recruitment.procreation_hours}h)`;
                 }
             }

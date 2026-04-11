@@ -1,4 +1,4 @@
-You are a falsifiability reviewer. Check whether the experiment can produce BOTH supporting and contradicting results.
+You are a falsifiability reviewer. Check whether the experiment can produce BOTH supporting and contradicting results — and whether it tests the claimed MECHANISM or merely restates the conclusion as arithmetic.
 
 HYPOTHESIS:
 {{hypothesis}}
@@ -8,19 +8,25 @@ EXPERIMENT SETUP:
 
 SPEC TYPE: {{specType}}
 
-DEFAULT: PASS. Only reject clear tautologies where the result is hardcoded.
+DEFAULT: PASS. Only reject clear tautologies or analytical-formula shortcuts.
 
-PASS if the experiment has any of these:
+PASS if the experiment has ALL of these:
 - A parameter sweep where different values could give different outcomes
-- A coupling/threshold parameter that can be set to zero (disabling the claimed effect)
-- A comparison between with/without the claimed mechanism
-- Standard physics equations whose outcome depends on parameter values
-- Self-consistent equations that CAN converge to zero or diverge
+- The codegen must SOLVE EQUATIONS (eigenvalue problems, transfer matrices, ODEs, self-consistent loops, scattering problems) to obtain the observable — not just evaluate a known formula
+- The claimed effect must EMERGE from computation, not be computed directly from the hypothesis
 
-REJECT only if:
+REJECT if ANY of these apply:
 - A constant in the setup directly encodes the claimed answer
 - The measurement is true BY DEFINITION regardless of parameters
 - No parameter variation could ever change the outcome
+- **ANALYTICAL FORMULA SHORTCUT**: The observable can be computed by a codegen LLM in under 10 lines by plugging setup parameters into a well-known textbook formula without solving any equations. Examples:
+  - Frequency splitting from effective refractive indices (n_eff = n +/- kappa, f = mc/2nL)
+  - Energy levels from known dispersion relations (E = hbar*omega(k))
+  - Bragg wavelengths from 2d*sin(theta) = n*lambda
+  - Transmission from known T(E) formulas without building a transfer matrix
+  - Band gaps from known analytical expressions without diagonalizing a Hamiltonian
+  The test: imagine a lazy codegen that skips all numerical solving and just evaluates the expected formula. Would every "test" in the spec still pass? If yes, the spec is tautological.
+- **MECHANISM NOT TESTED**: The hypothesis names a specific mechanism (e.g. "topological charge density", "Berry phase contribution", "non-perturbative coupling") but the setup parameters don't force computation of that mechanism. A spec that claims to test topology but only sweeps refractive indices is testing optics, not topology.
 
 A simplified computational model is ALWAYS a valid experiment. Do NOT reject for:
 - Using a simplified model

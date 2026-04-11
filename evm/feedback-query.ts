@@ -70,6 +70,8 @@ export async function getRecentExecutions(options: {
     }
     if (options.status === 'attention') {
         conditions.push(`e.status IN ('code_error', 'failed', 'skipped')`);
+    } else if (options.status === 'inconclusive') {
+        conditions.push(`e.claim_supported IS NULL AND e.verified = 0 AND e.status = 'completed'`);
     } else if (options.status) {
         conditions.push(`e.status = $${paramIdx}`);
         params.push(options.status);
@@ -78,7 +80,8 @@ export async function getRecentExecutions(options: {
     if (options.verified === true) {
         conditions.push(`e.verified = 1`);
     } else if (options.verified === false) {
-        conditions.push(`e.verified = 0 AND e.status = 'completed'`);
+        // Refuted: claim_supported explicitly 0 (not NULL which is inconclusive)
+        conditions.push(`e.claim_supported = 0 AND e.status = 'completed'`);
     }
     if (options.minConfidence != null) {
         conditions.push(`COALESCE(e.confidence, 0) >= $${paramIdx}`);
@@ -282,8 +285,9 @@ export async function getEVMStats(days: number = 7) {
                  WHEN claim_supported IS NULL AND verified = 1 THEN 1
                  ELSE 0 END) as verified_count,
             SUM(CASE WHEN claim_supported = 0 AND status = 'completed' THEN 1
-                 WHEN claim_supported IS NULL AND verified = 0 AND status = 'completed' THEN 1
                  ELSE 0 END) as disproved_count,
+            SUM(CASE WHEN claim_supported IS NULL AND verified = 0 AND status = 'completed' THEN 1
+                 ELSE 0 END) as inconclusive_count,
             SUM(CASE WHEN status = 'code_error' THEN 1 ELSE 0 END) as code_error_count,
             SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as error_count,
             SUM(CASE WHEN status = 'skipped' THEN 1 ELSE 0 END) as skipped_count,
@@ -328,6 +332,7 @@ export async function getEVMStats(days: number = 7) {
         total: parseInt(stats?.total || '0', 10),
         verified: parseInt(stats?.verified_count || '0', 10),
         disproved: parseInt(stats?.disproved_count || '0', 10),
+        inconclusive: parseInt(stats?.inconclusive_count || '0', 10),
         codeErrors: parseInt(stats?.code_error_count || '0', 10),
         errors: parseInt(stats?.error_count || '0', 10),
         skipped: parseInt(stats?.skipped_count || '0', 10),

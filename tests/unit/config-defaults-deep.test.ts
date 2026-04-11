@@ -756,30 +756,9 @@ describe('config.embeddingCache', () => {
 // tokenLimits deep
 // =============================================================================
 describe('config.tokenLimits deep', () => {
-  it('has profileLimits for all five profiles', () => {
-    const pl = config.tokenLimits.profileLimits;
-    for (const profile of ['micro', 'small', 'medium', 'large', 'xl'] as const) {
-      expect(pl[profile].summarize).toBeGreaterThan(0);
-      expect(pl[profile].compress).toBeGreaterThan(0);
-    }
-  });
-
-  it('profileLimits scale upward', () => {
-    const pl = config.tokenLimits.profileLimits;
-    expect(pl.micro.compress).toBeLessThan(pl.small.compress);
-    expect(pl.small.compress).toBeLessThan(pl.medium.compress);
-    expect(pl.medium.compress).toBeLessThan(pl.large.compress);
-    expect(pl.large.compress).toBeLessThan(pl.xl.compress);
-  });
-
   it('has reasoningModelPatterns', () => {
     expect(config.tokenLimits.reasoningModelPatterns.length).toBeGreaterThan(0);
     expect(config.tokenLimits.reasoningModelPatterns).toContain('r1');
-  });
-
-  it('has compressionRatio in (0,1)', () => {
-    expect(config.tokenLimits.compressionRatio).toBeGreaterThan(0);
-    expect(config.tokenLimits.compressionRatio).toBeLessThan(1);
   });
 });
 

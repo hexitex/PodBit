@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as d3 from 'd3';
 import { resonance, partitions as partitionsApi } from '../lib/api';
 import { useTheme } from '../lib/theme';
+import { utcMs } from '../lib/datetime';
 
 const TYPE_COLORS = {
   seed: '#10b981',
@@ -160,7 +161,7 @@ function buildHierarchy(nodes, groupBy, subGroup, sizeBy, keywordMap) {
       if (n.childCount > maxChildren) maxChildren = n.childCount;
       if (n.ancestorCount > maxAncestors) maxAncestors = n.ancestorCount;
       if (n.createdAt) {
-        const age = now - new Date(n.createdAt).getTime();
+        const age = now - utcMs(n.createdAt);
         if (age < minAge) minAge = age;
         if (age > maxAge) maxAge = age;
       }
@@ -176,7 +177,7 @@ function buildHierarchy(nodes, groupBy, subGroup, sizeBy, keywordMap) {
     }
     if (sizeBy === 'age') {
       if (!node.createdAt || maxAge <= minAge) return 0.5;
-      const age = Date.now() - new Date(node.createdAt).getTime();
+      const age = Date.now() - utcMs(node.createdAt);
       return 0.1 + ((age - minAge) / (maxAge - minAge)) * 0.9;
     }
     const v = sizeBy === 'salience' ? node.salience : node.weight;

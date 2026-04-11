@@ -135,7 +135,7 @@ async function downloadArtifact(
     const filePath = join(EVIDENCE_DIR, filename);
 
     const headers: Record<string, string> = { ...authHeaders };
-    const response = await fetch(url, { headers });
+    const response = await fetch(url, { headers, signal: AbortSignal.timeout(120_000) });
     if (!response.ok) throw new Error(`Artifact download failed (${response.status})`);
 
     const buffer = Buffer.from(await response.arrayBuffer());
@@ -150,7 +150,7 @@ async function fetchArtifactInline(
     authHeaders?: Record<string, string>,
 ): Promise<string> {
     const headers: Record<string, string> = { ...authHeaders };
-    const response = await fetch(url, { headers });
+    const response = await fetch(url, { headers, signal: AbortSignal.timeout(60_000) });
     if (!response.ok) throw new Error(`Artifact fetch failed (${response.status})`);
 
     if (artifact.type.startsWith('text/') || artifact.type === 'application/json') {

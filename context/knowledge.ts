@@ -11,6 +11,7 @@
  * smaller model profiles.
  */
 import { query } from '../db.js';
+import { dbDateMs } from '../utils/datetime.js';
 import { getEmbedding } from '../models.js';
 import {
     cosineSimilarity,
@@ -239,7 +240,7 @@ export async function selectKnowledge(message: string, session: any, options: Re
         score += weightScore * weights.nodeWeight;
 
         // Signal 4: Recency (newer nodes score higher, decays over configured days)
-        const ageMs = now - new Date(node.created_at).getTime();
+        const ageMs = now - dbDateMs(node.created_at);
         const ageDays = ageMs / (1000 * 60 * 60 * 24);
         const recencyScore = Math.max(0, 1 - (ageDays / cfg.recencyDays));
         score += recencyScore * weights.recency;

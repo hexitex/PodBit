@@ -312,7 +312,7 @@ function buildProviderResponseFormat(provider: string, jsonSchema?: JsonSchema, 
 
     switch (provider) {
         case 'lmstudio':
-            // LM Studio supports full json_schema structured output
+            // LM Studio supports full json_schema structured output for capable models
             return {
                 type: 'json_schema',
                 json_schema: {
@@ -509,9 +509,9 @@ async function _callWithMessagesInner(
         applyThinkingLevel(requestBody, modelName, 'off');
     }
 
-    // Z.AI / GLM: strip unsupported parameters, enable streaming for connection keepalive
-    const modelId = (modelName || '').toLowerCase();
-    const isZaiProxy = modelId.includes('glm') || endpoint.includes('z.ai');
+    // Z.AI: strip unsupported parameters, enable streaming for connection keepalive.
+    // Only trigger for actual Z.AI endpoints — NOT for local models with 'glm' in the name.
+    const isZaiProxy = endpoint.includes('z.ai');
     if (isZaiProxy) {
         requestBody.stream = true;             // Z.AI drops idle connections at ~300s; streaming keeps alive
         delete requestBody.frequency_penalty;  // not supported
@@ -520,9 +520,6 @@ async function _callWithMessagesInner(
         delete requestBody.top_logprobs;       // not supported
         delete requestBody.seed;               // not supported
         delete requestBody.n;                  // not supported
-        if (!requestBody.max_tokens) {
-            requestBody.max_tokens = 4096;
-        }
         console.log(`[llm] Z.AI sanitized request keys: ${Object.keys(requestBody).join(', ')}`);
     }
 
@@ -566,7 +563,7 @@ async function _callWithMessagesInner(
         const result = await readStreamingResponse(response);
         firstContent = result.text;
         data = { choices: [{ message: { content: result.text }, finish_reason: result.finishReason }], usage: result.usage ? { prompt_tokens: result.usage.prompt_tokens, completion_tokens: result.usage.completion_tokens, total_tokens: result.usage.total_tokens, completion_tokens_details: { reasoning_tokens: result.usage.tool_tokens } } : undefined };
-        convLog(`RESPONSE callWithMessages (streaming) → ${modelName}`, { textLen: result.text?.length, finishReason: result.finishReason });
+        convLog(`RESPONSE callWithMessages (streaming) -> ${modelName}`, { textLen: result.text?.length, finishReason: result.finishReason, usage: result.usage });
     } else {
         data = await response.json();
         convLog(`RESPONSE callWithMessages → ${modelName}`, data);
@@ -669,7 +666,7 @@ async function callAnthropic(model: ModelEntry, prompt: string, options: CallOpt
 
     const requestBody = {
         model: model.model,
-        max_tokens: options.maxTokens || 8192,
+        max_tokens: options.maxTokens || 16384,
         ...(systemPrompt ? { system: systemPrompt } : {}),
         // Explicitly disable extended thinking when noThink is set.
         // Thinking is opt-in for Claude, but models with adaptive thinking
@@ -791,9 +788,9 @@ async function callOpenAICompatible(model: ModelEntry, prompt: string, options: 
     // inject the schema definition into the system prompt per Z.AI best practice
     injectSchemaIntoPrompt(messages, model.provider, options.jsonSchema);
 
-    // Z.AI / GLM: strip unsupported parameters, enable streaming for connection keepalive
-    const modelIdLower = (modelName || '').toLowerCase();
-    const isZai = modelIdLower.includes('glm') || endpoint.includes('z.ai');
+    // Z.AI: strip unsupported parameters, enable streaming for connection keepalive.
+    // Only trigger for actual Z.AI endpoints — NOT for local models with 'glm' in the name.
+    const isZai = endpoint.includes('z.ai');
     if (isZai) {
         requestBody.stream = true;             // Z.AI drops idle connections at ~300s; streaming keeps alive
         delete requestBody.frequency_penalty;  // not supported
@@ -805,9 +802,6 @@ async function callOpenAICompatible(model: ModelEntry, prompt: string, options: 
         delete requestBody.user;               // Z.AI rejects custom user field
         delete requestBody.min_p;
         delete requestBody.top_k;
-        if (!requestBody.max_tokens) {
-            requestBody.max_tokens = 4096;
-        }
         console.log(`[llm] Z.AI request keys: ${Object.keys(requestBody).join(', ')}`);
     }
 
@@ -833,32 +827,52 @@ async function callOpenAICompatible(model: ModelEntry, prompt: string, options: 
 
     if (!response.ok) {
         const error = await response.text();
-        // Auto-strip unsupported properties and retry (up to 3 stripped params)
-        const strippableProps = ['min_p', 'top_k', 'frequency_penalty'];
-        let stripped = false;
+        let retried = false;
+
         if (response.status === 400) {
+            // Auto-strip unsupported properties and retry
+            const strippableProps = ['min_p', 'top_k', 'frequency_penalty'];
             const propMatch = error.match(/property\s+'([^']+)'\s+is unsupported/i);
             const prop = propMatch?.[1];
             if (prop && strippableProps.includes(prop) && prop in requestBody) {
                 delete requestBody[prop];
-                // Cache this discovery so we never send it again for this endpoint
                 if (!_unsupportedParams.has(endpointHost)) _unsupportedParams.set(endpointHost, new Set());
                 _unsupportedParams.get(endpointHost)!.add(prop);
                 console.error(`[llm] ${endpointHost} does not support '${prop}' — stripped and cached`);
-                _persistUnsupportedParams(); // fire-and-forget persist
-                // Retry without the unsupported property
+                _persistUnsupportedParams();
                 response = await fetch(url, {
-                    method: 'POST',
-                    headers,
-                    body: JSON.stringify(requestBody),
+                    method: 'POST', headers, body: JSON.stringify(requestBody),
                     signal: createFetchSignal(options.signal, options.requestTimeout),
                 });
-                stripped = true;
+                retried = true;
+            }
+
+            // json_schema validation failure — model doesn't support structured output.
+            // Downgrade to json_object mode and inject schema into prompt, then retry.
+            if (!retried && error.includes('json_validate_failed') && requestBody.response_format?.type === 'json_schema') {
+                console.error(`[llm] ${modelName} rejected json_schema structured output — falling back to json_object with prompt injection`);
+                requestBody.response_format = { type: 'json_object' };
+                // Inject schema into the prompt so the model knows what to produce
+                const schema = requestBody.response_format?.json_schema?.schema || options.jsonSchema?.schema;
+                if (schema) {
+                    const schemaInstruction = `\n\nYou MUST return valid JSON conforming to this JSON Schema:\n${JSON.stringify(schema, null, 2)}\n\nReturn ONLY the JSON object. No markdown, no code fences, no extra text.`;
+                    const sysMsg = messages.find((m: any) => m.role === 'system');
+                    if (sysMsg) { sysMsg.content += schemaInstruction; }
+                    else { messages.unshift({ role: 'system', content: schemaInstruction }); }
+                }
+                // Update the request body with mutated messages
+                requestBody.messages = messages;
+                response = await fetch(url, {
+                    method: 'POST', headers, body: JSON.stringify(requestBody),
+                    signal: createFetchSignal(options.signal, options.requestTimeout),
+                });
+                retried = true;
             }
         }
+
         if (!response.ok) {
-            if (!stripped) convLog(`ERROR callOpenAICompatible → ${modelName}`, { status: response.status, error });
-            const finalError = stripped ? await response.text() : error;
+            if (!retried) convLog(`ERROR callOpenAICompatible → ${modelName}`, { status: response.status, error });
+            const finalError = retried ? await response.text() : error;
             throw new Error(`${model.provider} API error (${response.status}): ${finalError}`);
         }
     }
@@ -866,9 +880,12 @@ async function callOpenAICompatible(model: ModelEntry, prompt: string, options: 
     // Z.AI uses streaming — read SSE chunks; others use normal JSON response
     if (isZai) {
         const result = await readStreamingResponse(response);
-        convLog(`RESPONSE callOpenAICompatible (streaming) → ${modelName}`, { textLen: result.text?.length, finishReason: result.finishReason });
+        convLog(`RESPONSE callOpenAICompatible (streaming) -> ${modelName}`, { textLen: result.text?.length, finishReason: result.finishReason, usage: result.usage });
         if (!result.text) {
-            throw new Error(`${model.provider} returned empty content from ${modelName} (streaming, finish_reason=${result.finishReason}, max_tokens=${options.maxTokens})`);
+            const lengthHint = result.finishReason === 'length'
+                ? ` — model exhausted output budget on reasoning/chain-of-thought with nothing left for the response. Increase max_tokens in the model registry (Models page)`
+                : '';
+            throw new Error(`${model.provider} returned empty content from ${modelName} (streaming, finish_reason=${result.finishReason}, max_tokens=${options.maxTokens})${lengthHint}`);
         }
         if (result.finishReason === 'length') {
             console.warn(`[llm] ${modelName} output truncated (finish_reason=length, max_tokens=${options.maxTokens}) — returning partial content`);
@@ -881,7 +898,10 @@ async function callOpenAICompatible(model: ModelEntry, prompt: string, options: 
     const content = data.choices?.[0]?.message?.content;
     const finishReason = data.choices?.[0]?.finish_reason;
     if (!content) {
-        throw new Error(`${model.provider} returned empty content from ${modelName} (finish_reason=${finishReason}, max_tokens=${options.maxTokens})`);
+        const lengthHint = finishReason === 'length'
+            ? ` — model exhausted output budget on reasoning/chain-of-thought with nothing left for the response. Increase max_tokens in the model registry (Models page)`
+            : '';
+        throw new Error(`${model.provider} returned empty content from ${modelName} (finish_reason=${finishReason}, max_tokens=${options.maxTokens})${lengthHint}`);
     }
     if (finishReason === 'length') {
         console.warn(`[llm] ${modelName} output truncated (finish_reason=length, max_tokens=${options.maxTokens}) — returning partial content`);

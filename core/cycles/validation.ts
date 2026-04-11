@@ -13,7 +13,7 @@ import { query, queryOne } from '../../db.js';
 import { config as appConfig } from '../../config.js';
 import { validateBreakthrough, runNoveltyGate } from '../validation.js';
 import { logDecision, getExcludedDomainsForCycle } from '../governance.js';
-import { emitActivity } from '../../services/event-bus.js';
+import { emitActivity, nodeLabel } from '../../services/event-bus.js';
 import type { ResonanceNode } from '../types.js';
 
 /**
@@ -70,13 +70,13 @@ async function runValidationCycleSingle(): Promise<void> {
 
     if (result.error) {
         console.error(`[validation] Error validating ${candidate.id.slice(0, 8)}: ${result.error}`);
-        emitActivity('cycle', 'validation_error', `Validation error: ${candidate.id.slice(0, 8)} — ${result.error}`);
+        emitActivity('cycle', 'validation_error', `Validation error: ${nodeLabel(candidate.id, candidate.content)} — ${result.error}`);
         return;
     }
 
     const composite = result.composite ?? 0;
     console.error(`[validation] ${candidate.id.slice(0, 8)}: composite=${composite.toFixed(1)} (threshold: ${cfg.minCompositeForPromotion})`);
-    emitActivity('cycle', 'validation_scored', `Validated ${candidate.id.slice(0, 8)}: composite=${composite.toFixed(1)} (threshold: ${cfg.minCompositeForPromotion})`, { nodeId: candidate.id, composite, threshold: cfg.minCompositeForPromotion, domain: candidate.domain, promoted: composite >= cfg.minCompositeForPromotion });
+    emitActivity('cycle', 'validation_scored', `Validated ${nodeLabel(candidate.id, candidate.content)}: composite=${composite.toFixed(1)} (threshold: ${cfg.minCompositeForPromotion})`, { nodeId: candidate.id, composite, threshold: cfg.minCompositeForPromotion, domain: candidate.domain, promoted: composite >= cfg.minCompositeForPromotion });
 
     if (composite >= cfg.minCompositeForPromotion) {
         // ── Gate 2: Novelty gate (frontier model skeptical check) ──
@@ -92,7 +92,7 @@ async function runValidationCycleSingle(): Promise<void> {
                 } else if (!noveltyGateResult.novel) {
                     // Blocked by novelty gate — not genuinely novel
                     console.error(`[validation] → ${candidate.id.slice(0, 8)} BLOCKED by novelty gate (confidence: ${noveltyGateResult.confidence?.toFixed(2)}): ${noveltyGateResult.reasoning}`);
-                    emitActivity('cycle', 'validation_blocked', `Blocked by novelty gate: ${candidate.id.slice(0, 8)} — ${noveltyGateResult.reasoning}`, { nodeId: candidate.id, composite, gate: 'novelty', confidence: noveltyGateResult.confidence, domain: candidate.domain });
+                    emitActivity('cycle', 'validation_blocked', `Blocked by novelty gate: ${nodeLabel(candidate.id, candidate.content)} — ${noveltyGateResult.reasoning}`, { nodeId: candidate.id, composite, gate: 'novelty', confidence: noveltyGateResult.confidence, domain: candidate.domain });
 
                     // Log to dream_cycles and return — do not promote
                     await queryOne(`
@@ -138,7 +138,7 @@ async function runValidationCycleSingle(): Promise<void> {
                     if (evmGateResult.status === 'completed' && evmGateResult.evaluation?.claimSupported === false) {
                         // Explicitly refuted — block promotion
                         console.error(`[validation] → ${candidate.id.slice(0, 8)} BLOCKED by EVM gate (claimSupported=false, score=${evmGateResult.evaluation.score})`);
-                        emitActivity('cycle', 'validation_blocked', `Blocked by EVM: ${candidate.id.slice(0, 8)} — claims refuted`, { nodeId: candidate.id, composite, gate: 'evm', evmStatus: evmGateResult.status, domain: candidate.domain });
+                        emitActivity('cycle', 'validation_blocked', `Blocked by EVM: ${nodeLabel(candidate.id, candidate.content)} — claims refuted`, { nodeId: candidate.id, composite, gate: 'evm', evmStatus: evmGateResult.status, domain: candidate.domain });
 
                         await queryOne(`
                             INSERT INTO dream_cycles (
@@ -177,7 +177,7 @@ async function runValidationCycleSingle(): Promise<void> {
             `Auto-validated as possible breakthrough: composite=${composite.toFixed(1)}, scores=${JSON.stringify(result.scores)}`
         );
         console.error(`[validation] → ${candidate.id.slice(0, 8)} marked as "possible" (composite: ${composite.toFixed(1)})`);
-        emitActivity('cycle', 'validation_promoted', `Promoted to "possible": ${candidate.id.slice(0, 8)} (composite: ${composite.toFixed(1)})`, { nodeId: candidate.id, composite, scores: result.scores, domain: candidate.domain });
+        emitActivity('cycle', 'validation_promoted', `Promoted to "possible": ${nodeLabel(candidate.id, candidate.content)} (composite: ${composite.toFixed(1)})`, { nodeId: candidate.id, composite, scores: result.scores, domain: candidate.domain });
 
         // Audit trail for successful promotion (with gate results)
         await queryOne(`

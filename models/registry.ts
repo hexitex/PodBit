@@ -13,6 +13,30 @@ import { getApiKey } from './api-keys.js';
 import { loadAssignmentCache } from './assignments.js';
 
 /**
+ * Validate that retry config parameters are coherent. The backoff must fit
+ * within the retry window, otherwise retries are impossible and the model
+ * silently fails after the first rate-limit hit.
+ */
+/**
+ * Validate retry config coherence. Returns a warning message if the backoff
+ * exceeds the retry window (retries would be ineffective). This is advisory -
+ * the system clamps backoff to the remaining window at runtime, so the config
+ * is never fatal. The warning surfaces in the GUI on save.
+ */
+function validateRetryConfig(cfg: { maxRetries?: number; retryWindowMinutes?: number; rateLimitBackoffMs?: number }): { warning?: string } {
+    const maxRetries = cfg.maxRetries ?? 3;
+    const windowMs = (cfg.retryWindowMinutes ?? 2) * 60_000;
+    const backoffMs = cfg.rateLimitBackoffMs ?? 120_000;
+
+    if (maxRetries > 0 && backoffMs > windowMs) {
+        return {
+            warning: `rate_limit_backoff_ms (${backoffMs}ms) exceeds retry_window_minutes (${cfg.retryWindowMinutes ?? 2}m = ${windowMs}ms). Backoff will be clamped to the remaining window at runtime, but retries may be less effective than intended.`,
+        };
+    }
+    return {};
+}
+
+/**
  * Convert a raw DB row from model_registry into a typed RegisteredModel object.
  * Applies defaults for nullable columns and normalizes provider names.
  * @param r - Raw row from SQLite query
