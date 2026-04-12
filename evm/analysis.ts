@@ -37,16 +37,46 @@ export async function analyseRejection(
         `Post-rejection analysis for ${result.nodeId.slice(0, 8)} (${claimType})`,
         { nodeId: result.nodeId, claimType });
 
-    // Build analysis prompt with lab results
-    const rawOutput = result.evaluation.rawOutput
-        ? JSON.stringify(result.evaluation.rawOutput, null, 2)
-        : '(no raw data)';
+    // Gather lab evidence - the verdict, stdout, and structured details
+    // are stored in lab_evidence, not in the execution record.
+    let labOutput = '';
+    try {
+        const { query: dbQuery } = await import('../core.js');
+        const evidence = await dbQuery(
+            `SELECT label, data_inline FROM lab_evidence
+             WHERE node_id = $1 AND label IN ('verdict', 'stdout')
+             ORDER BY created_at DESC LIMIT 2`,
+            [result.nodeId],
+        ) as any[];
+        for (const ev of evidence) {
+            if (!ev.data_inline) continue;
+            if (ev.label === 'verdict') {
+                try {
+                    const v = JSON.parse(ev.data_inline);
+                    labOutput += `LAB VERDICT: ${v.verdict} (confidence: ${v.confidence})\n`;
+                    if (v.details) labOutput += `DETAILS: ${v.details}\n`;
+                    if (v.structuredDetails?.testedClaims) labOutput += `TESTED: ${v.structuredDetails.testedClaims.join('; ')}\n`;
+                    if (v.structuredDetails?.untestedClaims) labOutput += `UNTESTED: ${v.structuredDetails.untestedClaims.join('; ')}\n`;
+                    if (v.structuredDetails?.suggestedFollowUp) labOutput += `SUGGESTED FOLLOW-UP: ${v.structuredDetails.suggestedFollowUp}\n`;
+                    if (v.structuredDetails?.tautologyRisk) labOutput += `TAUTOLOGY RISK: ${v.structuredDetails.tautologyRisk}\n`;
+                } catch { labOutput += ev.data_inline + '\n'; }
+            } else if (ev.label === 'stdout') {
+                labOutput += `COMPUTED RESULTS:\n${ev.data_inline.slice(0, 3000)}\n`;
+            }
+        }
+    } catch { /* non-fatal - fall back to evaluation data */ }
+
+    if (!labOutput) {
+        labOutput = result.evaluation.rawOutput
+            ? JSON.stringify(result.evaluation.rawOutput, null, 2)
+            : '(no lab data available)';
+    }
 
     const prompt = await getPrompt('evm.analysis', {
         nodeContent,
         claimType,
         hypothesis: (result as any).codegen?.hypothesis || 'Unknown hypothesis',
-        sandboxOutput: rawOutput,
+        sandboxOutput: labOutput,
         domain: domain || 'general',
         allowedModules: 'N/A (lab handles execution)',
         polarity: '',

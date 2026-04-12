@@ -3,10 +3,17 @@
 </p>
 
 <h1 align="center">Podbit</h1>
+<h2 align="center">AI has nothing to say
+unless you ask the question.</h2>
+Podbit discovers the questions that creates NEW knowledge.
+
+<p align="center">A genetic algorithm that breeds knowledge into verified insight. It combines your research, the LLM's training knowledge, and live web research - then evolves them through multiple generations.</p>
 
 <p align="center">
   <strong>Autonomous Knowledge and Research Synthesis Engine</strong>
 </p>
+
+<h1 align="center">Do you want to make a discovery?</h1>
 
 > ⚠️ **Early release - actively in development.** Podbit is research-grade software under heavy iteration. Expect rough edges, breaking changes, schema migrations, and parameters that move between releases. It is shared in this state because the ideas are interesting and feedback is welcome - not because it is stable or finished. Do not point it at data you cannot afford to re-ingest.
 
