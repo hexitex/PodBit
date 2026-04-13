@@ -13,11 +13,10 @@ Podbit discovers the questions that creates NEW knowledge.
   <strong>Autonomous Knowledge and Research Synthesis Engine</strong>
 </p>
 
-<p align="center">
+<h2 align="center">Watch overview</h2>
   <a href="https://youtu.be/a1eS4mV5gXQ">
     <img src="https://img.youtube.com/vi/a1eS4mV5gXQ/maxresdefault.jpg" alt="Podbit Demo" width="600" />
   </a>
-</p>
 
 <h1 align="center">Do you want to make a discovery?</h1>
 
