@@ -247,12 +247,33 @@ export async function extractExperimentSpec(
 
 /** Try to extract a parsed JSON object from an LLM response. Returns null on failure. */
 function tryParseExtractionResponse(raw: string): any | null {
+    // Strip markdown code fences (```json ... ``` or ``` ... ```)
+    let cleaned = raw.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/, '').trim();
     try {
-        return JSON.parse(raw);
+        return JSON.parse(cleaned);
     } catch {
-        const match = raw.match(/\{[\s\S]*\}/);
+        // Try to find the outermost JSON object
+        const match = cleaned.match(/\{[\s\S]*\}/);
         if (match) {
             try { return JSON.parse(match[0]); } catch { /* fall through */ }
+        }
+        // Attempt to rescue truncated JSON by closing open braces/brackets
+        const openBraces = (cleaned.match(/\{/g) || []).length;
+        const closeBraces = (cleaned.match(/\}/g) || []).length;
+        if (openBraces > closeBraces && cleaned.includes('"reducible"')) {
+            // Truncate at the last complete key-value pair and close
+            const lastComma = cleaned.lastIndexOf(',');
+            const lastColon = cleaned.lastIndexOf(':');
+            const cutPoint = Math.max(lastComma, cleaned.lastIndexOf('}'));
+            if (cutPoint > 0) {
+                let rescued = cleaned.slice(0, lastComma > lastColon ? lastComma : cutPoint);
+                // Close any open strings
+                const quoteCount = (rescued.match(/"/g) || []).length;
+                if (quoteCount % 2 !== 0) rescued += '"';
+                // Close open braces
+                for (let i = 0; i < openBraces - closeBraces; i++) rescued += '}';
+                try { return JSON.parse(rescued); } catch { /* fall through */ }
+            }
         }
         return null;
     }

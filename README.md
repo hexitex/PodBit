@@ -13,6 +13,12 @@ Podbit discovers the questions that creates NEW knowledge.
   <strong>Autonomous Knowledge and Research Synthesis Engine</strong>
 </p>
 
+<p align="center">
+  <a href="https://youtu.be/a1eS4mV5gXQ">
+    <img src="https://img.youtube.com/vi/a1eS4mV5gXQ/maxresdefault.jpg" alt="Podbit Demo" width="600" />
+  </a>
+</p>
+
 <h1 align="center">Do you want to make a discovery?</h1>
 
 > ⚠️ **Early release - actively in development.** Podbit is research-grade software under heavy iteration. Expect rough edges, breaking changes, schema migrations, and parameters that move between releases. It is shared in this state because the ideas are interesting and feedback is welcome - not because it is stable or finished. Do not point it at data you cannot afford to re-ingest.
@@ -21,7 +27,7 @@ Podbit discovers the questions that creates NEW knowledge.
 
 ## Quick Start
 
-> **Tested on Windows 11 only.** Podbit is written in cross-platform TypeScript on top of Node.js, SQLite, and tsx, so it *should* run on macOS and Linux without changes - but those targets have not been exercised yet. If you try it on another OS, expect to file bugs (and please do).
+> **Tested on Windows 11.** Podbit is written in cross-platform TypeScript on top of Node.js, SQLite, and tsx, so it *should* run on macOS and Linux without changes - but those targets have not been exercised yet. If you try it on another OS, you may need to file bugs (and please do).
 
 ### 1. Install Podbit
 

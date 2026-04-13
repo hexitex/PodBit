@@ -655,20 +655,28 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
         }
     }
 
-    // ─── AUTO-RETEST: feed lab suggestions back as guidance ────────────
-    // When the lab returns a verdict with suggestedFollowUp and confidence
-    // is below threshold, re-enqueue the node with the suggestions as
-    // guidance so the spec extractor produces a stronger test next time.
+    // ─── AUTO-RETEST: feed lab feedback back as guidance ───────────────
+    // When the lab returns a verdict with improvement suggestions, untested
+    // claims, or tautology warnings, re-enqueue the node so the spec
+    // extractor produces a stronger test. Applies to both inconclusive
+    // (weak test) and low-confidence verdicts (test ran but wasn't convincing).
     const autoRetest = config.labVerify.autoRetest;
-    if (autoRetest?.enabled && isComplete && !isInconclusive && result.evaluation) {
-        const suggestions = result.evaluation.structuredDetails?.suggestedFollowUp as string | undefined;
+    if (autoRetest?.enabled && isComplete && result.evaluation) {
+        const sd = result.evaluation.structuredDetails || {};
+        const suggestions = sd.suggestedFollowUp as string | undefined;
+        const untestedClaims = sd.untestedClaims as string[] | undefined;
+        const tautologyRisk = sd.tautologyRisk as string | undefined;
         const conf = result.evaluation.confidence ?? 1;
         const threshold = autoRetest.confidenceThreshold ?? 0.75;
         const maxRetests = autoRetest.maxRetests ?? 2;
 
-        if (suggestions && conf < threshold) {
+        // Trigger retest when: low confidence, high tautology risk, or significant untested claims
+        const needsRetest = conf < threshold
+            || tautologyRisk === 'high'
+            || (untestedClaims && untestedClaims.length > 0 && conf < 0.5);
+
+        if (needsRetest && (suggestions || untestedClaims || tautologyRisk)) {
             try {
-                // Count how many completed executions this node already has to cap retests
                 const priorCount = await query(
                     `SELECT COUNT(*) as c FROM lab_executions WHERE node_id = $1 AND status = 'completed'`,
                     [nodeId],
@@ -677,15 +685,25 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
 
                 if (completedCount <= maxRetests) {
                     const { enqueue } = await import('./queue.js');
-                    const retestGuidance = `Previous test (confidence ${(conf * 100).toFixed(0)}%) suggested improvements:\n${suggestions}`;
+                    const parts: string[] = [];
+                    parts.push(`Previous test verdict: ${labData.verdict} (confidence ${(conf * 100).toFixed(0)}%)`);
+                    if (tautologyRisk === 'high') {
+                        parts.push('WARNING: Previous test had HIGH TAUTOLOGY RISK - the code computed the claimed result by construction rather than testing it. The new spec MUST use a different computational approach that can genuinely fail.');
+                    }
+                    if (untestedClaims?.length) {
+                        parts.push(`Untested claims that MUST be addressed: ${untestedClaims.join('; ')}`);
+                    }
+                    if (suggestions) {
+                        parts.push(`Suggested improvements: ${suggestions}`);
+                    }
                     await enqueue(nodeId, {
-                        guidance: retestGuidance,
+                        guidance: parts.join('\n'),
                         queuedBy: 'autonomous',
-                        priority: -1, // lower priority than manual requests
+                        priority: -1,
                     });
                     emitActivity('lab', 'auto_retest',
-                        `${nodeLabel(nodeId, node.content)}: auto-retest enqueued (confidence ${(conf * 100).toFixed(0)}% < ${(threshold * 100).toFixed(0)}%, attempt ${completedCount + 1}/${maxRetests + 1})`,
-                        { nodeId, confidence: conf, threshold, attempt: completedCount + 1, suggestions: suggestions.slice(0, 200) });
+                        `${nodeLabel(nodeId, node.content)}: auto-retest enqueued (${tautologyRisk === 'high' ? 'tautology' : `conf ${(conf * 100).toFixed(0)}%`}, attempt ${completedCount + 1}/${maxRetests + 1})`,
+                        { nodeId, confidence: conf, tautologyRisk, untestedCount: untestedClaims?.length, attempt: completedCount + 1 });
                 }
             } catch { /* non-fatal */ }
         }

@@ -50,28 +50,37 @@ async function readStreamingResponse(response: Response): Promise<{ text: string
             buffer = lines.pop() || '';
 
             for (const line of lines) {
-                const trimmed = line.trim();
-                if (!trimmed || trimmed === 'data: [DONE]') continue;
-                if (!trimmed.startsWith('data: ')) continue;
-
-                try {
-                    const chunk = JSON.parse(trimmed.slice(6));
-                    const delta = chunk.choices?.[0]?.delta?.content;
-                    if (delta) content += delta;
-                    if (chunk.choices?.[0]?.finish_reason) finishReason = chunk.choices[0].finish_reason;
-                    if (chunk.usage) {
-                        usage = {
-                            prompt_tokens: chunk.usage.prompt_tokens || 0,
-                            completion_tokens: chunk.usage.completion_tokens || 0,
-                            tool_tokens: chunk.usage.completion_tokens_details?.reasoning_tokens || 0,
-                            total_tokens: chunk.usage.total_tokens || 0,
-                        };
-                    }
-                } catch { /* skip malformed chunk */ }
+                processSSELine(line);
             }
+        }
+        // Flush remaining buffer - the final SSE chunk may not end with \n,
+        // leaving the last data line unprocessed. Without this, content from
+        // the final chunk is silently dropped, causing truncated responses.
+        if (buffer.trim()) {
+            processSSELine(buffer);
         }
     } finally {
         reader.releaseLock();
+    }
+
+    function processSSELine(line: string): void {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed === 'data: [DONE]') return;
+        if (!trimmed.startsWith('data: ')) return;
+        try {
+            const chunk = JSON.parse(trimmed.slice(6));
+            const delta = chunk.choices?.[0]?.delta?.content;
+            if (delta) content += delta;
+            if (chunk.choices?.[0]?.finish_reason) finishReason = chunk.choices[0].finish_reason;
+            if (chunk.usage) {
+                usage = {
+                    prompt_tokens: chunk.usage.prompt_tokens || 0,
+                    completion_tokens: chunk.usage.completion_tokens || 0,
+                    tool_tokens: chunk.usage.completion_tokens_details?.reasoning_tokens || 0,
+                    total_tokens: chunk.usage.total_tokens || 0,
+                };
+            }
+        } catch { /* skip malformed chunk */ }
     }
 
     return { text: content, usage, finishReason };
