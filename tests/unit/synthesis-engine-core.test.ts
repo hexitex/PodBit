@@ -121,7 +121,7 @@ const mockAppConfig = {
     dedup: { embeddingSimilarityThreshold: 0.92 },
     clusterSelection: { enabled: false, clusterCycleRate: 0.2, clustersPerCycle: 1 },
     elitePool: { enabled: false, enableEliteBridging: false, bridgingRate: 0.2 },
-    labVerify: { enabled: false, autoVerifyEnabled: false, minNodeWeightForAuto: 0.8, failedSalienceCap: 0.5 },
+    labVerify: { enabled: false, failedSalienceCap: 0.5 },
     lifecycle: { enabled: false, sweepInterval: 5 },
     magicNumbers: { junkFilterLimit: 50 },
     consultantPipeline: { threshold: 6 },
@@ -319,7 +319,7 @@ beforeEach(() => {
     mockAppConfig.synthesisEngine.migrationEnabled = false;
     mockAppConfig.clusterSelection.enabled = false;
     mockAppConfig.elitePool = { enabled: false, enableEliteBridging: false, bridgingRate: 0.2 };
-    mockAppConfig.evm = { enabled: false, autoVerifyEnabled: false, minNodeWeightForAuto: 0.8 };
+    mockAppConfig.evm = { enabled: false };
     mockAppConfig.lifecycle = { enabled: false, sweepInterval: 5 };
 
     // Reset mock returns

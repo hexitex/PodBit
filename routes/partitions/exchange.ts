@@ -308,6 +308,8 @@ export async function importPartition(data: any, overwrite: boolean = false) {
             SELECT domain FROM partition_domains WHERE partition_id = $1
         `, [targetPartitionId]);
         for (const d of existingDomains) {
+            // Cancel any active lab jobs for nodes in this domain
+            try { const { cancelBulkLabJobs } = await import('../../evm/queue-worker.js'); await cancelBulkLabJobs(d.domain); } catch { /* non-fatal */ }
             // Clean up number variable refs/registry before deleting nodes
             try {
                 await query(`DELETE FROM node_number_refs WHERE node_id IN (SELECT id FROM nodes WHERE domain = $1)`, [d.domain]);

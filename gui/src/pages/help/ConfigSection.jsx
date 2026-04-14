@@ -63,7 +63,7 @@ function ConfigSection() {
     { name: 'Output Shape', desc: 'Voicing word limits, compression, novelty check, prompt injection detection', icon: '📐' },
     { name: 'Node Evolution', desc: 'Salience/weight dynamics, decay rates, fitness scoring, GA features, node lifecycle', icon: '🧬' },
     { name: 'Autonomous Cycles', desc: 'Validation, questions, tensions, research, autorating, lab verification, voicing, and population control', icon: '🔄' },
-    { name: 'Verification & Elite', desc: 'Lab framework (freeze, taint), verification outcomes, API reconnaissance, decomposition, elite pool', icon: '✅' },
+    { name: 'Verification & Elite', desc: 'Lab framework (freeze, taint), lab outcomes, API reconnaissance, decomposition, elite pool', icon: '✅' },
     { name: 'Knowledge Delivery', desc: 'Proxy budget, context engine, intake defense, knowledge base ingestion', icon: '📚' },
     { name: 'Model Parameters', desc: 'Per-subsystem temperature, top_p, min_p, top_k, repeat penalty, and consultant settings', icon: '🤖' },
     { name: 'Word Lists & Patterns', desc: 'Telegraphic word lists, vocabulary, stop words, voicing cleanup, transient partitions', icon: '📋' },

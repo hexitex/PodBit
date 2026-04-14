@@ -117,7 +117,7 @@ const mockAppConfig: any = {
     dedup: { embeddingSimilarityThreshold: 0.92 },
     clusterSelection: { enabled: false, clusterCycleRate: 0.2, clustersPerCycle: 1 },
     elitePool: { enabled: false, enableEliteBridging: false, bridgingRate: 0.2 },
-    labVerify: { enabled: false, autoVerifyEnabled: false, minNodeWeightForAuto: 0.8, failedSalienceCap: 0.5 },
+    labVerify: { enabled: false, failedSalienceCap: 0.5 },
     lifecycle: { enabled: false, sweepInterval: 5 },
     magicNumbers: { junkFilterLimit: 50 },
     consultantPipeline: { threshold: 6 },
@@ -330,7 +330,7 @@ beforeEach(() => {
     mockAppConfig.synthesisEngine.migrationEnabled = false;
     mockAppConfig.clusterSelection.enabled = false;
     mockAppConfig.elitePool = { enabled: false, enableEliteBridging: false, bridgingRate: 0.2 };
-    mockAppConfig.evm = { enabled: false, autoVerifyEnabled: false, minNodeWeightForAuto: 0.8 };
+    mockAppConfig.evm = { enabled: false };
     mockAppConfig.lifecycle = { enabled: false, sweepInterval: 5 };
 
     mockQuery.mockResolvedValue([]);
@@ -506,19 +506,6 @@ describe('eliteBridgingSynthesis — via synthesisCycle', () => {
         expect(updateGenCalls.length).toBeGreaterThanOrEqual(1);
     });
 
-    it('fires EVM auto-verify when enabled', async () => {
-        const nodeA = makeNode({ id: 'elite-evm-a', domain: 'physics' });
-        const nodeB = makeNodeB({ id: 'elite-evm-b', domain: 'biology' });
-        setupEliteBridging(nodeA, nodeB);
-        mockAppConfig.evm = { enabled: true, autoVerifyEnabled: true, minNodeWeightForAuto: 0.1 };
-
-        await synthesisCycle();
-
-        // EVM verify is fire-and-forget via import().then()
-        // We just verify the node was created successfully
-        expect(mockCreateNode).toHaveBeenCalled();
-    });
-
     it('includes project context in prompt when available', async () => {
         const nodeA = makeNode({ id: 'elite-ctx-a', domain: 'physics' });
         const nodeB = makeNodeB({ id: 'elite-ctx-b', domain: 'biology' });
@@ -604,41 +591,6 @@ describe('synthesisCycle — 2-parent synthesis', () => {
             expect(mockVoice).toHaveBeenCalled();
             // voiceMulti is only used in cluster synthesis, not regular 2-parent path
             expect(mockVoiceMulti).not.toHaveBeenCalled();
-        }
-    });
-});
-
-// =============================================================================
-// synthesisCycle — EVM auto-verify
-// =============================================================================
-
-describe('synthesisCycle — EVM auto-verify', () => {
-    it('fires EVM auto-verify when enabled and weight is sufficient', async () => {
-        mockAppConfig.evm = { enabled: true, autoVerifyEnabled: true, minNodeWeightForAuto: 0.5 };
-        const nodeA = makeNode({ id: 'evm-a', specificity: 5 });
-        const nodeB = makeNodeB({ id: 'evm-b', specificity: 5 });
-        setupFullPipeline(nodeA, nodeB);
-
-        const result = await synthesisCycle();
-
-        expect(result).toBeTruthy();
-        if (result) {
-            expect(result.created).toBe(true);
-        }
-    });
-
-    it('does not fire EVM when weight is below minimum', async () => {
-        mockAppConfig.evm = { enabled: true, autoVerifyEnabled: true, minNodeWeightForAuto: 5.0 };
-        mockAppConfig.engine.knowledgeWeight = 0.1;
-        const nodeA = makeNode({ id: 'evm-low-a', specificity: 5 });
-        const nodeB = makeNodeB({ id: 'evm-low-b', specificity: 5 });
-        setupFullPipeline(nodeA, nodeB);
-
-        const result = await synthesisCycle();
-
-        expect(result).toBeTruthy();
-        if (result) {
-            expect(result.created).toBe(true);
         }
     });
 });

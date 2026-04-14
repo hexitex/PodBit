@@ -1236,17 +1236,8 @@ async function synthesisCycle(domain: string | null = null) {
     // 10c. Post-voicing API verification (fire-and-forget, independent of EVM)
 
 
-    // 10d. EVM verification (async, non-blocking)
-    // Fire-and-forget: don't delay synthesis cycle for verification
-    if (appConfig.labVerify?.enabled && appConfig.labVerify?.autoVerifyEnabled) {
-        if (childWeight >= (appConfig.labVerify.minNodeWeightForAuto ?? 0.8)) {
-            import('../evm/index.js').then(({ verifyNode }) => {
-                verifyNode(child.id).catch(err => {
-                    console.error(`[evm] Auto-verification failed for ${child.id.slice(0, 8)}: ${err.message}`);
-                });
-            }).catch(() => {});
-        }
-    }
+    // 10d. Lab verification is handled by the Lab Verification Cycle, which
+    // picks up nodes once they have earned weight through synthesis rating.
 
     // 11. Boost parent weights for knowledge-trajectory children (capped at weightCeiling)
     if (trajectory === 'knowledge') {
@@ -1440,14 +1431,8 @@ async function eliteBridgingSynthesis(nodeA: any, nodeB: any, domain: string | n
         ).catch(() => {});
     }
 
-    // Auto-verify the bridge result (fire-and-forget)
-    if (appConfig.labVerify?.enabled && appConfig.labVerify?.autoVerifyEnabled) {
-        import('../evm/index.js').then(({ verifyNode }) => {
-            verifyNode(child.id).catch(err => {
-                console.error(`[evm] Auto-verification failed for elite bridge ${child.id.slice(0, 8)}: ${err.message}`);
-            });
-        }).catch(() => {});
-    }
+    // Lab verification is handled by the Lab Verification Cycle once this
+    // node earns weight through synthesis rating.
 
     // Log successful bridging attempt
     const { logBridgingAttempt } = await import('./elite-pool.js');

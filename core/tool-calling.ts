@@ -73,10 +73,14 @@ const READ_ONLY_TOOLS: ToolDefinition[] = [
             parameters: {
                 type: 'object',
                 properties: {
-                    text: { type: 'string', description: 'Semantic search query (natural language)' },
+                    text: { type: 'string', description: 'Semantic search query (natural language, embedding similarity + keyword fallback)' },
+                    search: { type: 'string', description: 'Keyword search (LIKE match on content and keywords)' },
                     domain: { type: 'string', description: 'A SINGLE domain name to filter by (e.g. "skincare" or "ai-rag"). Omit to search all domains.' },
                     nodeType: { type: 'string', enum: ['seed', 'proto', 'voiced', 'synthesis', 'breakthrough', 'question', 'raw'], description: 'Filter by node type' },
+                    trajectory: { type: 'string', enum: ['knowledge', 'abstraction'], description: 'Filter by trajectory' },
+                    minWeight: { type: 'number', description: 'Minimum weight threshold (0.0-2.0)' },
                     limit: { type: 'integer', description: 'Max results (default 10)', default: 10 },
+                    orderBy: { type: 'string', enum: ['weight', 'salience', 'recent', 'oldest', 'specificity'], description: 'Sort order (e.g. "weight" for top nodes by importance)' },
                 },
             },
         },

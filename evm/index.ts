@@ -43,7 +43,7 @@ export async function verifyNode(nodeId: string, _researchData?: string, hints?:
     const { processNextEntry } = await import('./queue-worker.js');
 
     // Callers that opt into critique-lab fallback (allowCritique) are by definition
-    // human-invoked. Everything else (synthesis-engine auto-verify, validation cycle,
+    // human-invoked. Everything else (verification cycle, validation cycle,
     // research cycle, etc.) is autonomous.
     const enqueueResult = await enqueue(nodeId, {
         guidance: hints?.guidance,

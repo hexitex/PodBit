@@ -203,7 +203,7 @@ export const GUI_ENRICHMENTS: Record<string, GuiEnrichment> = {
     labVerify: {
         category: 'verificationElite',
         helpText: 'Controls how the graph responds to lab experiment results. Claims are submitted to external lab servers for testing. Supported claims get weight boosts, refuted claims get penalties and can be auto-archived. The spec_extraction subsystem extracts testable experiment specs from claims.',
-        searchTerms: ['verification', 'lab', 'weight boost', 'auto verify', 'archive', 'refuted', 'supported', 'labVerify'],
+        searchTerms: ['verification', 'lab', 'weight boost', 'outcomes', 'archive', 'refuted', 'supported', 'labVerify'],
     },
     post_rejection: {
         category: 'verificationElite',

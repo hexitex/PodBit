@@ -43,6 +43,13 @@ async function handleRemove(params: Record<string, any>) {
 
     const auditReason = reason || `Node ${mode === 'junk' ? 'junked' : mode === 'archive' ? 'archived' : 'deleted'} via MCP`;
 
+    // Cancel any pending/processing lab jobs for this node before removal.
+    // Aborts inflight polling, cancels remote lab jobs, unfreezes the node.
+    try {
+        const { cancelNodeJobs } = await import('../../evm/queue-worker.js');
+        await cancelNodeJobs(nodeId);
+    } catch { /* lab queue module may not be loaded */ }
+
     if (mode === 'hard') {
         // Permanent deletion: edges, decisions, EVM executions, then node
         await query(`DELETE FROM edges WHERE source_id = $1 OR target_id = $1`, [nodeId]);

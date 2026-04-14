@@ -509,6 +509,11 @@ async function cleanupTransientPartition(partitionId: string, domainList: string
 
     // Delete edges involving transient nodes
     if (domainList.length > 0) {
+        // Cancel any active lab jobs for nodes in these domains
+        for (const domain of domainList) {
+            try { const { cancelBulkLabJobs } = await import('../../evm/queue-worker.js'); await cancelBulkLabJobs(domain); } catch { /* non-fatal */ }
+        }
+
         const placeholders = domainList.map((_: string, i: number) => `$${i + 1}`).join(', ');
         await query(`
             DELETE FROM edges WHERE source_id IN (SELECT id FROM nodes WHERE domain IN (${placeholders}))

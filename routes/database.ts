@@ -13,6 +13,14 @@
 import { Router } from 'express';
 import { query, queryOne, backupDatabase, restoreDatabase, listBackups } from '../db.js';
 import { invalidateKnowledgeCache } from '../handlers/knowledge.js';
+
+/** Cancel all active lab queue entries (optionally by domain) and their remote lab jobs. */
+async function cancelLabQueueEntries(domain?: string): Promise<number> {
+    try {
+        const { cancelBulkLabJobs } = await import('../evm/queue-worker.js');
+        return await cancelBulkLabJobs(domain);
+    } catch { return 0; }
+}
 import { handleProjects } from '../handlers/projects.js';
 import { asyncHandler } from '../utils/async-handler.js';
 
@@ -107,6 +115,10 @@ router.delete('/database/nodes/type/:type', asyncHandler(async (req, res) => {
     const ids = nodeIds.map(n => n.id);
 
     if (ids.length > 0) {
+        // Cancel any active lab jobs for nodes being deleted
+        for (const id of ids) {
+            try { const { cancelNodeJobs } = await import('../evm/queue-worker.js'); await cancelNodeJobs(id); } catch { /* non-fatal */ }
+        }
         // Delete edges involving these nodes
         await query(`DELETE FROM edges WHERE source_id = ANY($1) OR target_id = ANY($1)`, [ids]);
         // Clean up referencing records for removed nodes
@@ -145,6 +157,8 @@ router.delete('/database/nodes/domain/:domain', asyncHandler(async (req, res) =>
     const ids = nodeIds.map(n => n.id);
 
     if (ids.length > 0) {
+        // Cancel any active lab jobs for nodes in this domain
+        await cancelLabQueueEntries(domain);
         // Delete edges involving these nodes
         await query(`DELETE FROM edges WHERE source_id = ANY($1) OR target_id = ANY($1)`, [ids]);
         // Clean up referencing records for removed nodes
@@ -175,6 +189,9 @@ router.delete('/database/nodes', asyncHandler(async (req, res) => {
 
     const beforeNodes = await query(`SELECT COUNT(*) as count FROM nodes`);
     const beforeEdges = await query(`SELECT COUNT(*) as count FROM edges`);
+
+    // Cancel all active lab jobs before wiping nodes
+    await cancelLabQueueEntries();
 
     // Core data
     await query(`DELETE FROM edges`);

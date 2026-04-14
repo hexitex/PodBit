@@ -151,7 +151,6 @@ export const AXIS_PARAM_TERMS = {
   // --- Verification: how much validation and evidence-checking is active ---
   verification: [
     { configPath: ['labVerify', 'enabled'], min: 0, max: 1, weight: 0.12, inverted: false, type: 'boolean', defaultValue: 0, label: 'Verification Enabled', sectionId: 'labVerify', tier: 'basic' },
-    { configPath: ['labVerify', 'autoVerifyEnabled'], min: 0, max: 1, weight: 0.08, inverted: false, type: 'boolean', defaultValue: 0, label: 'Auto-Verify', sectionId: 'labVerify', tier: 'intermediate' },
     { configPath: ['labVerify', 'postRejection', 'enabled'], min: 0, max: 1, weight: 0.08, inverted: false, type: 'boolean', defaultValue: 0, label: 'Post-Rejection Enabled', sectionId: 'post_rejection', tier: 'intermediate' },
     { configPath: ['labVerify', 'postRejection', 'proposalEnabled'], min: 0, max: 1, weight: 0.05, inverted: false, type: 'boolean', defaultValue: 0, label: 'Post-Rejection Proposals', sectionId: 'post_rejection', tier: 'intermediate' },
     { configPath: ['autonomousCycles', 'evm', 'enabled'], min: 0, max: 1, weight: 0.08, inverted: false, type: 'boolean', defaultValue: 1, label: 'Lab Verification Cycle Enabled', sectionId: 'cycle_evm', tier: 'basic' },

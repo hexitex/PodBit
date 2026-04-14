@@ -12,7 +12,7 @@
  * - clusterSynthesisCycle: excluded domains, cluster pair failure majority,
  *   voicing rejection with consultant escalation, dedup, junk, specificity,
  *   knowledge trajectory parent boost, successful creation
- * - synthesisCycle: migration path, multi-parent path, EVM auto-verify,
+ * - synthesisCycle: migration path, multi-parent path,
  *   system domain target fallback, dedup bestSimilarity activity emission
  * - runSynthesisEngine: disabled engine, already running, MCP mode,
  *   domain-directed/cluster routing, lifecycle sweep, transient partition tracking,
@@ -143,7 +143,7 @@ const mockAppConfig: any = {
     dedup: { embeddingSimilarityThreshold: 0.9 },
     magicNumbers: { junkFilterLimit: 50 },
     elitePool: { enabled: false, enableEliteBridging: false, bridgingRate: 0.2 },
-    evm: { enabled: false, autoVerifyEnabled: false, minNodeWeightForAuto: 0.8 },
+    evm: { enabled: false },
     lifecycle: { enabled: false, sweepInterval: 5 },
 };
 
@@ -299,7 +299,7 @@ beforeEach(() => {
     mockAppConfig.synthesisEngine.domainDirectedEnabled = false;
     mockAppConfig.clusterSelection.enabled = false;
     mockAppConfig.elitePool = { enabled: false, enableEliteBridging: false, bridgingRate: 0.2 };
-    mockAppConfig.evm = { enabled: false, autoVerifyEnabled: false, minNodeWeightForAuto: 0.8 };
+    mockAppConfig.evm = { enabled: false };
     mockAppConfig.lifecycle = { enabled: false, sweepInterval: 5 };
     mockAppConfig.synthesisEngine.migrationEnabled = false;
 
@@ -632,7 +632,7 @@ describe('runSynthesisEngine', () => {
 });
 
 // =============================================================================
-// synthesisCycle — EVM auto-verify and knowledge trajectory parent boost
+// synthesisCycle — additional branches and knowledge trajectory parent boost
 // =============================================================================
 
 describe('synthesisCycle — additional branches', () => {

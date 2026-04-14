@@ -675,12 +675,12 @@ function SynthesisSection() {
 
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="bg-white dark:bg-gray-900 border border-violet-200 dark:border-violet-700 rounded p-2">
-            <p className="font-semibold text-violet-700 dark:text-violet-300">Inline Verification</p>
-            <p className="text-violet-600 dark:text-violet-400">New synthesis children can be verified immediately at creation time (fire-and-forget) when <code className="bg-violet-100 dark:bg-violet-900/30 px-1 rounded">evm.autoVerifyEnabled</code> is on. This skips classification  - only the weight threshold applies.</p>
+            <p className="font-semibold text-violet-700 dark:text-violet-300">Lab Verification Cycle</p>
+            <p className="text-violet-600 dark:text-violet-400">The sole path to lab verification. Nodes must earn weight through synthesis rating before the cycle picks them up. Uses spec extraction to filter non-testable claims. Handles retries with configurable backoff. One node per tick to avoid starving other cycles.</p>
           </div>
           <div className="bg-white dark:bg-gray-900 border border-violet-200 dark:border-violet-700 rounded p-2">
-            <p className="font-semibold text-violet-700 dark:text-violet-300">Cycle Verification</p>
-            <p className="text-violet-600 dark:text-violet-400">The autonomous cycle processes the backlog of existing unverified nodes. Uses spec extraction to filter non-testable claims. Handles retries with configurable backoff. One node per tick to avoid starving other cycles.</p>
+            <p className="font-semibold text-violet-700 dark:text-violet-300">Lab Outcomes</p>
+            <p className="text-violet-600 dark:text-violet-400">Controls how the graph responds to lab results. Supported claims get weight boosts, refuted claims get penalties and can be auto-archived. Separate from the cycle - outcomes define consequences, the cycle defines selection.</p>
           </div>
         </div>
       </div>

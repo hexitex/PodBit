@@ -16,14 +16,14 @@ export const FEATURE_SECTIONS: Record<string, SectionMeta> = {
 
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
-    // Verification — graph consequences of lab experiment results
+    // Lab Outcomes — graph consequences of lab experiment results
     // -------------------------------------------------------------------------
     labVerify: {
         id: 'labVerify',
         tier: 'intermediate',
-        title: 'Verification Outcomes',
-        description: 'How the graph responds to lab experiment results — weight changes, auto-archiving, salience caps',
-        behavior: `Lab servers run experiments on claims and return raw data. Podbit evaluates that data and applies graph consequences here. Supported claims get a weight boost (scaled by confidence), making them more likely to be selected as synthesis parents. Refuted claims get a weight penalty and can be auto-archived. Nodes that fail verification have their salience capped so they don't dominate parent selection. Auto-verify submits new synthesis nodes to the lab automatically — only nodes above the minimum weight threshold are submitted.`,
+        title: 'Lab Outcomes',
+        description: 'How the graph responds to lab experiment results - weight changes, auto-archiving, salience caps',
+        behavior: `Lab servers run experiments on claims and return raw data. Podbit evaluates that data and applies graph consequences here. Supported claims get a weight boost (scaled by confidence), making them more likely to be selected as synthesis parents. Refuted claims get a weight penalty and can be auto-archived. Nodes that fail verification have their salience capped so they don't dominate parent selection. Nodes reach the lab via the Lab Verification Cycle, which selects candidates based on weight threshold - this ensures only nodes that have earned their weight through synthesis are submitted.`,
         parameters: [
             {
                 key: 'evmEnabled',
@@ -32,14 +32,6 @@ export const FEATURE_SECTIONS: Record<string, SectionMeta> = {
                 min: 0, max: 1, step: 1, default: 1,
                 configPath: ['labVerify', 'enabled'],
                 tier: 'basic',
-            },
-            {
-                key: 'autoVerifyEnabled',
-                label: 'Auto-Verify Synthesis',
-                description: 'Automatically submit new synthesis nodes to the lab for verification.',
-                min: 0, max: 1, step: 1, default: 1,
-                configPath: ['labVerify', 'autoVerifyEnabled'],
-                tier: 'intermediate',
             },
             {
                 key: 'weightBoostOnVerified',
@@ -82,14 +74,6 @@ export const FEATURE_SECTIONS: Record<string, SectionMeta> = {
                 tier: 'intermediate',
             },
             {
-                key: 'minNodeWeightForAuto',
-                label: 'Min Weight for Auto-Verify',
-                description: 'Only auto-submit nodes with weight above this threshold. Prevents sending low-weight nodes to the lab.',
-                min: 0.1, max: 2.0, step: 0.1, default: 0.8,
-                configPath: ['labVerify', 'minNodeWeightForAuto'],
-                tier: 'advanced',
-            },
-            {
                 key: 'numericalPrecision',
                 label: 'Default Precision Hint',
                 description: 'Default decimal precision passed to labs in experiment specs (e.g., mpmath.dps). Labs can override this.',
@@ -99,10 +83,10 @@ export const FEATURE_SECTIONS: Record<string, SectionMeta> = {
             },
         ],
         presets: [
-            { label: 'Enable Manual', intent: 'Enable lab verification for manual verification only — auto-verify off, moderate weight boost for verified nodes' },
-            { label: 'Enable Auto', intent: 'Enable lab verification with auto-verification of new synthesis nodes — moderate boost and penalty' },
-            { label: 'Aggressive', intent: 'Enable auto-verification with high boost for verified nodes (0.3) and stronger penalty for failures (-0.15)' },
-            { label: 'Disable', intent: 'Turn off lab verification entirely' },
+            { label: 'Enable', intent: 'Enable lab outcomes - moderate weight boost for verified nodes, mild penalty for refuted' },
+            { label: 'Aggressive', intent: 'Strong boost for verified nodes (0.3) and stronger penalty for failures (-0.15), auto-archive on refute' },
+            { label: 'Lenient', intent: 'Small boost (0.1), no penalty, no auto-archive - lab results inform but do not punish' },
+            { label: 'Disable', intent: 'Turn off lab outcomes entirely - lab results are recorded but do not affect graph weights' },
         ],
     },
 

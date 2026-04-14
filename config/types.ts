@@ -523,10 +523,6 @@ export interface PodbitConfig {
     autoArchiveConfidence: number;
     /** Cap effective salience when a node has failed verification */
     failedSalienceCap: number;
-    /** Auto-submit new synthesis nodes to the lab */
-    autoVerifyEnabled: boolean;
-    /** Minimum node weight for auto-submission */
-    minNodeWeightForAuto: number;
     /** Default precision hint passed to lab via experiment spec */
     numericalPrecision: number;
     /** Post-rejection analysis — LLM investigates why a claim was refuted */

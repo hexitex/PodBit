@@ -295,13 +295,13 @@ export const CYCLE_SECTIONS: Record<string, SectionMeta> = {
         id: 'cycle_evm',
         title: 'Lab Verification Cycle',
         tier: 'intermediate' as SectionTier,
-        description: 'Autonomous cycle that selects unverified nodes and submits them to the lab verification pipeline',
-        behavior: 'Scans high-weight nodes that lack verification, extracts experiment specs, submits to lab servers, and applies graph consequences (weight changes, taint, evidence storage). The cycle selects one candidate per tick. Requires both the verification master switch and the cycle switch to be enabled.',
+        description: 'The sole path for submitting nodes to lab verification - scans rated nodes that earned sufficient weight',
+        behavior: 'This is the only way nodes reach lab verification. Nodes must first earn weight through synthesis rating before the cycle picks them up. Scans high-weight unverified nodes, extracts experiment specs, submits to lab servers. Lab Outcomes (labVerify section) controls what happens when results come back. Requires both the lab outcomes master switch and the cycle switch to be enabled.',
         parameters: [
             {
                 key: 'evmCycleEnabled',
                 label: 'Cycle Enabled',
-                description: 'Enable the autonomous lab verification cycle. Also requires the verification master switch (evm.enabled) to be on.',
+                description: 'Enable the lab verification cycle. Also requires the Lab Outcomes master switch to be on.',
                 min: 0, max: 1, step: 1, default: 1,
                 configPath: ['autonomousCycles', 'evm', 'enabled'],
                 tier: 'basic',

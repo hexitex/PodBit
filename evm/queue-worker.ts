@@ -41,6 +41,9 @@ let tickRunning = false;
 /** In-flight jobs: entryId -> startTimestamp */
 const inflight = new Map<number, number>();
 
+/** In-flight abort controllers: nodeId -> AbortController[] (a node may have multiple inflight entries) */
+const inflightAborts = new Map<string, AbortController[]>();
+
 /** Recovery counter: entryId -> number of times recovered. Prevents infinite loops. */
 const recoveryCount = new Map<number, number>();
 
@@ -170,6 +173,12 @@ async function _claimAndStart(): Promise<boolean> {
 
 async function _executeEntry(entry: any): Promise<void> {
     let frozeNode = false;
+    // Hoist abort controller so it's accessible in the finally block for cleanup
+    const jobAbort = new AbortController();
+    const nodeAborts = inflightAborts.get(entry.node_id) || [];
+    nodeAborts.push(jobAbort);
+    inflightAborts.set(entry.node_id, nodeAborts);
+
     try {
         // Freeze node while lab experiment runs
         const template = entry.template_id ? await getTemplate(entry.template_id) : null;
@@ -198,7 +207,6 @@ async function _executeEntry(entry: any): Promise<void> {
         // created here but only attached to the lab submission via hints.
         // Spec extraction runs without a deadline so semaphore contention
         // doesn't eat into the lab's polling budget.
-        const jobAbort = new AbortController();
         // Timer is started later by verifyNodeInternal just before lab submission
         let freezeTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -314,6 +322,13 @@ async function _executeEntry(entry: any): Promise<void> {
             }
         } catch { /* non-fatal cleanup */ }
     } finally {
+        // Clean up abort controller from the per-node map
+        const aborts = inflightAborts.get(entry.node_id);
+        if (aborts) {
+            const idx = aborts.indexOf(jobAbort);
+            if (idx >= 0) aborts.splice(idx, 1);
+            if (aborts.length === 0) inflightAborts.delete(entry.node_id);
+        }
         if (frozeNode) {
             try { await unfreezeNode(entry.node_id); } catch { /* non-fatal */ }
         }
@@ -495,5 +510,131 @@ async function _cancelLabJob(externalJobId: string | null, entryId: number): Pro
         // 409 = already completed/cancelled, which is fine
     } catch {
         // Lab unreachable or job already gone - not a problem
+    }
+}
+
+/**
+ * Cancel all lab activity for a node - pending entries, processing entries,
+ * inflight abort signals, and remote lab jobs. Called when a node is deleted
+ * or archived so labs don't waste resources on a node that no longer exists.
+ *
+ * Best-effort: failures in any step don't block the caller.
+ */
+export async function cancelNodeJobs(nodeId: string): Promise<{ cancelled: number }> {
+    let cancelled = 0;
+
+    try {
+        // 1. Abort any inflight jobs in this process (stops lab polling immediately)
+        const aborts = inflightAborts.get(nodeId);
+        if (aborts) {
+            for (const ac of aborts) {
+                try { ac.abort(); } catch { /* already aborted */ }
+            }
+            inflightAborts.delete(nodeId);
+        }
+
+        // 2. Cancel pending entries in the queue
+        const { cancelByNode } = await import('./queue.js');
+        const { cancelled: pendingCount } = await cancelByNode(nodeId);
+        cancelled += pendingCount;
+
+        // 3. Cancel processing entries and their remote lab jobs
+        const processing = await query(
+            "SELECT id, external_job_id FROM lab_queue WHERE node_id = $1 AND status = 'processing'",
+            [nodeId],
+        );
+        for (const row of processing) {
+            const r = row as any;
+            await query(
+                "UPDATE lab_queue SET status = 'cancelled', error = 'Node deleted', completed_at = datetime('now') WHERE id = $1",
+                [r.id],
+            );
+            inflight.delete(r.id);
+            recoveryCount.delete(r.id);
+            await _cancelLabJob(r.external_job_id, r.id);
+            cancelled++;
+        }
+
+        // 4. Unfreeze the node (it may be about to be deleted, but unfreeze is safe either way)
+        try { await unfreezeNode(nodeId); } catch { /* non-fatal */ }
+        try { await clearNodeQueueStatus(nodeId); } catch { /* non-fatal */ }
+
+        if (cancelled > 0) {
+            console.error(`[lab-queue-worker] Cancelled ${cancelled} queue entries for deleted node ${nodeId.slice(0, 8)}`);
+            emitActivity('lab', 'node_deleted',
+                `Cancelled ${cancelled} lab queue entries for node ${nodeId.slice(0, 8)}`,
+                { nodeId, cancelled });
+        }
+    } catch (err: any) {
+        console.error(`[lab-queue-worker] Error cancelling jobs for node ${nodeId}: ${err.message}`);
+    }
+
+    return { cancelled };
+}
+
+/**
+ * Cancel all active lab jobs, optionally filtered by domain.
+ * Used during bulk node deletion (wipe domain, wipe all nodes).
+ * Aborts inflight polling, cancels DB entries, and cancels remote lab jobs.
+ */
+export async function cancelBulkLabJobs(domain?: string): Promise<number> {
+    try {
+        // 1. Abort all (or domain-matched) inflight controllers
+        if (!domain) {
+            // Cancel everything
+            for (const [, aborts] of inflightAborts) {
+                for (const ac of aborts) {
+                    try { ac.abort(); } catch { /* already aborted */ }
+                }
+            }
+            inflightAborts.clear();
+            inflight.clear();
+            recoveryCount.clear();
+        } else {
+            // Need to find which inflight nodes belong to this domain
+            for (const [nodeId, aborts] of inflightAborts) {
+                try {
+                    const node = await query(
+                        'SELECT domain FROM nodes WHERE id = $1',
+                        [nodeId],
+                    );
+                    if ((node[0] as any)?.domain === domain) {
+                        for (const ac of aborts) {
+                            try { ac.abort(); } catch { /* already aborted */ }
+                        }
+                        inflightAborts.delete(nodeId);
+                    }
+                } catch { /* node may already be gone */ }
+            }
+        }
+
+        // 2. Cancel all active DB entries and collect remote job IDs
+        const { cancelAllActive } = await import('./queue.js');
+        const { cancelled, externalJobs } = await cancelAllActive(domain);
+
+        // 3. Cancel remote lab jobs (best-effort)
+        for (const job of externalJobs) {
+            if (job.externalJobId) {
+                await _cancelLabJob(job.externalJobId, job.id);
+            }
+        }
+
+        // 4. Unfreeze affected nodes
+        const nodeIds = [...new Set(externalJobs.map((j: any) => j.nodeId).filter(Boolean))];
+        for (const nid of nodeIds) {
+            try { await unfreezeNode(nid); } catch { /* non-fatal */ }
+        }
+
+        if (cancelled > 0) {
+            console.error(`[lab-queue-worker] Bulk cancelled ${cancelled} queue entries${domain ? ` for domain "${domain}"` : ''}`);
+            emitActivity('lab', 'bulk_cancel',
+                `Bulk cancelled ${cancelled} lab queue entries${domain ? ` for domain "${domain}"` : ''}`,
+                { domain, cancelled });
+        }
+
+        return cancelled;
+    } catch (err: any) {
+        console.error(`[lab-queue-worker] Error in bulk cancel: ${err.message}`);
+        return 0;
     }
 }

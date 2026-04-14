@@ -119,7 +119,7 @@ export async function enqueue(nodeId: string, opts: EnqueueOptions = {}): Promis
     }
 
     // Cooldown check — don't re-queue if recently verified (completed or skipped).
-    // Without this, validation cycles and auto-verify re-queue nodes every tick
+    // Without this, validation and verification cycles re-queue nodes every tick
     // because the pending/processing check above passes once the entry completes.
     // Manual enqueues bypass this so users can always force re-verification.
     // Chain jobs also bypass — they are system-initiated follow-ups, not autonomous re-queues.
@@ -295,6 +295,46 @@ export async function cancelByNode(nodeId: string): Promise<{ cancelled: number 
         await clearNodeQueueStatus(nodeId);
     }
     return { cancelled: rows.length };
+}
+
+/**
+ * Cancel all active (pending + processing) entries, optionally filtered by domain.
+ * Used during bulk node deletion to prevent orphaned queue entries.
+ * Returns external_job_ids so the caller can cancel remote lab jobs.
+ *
+ * @param domain - If provided, only cancel entries for nodes in this domain
+ * @returns Cancelled count and external job IDs for lab cancellation
+ */
+export async function cancelAllActive(domain?: string): Promise<{ cancelled: number; externalJobs: Array<{ id: number; externalJobId: string | null; nodeId: string }> }> {
+    const domainJoin = domain
+        ? "INNER JOIN nodes n ON n.id = q.node_id AND n.domain = $1"
+        : '';
+    const params = domain ? [domain] : [];
+
+    // Collect external job IDs before cancelling
+    const active = await query(
+        `SELECT q.id, q.external_job_id, q.node_id FROM lab_queue q ${domainJoin} WHERE q.status IN ('pending', 'processing')`,
+        params,
+    );
+    if (active.length === 0) return { cancelled: 0, externalJobs: [] };
+
+    const ids = active.map((r: any) => r.id);
+    const placeholders = ids.map((_: any, i: number) => `$${i + 1}`).join(',');
+    await query(
+        `UPDATE lab_queue SET status = 'cancelled', error = 'Bulk node deletion', completed_at = datetime('now') WHERE id IN (${placeholders})`,
+        ids,
+    );
+
+    // Clear queue status on affected nodes
+    const nodeIds = [...new Set(active.map((r: any) => r.node_id))];
+    for (const nid of nodeIds) {
+        await clearNodeQueueStatus(nid);
+    }
+
+    return {
+        cancelled: active.length,
+        externalJobs: active.map((r: any) => ({ id: r.id, externalJobId: r.external_job_id, nodeId: r.node_id })),
+    };
 }
 
 // =========================================================================

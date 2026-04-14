@@ -1003,8 +1003,6 @@ export const config: PodbitConfig = {
     autoArchiveOnDisproved: true,
     autoArchiveConfidence: 0.6,
     failedSalienceCap: 0.5,
-    autoVerifyEnabled: process.env.EVM_AUTO_VERIFY !== 'false',
-    minNodeWeightForAuto: parseFloat(process.env.EVM_MIN_WEIGHT_AUTO!) || 0.8,
     numericalPrecision: parseInt(process.env.EVM_NUMERICAL_PRECISION!, 10) || 500,
     postRejection: {
       enabled: process.env.EVM_POST_REJECTION_ENABLED !== 'false',

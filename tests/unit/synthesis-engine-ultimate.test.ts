@@ -8,7 +8,7 @@
  * - logSynthesisCycle: logging with various data shapes
  * - eliteBridgingSynthesis: success, rejection, hallucination, LLM error
  * - clusterSynthesisCycle: success, excluded domains, pair validation, junk filter, dedup, specificity
- * - synthesisCycle: migration path, multi-parent, EVM auto-verify,
+ * - synthesisCycle: migration path, multi-parent,
  *   system domain fallback, dedup rejection
  * - runSynthesisEngine: cluster mode, transient domains, lifecycle sweep error, AbortError
  * - discoverResonance: edge cases
@@ -111,7 +111,7 @@ const mockAppConfig: any = {
     dedup: { embeddingSimilarityThreshold: 0.92 },
     clusterSelection: { enabled: false, clusterCycleRate: 0.2, clustersPerCycle: 1 },
     elitePool: { enabled: false, enableEliteBridging: false, bridgingRate: 0.2 },
-    labVerify: { enabled: false, autoVerifyEnabled: false, minNodeWeightForAuto: 0.8, failedSalienceCap: 0.5 },
+    labVerify: { enabled: false, failedSalienceCap: 0.5 },
     lifecycle: { enabled: false, sweepInterval: 5 },
     magicNumbers: { junkFilterLimit: 50 },
     specificity: {}, nodes: {}, voicing: {}, hallucination: {}, tensions: {},
@@ -227,7 +227,7 @@ beforeEach(() => {
     mockAppConfig.synthesisEngine.migrationEnabled = false;
     mockAppConfig.clusterSelection.enabled = false;
     mockAppConfig.elitePool = { enabled: false, enableEliteBridging: false, bridgingRate: 0.2 };
-    mockAppConfig.evm = { enabled: false, autoVerifyEnabled: false, minNodeWeightForAuto: 0.8 };
+    mockAppConfig.evm = { enabled: false };
     mockAppConfig.lifecycle = { enabled: false, sweepInterval: 5 };
 
     mockQuery.mockResolvedValue([]);
@@ -331,32 +331,6 @@ describe('synthesisCycle — 2-parent synthesis uses pairwise voice', () => {
         // Regular synthesis uses pairwise voice, not voiceMulti
         expect(mockVoice).toHaveBeenCalled();
         expect(mockVoiceMulti).not.toHaveBeenCalled();
-    });
-});
-
-// =============================================================================
-// synthesisCycle — EVM auto-verify
-// =============================================================================
-
-describe('synthesisCycle — EVM auto-verify', () => {
-    it('triggers EVM verification when enabled and weight meets threshold', async () => {
-        mockAppConfig.evm = { enabled: true, autoVerifyEnabled: true, minNodeWeightForAuto: 0.5 };
-        const nodeA = makeNode({ id: 'a', domain: 'test', specificity: 5 });
-        const nodeB = makeNodeB({ id: 'b', domain: 'test', specificity: 5 });
-        mockSampleNodes.mockResolvedValue([nodeA]);
-        mockGetAccessibleDomains.mockResolvedValue(['test']);
-        mockQuery.mockResolvedValue([{ id: 'b' }]);
-        mockFindNeighbors.mockResolvedValue([{ id: 'b', similarity: 0.6 }]);
-        mockQueryOne.mockResolvedValue(nodeB);
-        mockVoice.mockResolvedValue({ content: 'voiced output for EVM test', rejectionReason: null });
-        mockMeasureSpecificity.mockReturnValue(5);
-        // createNode returns a node with weight >= threshold
-        mockCreateNode.mockResolvedValue({ id: 'child-evm' });
-
-        const result = await synthesisCycle();
-        expect(result.created).toBe(true);
-        // EVM is fire-and-forget
-        await new Promise(resolve => setTimeout(resolve, 50));
     });
 });
 
@@ -836,17 +810,6 @@ describe('runSynthesisEngine — elite bridging', () => {
         const result = await runSynthesisEngine({ maxCycles: 1 });
         expect(result.success).toBe(true);
         expect(mockCreateNode).toHaveBeenCalled();
-    });
-
-    it('triggers EVM verification for elite bridging when enabled', async () => {
-        mockAppConfig.evm = { enabled: true, autoVerifyEnabled: true, minNodeWeightForAuto: 0.5 };
-        setupEliteBridging();
-        mockCallSubsystemModel.mockResolvedValue('This is a long enough elite bridging synthesis output for EVM test');
-        mockMeasureSpecificity.mockReturnValue(5);
-
-        const result = await runSynthesisEngine({ maxCycles: 1 });
-        expect(result.success).toBe(true);
-        await new Promise(resolve => setTimeout(resolve, 50));
     });
 
     it('uses system domain fallback in elite bridging', async () => {
