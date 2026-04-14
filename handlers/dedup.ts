@@ -664,7 +664,7 @@ async function askLlmJudge(
         }
 
         emitActivity('synthesis', 'dedup_judge',
-            `LLM judge: ${isDuplicate ? 'DUPLICATE' : 'NOVEL'} (${similarity.toFixed(3)}) — "${newContent.slice(0, 60)}"`, {
+            `LLM judge: ${isDuplicate ? 'DUPLICATE' : 'NOVEL'} (${similarity.toFixed(3)}) — "${resolvedNew.slice(0, 60)}"`, {
             similarity,
             threshold: appConfig.dedup.llmJudgeHardCeiling,
             passed: !isDuplicate,

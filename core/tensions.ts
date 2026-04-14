@@ -13,6 +13,7 @@
 
 import { query } from '../db.js';
 import { callSubsystemModel, getAssignedModel } from '../models.js';
+import { extractVarIdsFromContent, getVariablesByIds, buildVariableLegend } from './number-variables.js';
 import { getPrompt } from '../prompts.js';
 import { getProjectContextBlock } from './project-context.js';
 import { config, } from './engine-config.js';
@@ -194,13 +195,25 @@ async function generateQuestion(nodeA: ResonanceNode, nodeB: ResonanceNode, tens
         ? `\nTension detected around: ${tensionSignals.join(', ')}`
         : '';
 
+    // Build variable legend so the LLM understands [[[PREFIX+nnn]]] placeholders
+    // without resolving them (prevents cross-domain number contamination)
+    const varIds = [
+        ...extractVarIdsFromContent(nodeA.content),
+        ...extractVarIdsFromContent(nodeB.content),
+    ];
+    let varLegendBlock = '';
+    if (varIds.length > 0) {
+        const vars = await getVariablesByIds(varIds);
+        if (vars.length > 0) varLegendBlock = buildVariableLegend(vars) + '\n';
+    }
+
     const tensionProjectContext = await getProjectContextBlock();
     const baseQuestionPrompt = await getPrompt('core.question_generation', {
         contentA: nodeA.content,
         contentB: nodeB.content,
         signalHint,
     });
-    const prompt = tensionProjectContext ? `${tensionProjectContext}\n\n${baseQuestionPrompt}` : baseQuestionPrompt;
+    const prompt = [tensionProjectContext, varLegendBlock, baseQuestionPrompt].filter(Boolean).join('\n\n');
 
     // Provider-agnostic structured output hint
     const questionJsonSchema = {
