@@ -375,29 +375,20 @@ describe('getQueueStats', () => {
 // =============================================================================
 
 describe('recoverStuck', () => {
-    it('clears orphaned job IDs then resets processing to pending', async () => {
-        // First call: clear external_job_ids, second call: reset processing -> pending
-        mockQuery
-            .mockResolvedValueOnce([])  // clear external_job_ids
-            .mockResolvedValueOnce([{ id: 1 }, { id: 2 }]);  // reset processing
+    it('resets processing entries to pending', async () => {
+        mockQuery.mockResolvedValueOnce([{ id: 1 }, { id: 2 }]);
 
         const count = await recoverStuck();
         expect(count).toBe(2);
 
-        // First query clears external_job_id
-        const [sql1] = mockQuery.mock.calls[0] as any[];
-        expect(String(sql1)).toContain('external_job_id');
-
-        // Second query resets status
-        const [sql2] = mockQuery.mock.calls[1] as any[];
-        expect(String(sql2)).toContain("status = 'pending'");
-        expect(String(sql2)).toContain('RETURNING');
+        // Single query resets status and preserves external_job_id
+        const [sql] = mockQuery.mock.calls[0] as any[];
+        expect(String(sql)).toContain("status = 'pending'");
+        expect(String(sql)).toContain('RETURNING');
     });
 
     it('returns 0 when no stuck entries', async () => {
-        mockQuery
-            .mockResolvedValueOnce([])  // clear external_job_ids
-            .mockResolvedValueOnce([]);  // no stuck entries
+        mockQuery.mockResolvedValueOnce([]);
         const count = await recoverStuck();
         expect(count).toBe(0);
     });
