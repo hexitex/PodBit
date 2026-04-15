@@ -227,7 +227,7 @@ export default function JournalTimeline() {
   // Pin + rollback
   const rollbackMutation = useMutation({
     mutationFn: async ({ targetTimestamp, nodeIds }) => {
-      let pinGroup = undefined;
+      let pinGroup ;
       if (nodeIds.length > 0) {
         const pinResult = await journal.pin(nodeIds);
         pinGroup = pinResult.pinGroup;

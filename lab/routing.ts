@@ -68,7 +68,7 @@ async function llmRoute(spec: ExperimentSpec, candidates: LabRegistryEntry[]): P
     const setupSummary = JSON.stringify(spec.setup).slice(0, 200);
 
     // Fill template variables
-    let prompt = promptTemplate
+    const prompt = promptTemplate
         .replace('{{specType}}', spec.specType)
         .replace('{{measurementCount}}', String(Object.keys(spec.setup).length))
         .replace('{{hypothesis}}', spec.hypothesis || 'N/A')

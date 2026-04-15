@@ -233,7 +233,7 @@ async function _executeEntry(entry: any, pipelineAbort: AbortController): Promis
         // Spec extraction runs without a deadline so semaphore contention
         // doesn't eat into the lab's polling budget.
         // Timer is started later by verifyNodeInternal just before lab submission
-        let freezeTimer: ReturnType<typeof setTimeout> | null = null;
+        const freezeTimer: ReturnType<typeof setTimeout> | null = null;
 
         // Build hints - include chain context if this is a chain job
         const hints: import('./types.js').VerifyHints = {

@@ -522,7 +522,7 @@ describe('importPartition — integrity log import', () => {
     it('continues import when integrity log insert fails (non-fatal)', async () => {
         mockQueryOne.mockResolvedValue(null);
         // Let the integrity log INSERT throw
-        let callCount = 0;
+        const callCount = 0;
         mockQuery.mockImplementation(async (sql: any) => {
             if (String(sql).includes('INSERT INTO integrity_log')) {
                 throw new Error('no such table: integrity_log');

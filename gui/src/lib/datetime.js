@@ -26,7 +26,7 @@ export function utcDate(value) {
  */
 export function formatLocal(value, opts) {
     const d = utcDate(value);
-    if (!d || isNaN(d.getTime())) return '--';
+    if (!d || Number.isNaN(d.getTime())) return '--';
     return d.toLocaleString('en-GB', opts);
 }
 
@@ -35,7 +35,7 @@ export function formatLocal(value, opts) {
  */
 export function formatLocalDate(value) {
     const d = utcDate(value);
-    if (!d || isNaN(d.getTime())) return '--';
+    if (!d || Number.isNaN(d.getTime())) return '--';
     return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
@@ -44,7 +44,7 @@ export function formatLocalDate(value) {
  */
 export function formatLocalTime(value) {
     const d = utcDate(value);
-    if (!d || isNaN(d.getTime())) return '--';
+    if (!d || Number.isNaN(d.getTime())) return '--';
     return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
@@ -53,7 +53,7 @@ export function formatLocalTime(value) {
  */
 export function formatLocalShort(value) {
     const d = utcDate(value);
-    if (!d || isNaN(d.getTime())) return '--';
+    if (!d || Number.isNaN(d.getTime())) return '--';
     return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' +
            d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }

@@ -71,7 +71,7 @@ export async function extractExperimentSpec(
 
     // Build authoritative spec type registry from structured data (capabilities + DB).
     // Context prompts are supplementary descriptions only — never the source for specType names.
-    let availableSpecTypes: string[] = [];
+    const availableSpecTypes: string[] = [];
     let labDescriptionBlock = '';
     try {
         const { listLabs } = await import('../lab/registry.js');
@@ -248,7 +248,7 @@ export async function extractExperimentSpec(
 /** Try to extract a parsed JSON object from an LLM response. Returns null on failure. */
 function tryParseExtractionResponse(raw: string): any | null {
     // Strip markdown code fences (```json ... ``` or ``` ... ```)
-    let cleaned = raw.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/, '').trim();
+    const cleaned = raw.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/, '').trim();
     try {
         return JSON.parse(cleaned);
     } catch {

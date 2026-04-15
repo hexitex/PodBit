@@ -468,7 +468,7 @@ describe('interceptConsole: safeOriginal behavior', () => {
     });
 
     it('skips call entirely when stdioAlive is false', () => {
-        let stdioAlive = false;
+        const stdioAlive = false;
         let called = false;
         function safeOriginal(fn: (...a: any[]) => void, args: any[]): void {
             if (!stdioAlive) return;

@@ -9,7 +9,7 @@ let uuidCounter = 0;
 const mockPersistSessionInsights = jest.fn<(session: any) => Promise<void>>();
 
 let mockSessionTTLMs = 3600000;
-let mockCleanupInterval = 600000;
+const mockCleanupInterval = 600000;
 
 jest.unstable_mockModule('uuid', () => ({
     v4: () => `uuid-${++uuidCounter}`,

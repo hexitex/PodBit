@@ -890,7 +890,7 @@ describe('sqlite-backend-max', () => {
             const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
             await mod.close();
             resetState();
-            let existsCallCount = 0;
+            const existsCallCount = 0;
             mockReadFileSync.mockImplementation((p: any, _enc?: any) => {
                 const ps = String(p);
                 if (ps.includes('projects.json')) {

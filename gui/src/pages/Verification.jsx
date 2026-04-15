@@ -499,13 +499,10 @@ export default function Verification() {
     }
   }, [pruneMutation.isSuccess, pruneMutation.isError]);
 
-  // Poll faster when lab jobs are active or recently finished
-  const activeRefetchMs = queueActive > 0 || queueCooldown ? 5000 : 30000;
-
   const { data: stats } = useQuery({
     queryKey: ['lab-stats', days],
     queryFn: () => evm.stats(days),
-    refetchInterval: activeRefetchMs,
+    refetchInterval: 30000,
   });
 
   const confActive = confRange[0] > 0 || confRange[1] < 100;
@@ -531,7 +528,7 @@ export default function Verification() {
       ...(outcomeFilter === 'needs_expert' ? { status: 'needs_expert' } : {}),
       ...(outcomeFilter === 'analysis' ? { status: 'analysis' } : {}),
     }),
-    refetchInterval: activeRefetchMs,
+    refetchInterval: 30000,
   });
 
   const bulkApproveMutation = useMutation({
@@ -589,6 +586,16 @@ export default function Verification() {
     }
     prevQueueActive.current = queueActive;
   }, [queueActive]);
+
+  // Poll results faster while jobs are active or recently finished
+  useEffect(() => {
+    if (!queueActive && !queueCooldown) return;
+    const timer = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ['lab-recent'] });
+      queryClient.invalidateQueries({ queryKey: ['lab-stats'] });
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [queueActive > 0, queueCooldown]);
 
   // Batch-resolve node names for display
   const [, _forceNames] = useState(0);

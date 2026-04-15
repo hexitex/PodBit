@@ -268,7 +268,7 @@ export async function handleChatMessage(message: string, mode: string = 'api', d
             const seeds = seedResponse
                 .split('\n')
                 .map(line => line
-                    .replace(/^\s*(?:\d+[\.\)]\s*|[-*\u2022]\s*|>\s*)/, '')  // strip bullets, numbers, blockquotes
+                    .replace(/^\s*(?:\d+[.)]\s*|[-*\u2022]\s*|>\s*)/, '')  // strip bullets, numbers, blockquotes
                     .replace(/^\*\*.*?\*\*[:\s]*/, '')                        // strip bold prefixes like **Fact:**
                     .trim()
                 )

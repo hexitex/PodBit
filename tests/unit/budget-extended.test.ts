@@ -1197,7 +1197,7 @@ describe('monitorTick disabled-while-exceeded path', () => {
         mockGetSynthesisStatus.mockReturnValue({ running: false });
 
         // Exceed first
-        let restore = bustCostCache();
+        const restore = bustCostCache();
         mockQueryOne.mockImplementation(async (sql: string) => {
             if (typeof sql === 'string' && sql.includes('settings')) {
                 return cfgRow({

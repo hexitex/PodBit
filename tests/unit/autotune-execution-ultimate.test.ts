@@ -146,7 +146,7 @@ const mockPng = jest.fn<any>();
 const mockResize = jest.fn<any>();
 const mockMetadata = jest.fn<any>();
 const mockSharpToBuffer = jest.fn<any>().mockResolvedValue(Buffer.from('compressed-webp'));
-let mockSharpInstance: any = {
+const mockSharpInstance: any = {
     metadata: mockMetadata,
     resize: mockResize,
     jpeg: mockJpeg,

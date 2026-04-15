@@ -256,7 +256,7 @@ describe('sqlite-backend-ultimate', () => {
 
             // Setup: _system_db_initialized not found (settings table SELECT throws)
             // neuralnetworks.db does NOT exist, but legacy resonance.db DOES exist
-            let sysDbInitialized = false;
+            const sysDbInitialized = false;
             mockExistsSync.mockImplementation((p: any) => {
                 const ps = String(p);
                 if (ps.includes('neuralnetworks.db')) return false;

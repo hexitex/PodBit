@@ -1294,7 +1294,7 @@ async function eliteBridgingSynthesis(nodeA: any, nodeB: any, domain: string | n
     // Elite nodes are rich 150-300 word verified paragraphs that need richer synthesis output.
     // All failures emit activity events so the GUI activity feed shows what's happening.
     let voicedContent: string | null = null;
-    let voicedName: string | null = null;
+    const voicedName: string | null = null;
     let eliteRejectReason = '';
     try {
         const projectContext = await getProjectContextBlock();
