@@ -25,6 +25,7 @@ const tensionPatterns: [string, string][] = [
 
 jest.unstable_mockModule('../../db.js', () => ({
     query: mockQuery,
+    queryOne: jest.fn().mockResolvedValue(null),
 }));
 jest.unstable_mockModule('../../models.js', () => ({
     callSubsystemModel: mockCallSubsystemModel,

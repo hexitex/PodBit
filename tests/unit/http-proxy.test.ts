@@ -89,7 +89,7 @@ describe('proxyToolCall', () => {
             json: () => Promise.resolve({ success: true, name: 'test-project' }),
         } as any);
 
-        await proxyToolCall('podbit.projects', { action: 'load', name: 'test-project' });
+        await proxyToolCall('podbit_projects', { action: 'load', name: 'test-project' });
 
         expect(mockSwitchProject).toHaveBeenCalled();
         expect(mockClearAllCaches).toHaveBeenCalled();
@@ -101,7 +101,7 @@ describe('proxyToolCall', () => {
             json: () => Promise.resolve({ success: true, name: 'new-proj' }),
         } as any);
 
-        await proxyToolCall('podbit.projects', { action: 'new', name: 'new-proj' });
+        await proxyToolCall('podbit_projects', { action: 'new', name: 'new-proj' });
 
         expect(mockSwitchProject).toHaveBeenCalled();
     });
@@ -123,7 +123,7 @@ describe('proxyToolCall', () => {
             json: () => Promise.resolve({ projects: {} }),
         } as any);
 
-        await proxyToolCall('podbit.projects', { action: 'list' });
+        await proxyToolCall('podbit_projects', { action: 'list' });
 
         expect(mockSwitchProject).not.toHaveBeenCalled();
     });

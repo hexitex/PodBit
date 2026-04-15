@@ -861,14 +861,14 @@ describe('backward compatibility', () => {
 // tsxCommand platform branch — covered via managedServices command field
 // =============================================================================
 describe('tsx command platform branching', () => {
-  it('managedServices.resonance.command is npx or npx.cmd based on platform', () => {
+  it('managedServices.podbit.command is npx or npx.cmd based on platform', () => {
     const expected = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-    expect(config.managedServices.resonance.command).toBe(expected);
+    expect(config.managedServices.podbit.command).toBe(expected);
   });
 
-  it('managedServices.resonance.args includes tsx', () => {
-    expect(config.managedServices.resonance.args).toContain('tsx');
-    expect(config.managedServices.resonance.args).toContain('server.ts');
+  it('managedServices.podbit.args includes tsx', () => {
+    expect(config.managedServices.podbit.args).toContain('tsx');
+    expect(config.managedServices.podbit.args).toContain('server.ts');
   });
 
   it('proxy managed service args include tsx + proxy-server.ts', () => {

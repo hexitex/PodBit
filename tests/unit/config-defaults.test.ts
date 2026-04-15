@@ -128,8 +128,8 @@ describe('DEFAULT_REPEAT_PENALTIES', () => {
 // =============================================================================
 
 describe('config.managedServices detail', () => {
-  it('resonance service specifies health endpoint', () => {
-    expect(config.managedServices.resonance.healthEndpoint).toContain('/health');
+  it('podbit service specifies health endpoint', () => {
+    expect(config.managedServices.podbit.healthEndpoint).toContain('/health');
   });
 
   it('gui service cwd includes gui directory', () => {

@@ -66,7 +66,7 @@ jest.unstable_mockModule('../../db.js', () => ({
     pool: { close: jest.fn() },
 }));
 
-jest.unstable_mockModule('../../services/event-bus.js', () => ({
+jest.unstable_mockModule('../../services/event-bus.js', () => ({ nodeLabel: (id, c) => c ? `${id.slice(0,8)} "${c.slice(0,30)}"` : id.slice(0,8),
     emitActivity: jest.fn(),
 }));
 

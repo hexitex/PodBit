@@ -40,7 +40,7 @@ const mockCreateEnrichmentNodes = jest.fn<() => Promise<any>>().mockResolvedValu
 const mockAppendEnrichmentToNode = jest.fn<() => Promise<any>>().mockResolvedValue({ facts: [], mode: 'inline' });
 
 jest.unstable_mockModule('../../config.js', () => ({ config: mockAppConfig }));
-jest.unstable_mockModule('../../services/event-bus.js', () => ({ emitActivity: mockEmitActivity }));
+jest.unstable_mockModule('../../services/event-bus.js', () => ({ nodeLabel: (id, c) => c ? `${id.slice(0,8)} "${c.slice(0,30)}"` : id.slice(0,8), emitActivity: mockEmitActivity }));
 jest.unstable_mockModule('../../core/number-variables.js', () => ({
     resolveContent: mockResolveContent,
     getNodeVariables: mockGetNodeVariables,

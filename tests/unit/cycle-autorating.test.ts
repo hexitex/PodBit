@@ -41,7 +41,7 @@ jest.unstable_mockModule('../../core/project-context.js', () => ({
 jest.unstable_mockModule('../../handlers/feedback.js', () => ({
     handleRate: mockHandleRate,
 }));
-jest.unstable_mockModule('../../services/event-bus.js', () => ({
+jest.unstable_mockModule('../../services/event-bus.js', () => ({ nodeLabel: (id, c) => c ? `${id.slice(0,8)} "${c.slice(0,30)}"` : id.slice(0,8),
     emitActivity: mockEmitActivity,
 }));
 jest.unstable_mockModule('../../core/number-variables.js', () => ({

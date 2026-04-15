@@ -16,7 +16,7 @@ jest.unstable_mockModule('../../mcp/http-proxy.js', () => ({
 
 // Mock activity emission
 const mockEmitActivity = jest.fn();
-jest.unstable_mockModule('../../services/event-bus.js', () => ({
+jest.unstable_mockModule('../../services/event-bus.js', () => ({ nodeLabel: (id, c) => c ? `${id.slice(0,8)} "${c.slice(0,30)}"` : id.slice(0,8),
     emitActivity: mockEmitActivity,
 }));
 
@@ -77,52 +77,52 @@ describe('handleToolCall', () => {
 
     it('calls handler directly when proxy returns null', async () => {
         mockProxyToolCall.mockResolvedValue(null);
-        const result = await handleToolCall('podbit.query', { text: 'test' });
+        const result = await handleToolCall('podbit_query', { text: 'test' });
         expect(result).toEqual({ ok: true });
         expect(mockHandler).toHaveBeenCalledWith({ text: 'test' });
     });
 
     it('returns proxy result when proxy succeeds', async () => {
         mockProxyToolCall.mockResolvedValue({ proxied: true, nodes: [] });
-        const result = await handleToolCall('podbit.query', { text: 'test' });
+        const result = await handleToolCall('podbit_query', { text: 'test' });
         expect(result).toEqual({ proxied: true, nodes: [] });
         expect(mockHandler).not.toHaveBeenCalled();
     });
 
     it('emits activity event only for direct calls (not proxied)', async () => {
         mockProxyToolCall.mockResolvedValue(null);
-        await handleToolCall('podbit.stats', { days: 7 });
+        await handleToolCall('podbit_stats', { days: 7 });
         expect(mockEmitActivity).toHaveBeenCalledWith('mcp', 'tool_call', expect.any(String));
     });
 
     it('does not emit activity event when proxied (server emits it)', async () => {
         mockProxyToolCall.mockResolvedValue({ proxied: true });
-        await handleToolCall('podbit.stats', { days: 7 });
+        await handleToolCall('podbit_stats', { days: 7 });
         expect(mockEmitActivity).not.toHaveBeenCalled();
     });
 
     it('catches handler errors and returns error object', async () => {
         mockProxyToolCall.mockResolvedValue(null);
         mockHandler.mockRejectedValue(new Error('DB connection lost'));
-        const result = await handleToolCall('podbit.query', {});
+        const result = await handleToolCall('podbit_query', {});
         expect(result.error).toBe('DB connection lost');
     });
 
     it('includes action in activity event message', async () => {
         mockProxyToolCall.mockResolvedValue(null);
-        await handleToolCall('podbit.config', { action: 'get' });
+        await handleToolCall('podbit_config', { action: 'get' });
         expect(mockEmitActivity).toHaveBeenCalledWith('mcp', 'tool_call', expect.stringContaining('.get'));
     });
 
-    it('dispatches podbit.api to generic handler', async () => {
+    it('dispatches podbit_api to generic handler', async () => {
         mockProxyToolCall.mockResolvedValue(null);
-        await handleToolCall('podbit.api', { action: 'tools' });
+        await handleToolCall('podbit_api', { action: 'tools' });
         expect(mockHandler).toHaveBeenCalledWith({ action: 'tools' });
     });
 
     it('dispatches docs tools correctly', async () => {
         mockProxyToolCall.mockResolvedValue(null);
-        await handleToolCall('docs.templates', {});
+        await handleToolCall('docs_templates', {});
         expect(mockHandler).toHaveBeenCalled();
     });
 });

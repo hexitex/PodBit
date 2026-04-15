@@ -141,7 +141,7 @@ jest.unstable_mockModule('../../handlers/generic-api.js', () => ({
 
 const mockEmitActivity = jest.fn<(...args: any[]) => void>();
 
-jest.unstable_mockModule('../../services/event-bus.js', () => ({
+jest.unstable_mockModule('../../services/event-bus.js', () => ({ nodeLabel: (id, c) => c ? `${id.slice(0,8)} "${c.slice(0,30)}"` : id.slice(0,8),
     emitActivity: mockEmitActivity,
 }));
 
@@ -157,120 +157,120 @@ describe('mcp/dispatch — handleToolCall', () => {
     });
 
     it('returns error for unknown tool name', async () => {
-        const result = await handleToolCall('podbit.nonexistent', {});
-        expect(result).toEqual({ error: 'Unknown tool: podbit.nonexistent' });
+        const result = await handleToolCall('podbit_nonexistent', {});
+        expect(result).toEqual({ error: 'Unknown tool: podbit_nonexistent' });
     });
 
     it('does not emit activity for unknown tool', async () => {
-        await handleToolCall('unknown.tool', {});
+        await handleToolCall('unknown_tool', {});
         expect(mockEmitActivity).not.toHaveBeenCalled();
     });
 
-    it('dispatches podbit.query to handleQuery', async () => {
+    it('dispatches podbit_query to handleQuery', async () => {
         const params = { text: 'hello', domain: 'test-domain' };
         mockHandleQuery.mockResolvedValueOnce({ rows: [{ id: '1' }] });
 
-        const result = await handleToolCall('podbit.query', params);
+        const result = await handleToolCall('podbit_query', params);
 
         expect(mockHandleQuery).toHaveBeenCalledWith(params);
         expect(result).toEqual({ rows: [{ id: '1' }] });
     });
 
-    it('dispatches podbit.get to handleGet', async () => {
+    it('dispatches podbit_get to handleGet', async () => {
         const params = { id: 'abc-123' };
-        await handleToolCall('podbit.get', params);
+        await handleToolCall('podbit_get', params);
         expect(mockHandleGet).toHaveBeenCalledWith(params);
     });
 
-    it('dispatches podbit.propose to handlePropose', async () => {
+    it('dispatches podbit_propose to handlePropose', async () => {
         const params = { content: 'test', nodeType: 'seed', contributor: 'test' };
-        await handleToolCall('podbit.propose', params);
+        await handleToolCall('podbit_propose', params);
         expect(mockHandlePropose).toHaveBeenCalledWith(params);
     });
 
-    it('dispatches podbit.voice to handleVoice', async () => {
-        await handleToolCall('podbit.voice', { nodeId: 'x' });
+    it('dispatches podbit_voice to handleVoice', async () => {
+        await handleToolCall('podbit_voice', { nodeId: 'x' });
         expect(mockHandleVoice).toHaveBeenCalledWith({ nodeId: 'x' });
     });
 
-    it('dispatches podbit.config to handleConfig', async () => {
+    it('dispatches podbit_config to handleConfig', async () => {
         const params = { action: 'get' };
-        await handleToolCall('podbit.config', params);
+        await handleToolCall('podbit_config', params);
         expect(mockHandleConfig).toHaveBeenCalledWith(params);
     });
 
-    it('dispatches podbit.kb to handleKnowledgeBase', async () => {
+    it('dispatches podbit_kb to handleKnowledgeBase', async () => {
         const params = { action: 'folders' };
-        await handleToolCall('podbit.kb', params);
+        await handleToolCall('podbit_kb', params);
         expect(mockHandleKnowledgeBase).toHaveBeenCalledWith(params);
     });
 
-    it('dispatches podbit.projects to handleProjects', async () => {
+    it('dispatches podbit_projects to handleProjects', async () => {
         const params = { action: 'list' };
-        await handleToolCall('podbit.projects', params);
+        await handleToolCall('podbit_projects', params);
         expect(mockHandleProjects).toHaveBeenCalledWith(params);
     });
 
-    it('dispatches podbit.api to handleGenericApi (the unified gateway)', async () => {
+    it('dispatches podbit_api to handleGenericApi (the unified gateway)', async () => {
         const params = { action: 'list' };
-        await handleToolCall('podbit.api', params);
+        await handleToolCall('podbit_api', params);
         expect(mockHandleGenericApi).toHaveBeenCalledWith(params);
     });
 
-    it('dispatches podbit.apiRegistry to handleApiRegistry', async () => {
+    it('dispatches podbit_apiRegistry to handleApiRegistry', async () => {
         const params = { action: 'list' };
-        await handleToolCall('podbit.apiRegistry', params);
+        await handleToolCall('podbit_apiRegistry', params);
         expect(mockHandleApiRegistry).toHaveBeenCalledWith(params);
     });
 
-    it('dispatches docs.templates to handleScaffoldTemplates', async () => {
-        await handleToolCall('docs.templates', {});
+    it('dispatches docs_templates to handleScaffoldTemplates', async () => {
+        await handleToolCall('docs_templates', {});
         expect(mockHandleScaffoldTemplates).toHaveBeenCalledWith({});
     });
 
-    it('dispatches docs.decompose to handleScaffoldDecompose', async () => {
+    it('dispatches docs_decompose to handleScaffoldDecompose', async () => {
         const params = { request: 'test', taskType: 'analysis' };
-        await handleToolCall('docs.decompose', params);
+        await handleToolCall('docs_decompose', params);
         expect(mockHandleScaffoldDecompose).toHaveBeenCalledWith(params);
     });
 
-    it('dispatches docs.generate to handleScaffoldGenerate', async () => {
+    it('dispatches docs_generate to handleScaffoldGenerate', async () => {
         const params = { request: 'test', taskType: 'analysis' };
-        await handleToolCall('docs.generate', params);
+        await handleToolCall('docs_generate', params);
         expect(mockHandleScaffoldGenerate).toHaveBeenCalledWith(params);
     });
 
     // --- Activity emission ---------------------------------------------------
 
-    it('emits activity with shortName (strips podbit. prefix)', async () => {
-        await handleToolCall('podbit.stats', {});
+    it('emits activity with shortName (strips podbit_ prefix)', async () => {
+        await handleToolCall('podbit_stats', {});
         expect(mockEmitActivity).toHaveBeenCalledWith('mcp', 'tool_call', 'stats');
     });
 
-    it('emits activity with shortName (strips docs. prefix)', async () => {
-        await handleToolCall('docs.templates', {});
+    it('emits activity with shortName (strips docs_ prefix)', async () => {
+        await handleToolCall('docs_templates', {});
         expect(mockEmitActivity).toHaveBeenCalledWith('mcp', 'tool_call', 'templates');
     });
 
     it('emits activity with action suffix', async () => {
-        await handleToolCall('podbit.synthesis', { action: 'start' });
+        await handleToolCall('podbit_synthesis', { action: 'start' });
         expect(mockEmitActivity).toHaveBeenCalledWith('mcp', 'tool_call', 'synthesis.start');
     });
 
     it('emits activity with text hint (truncated to 60 chars)', async () => {
         const longText = 'a'.repeat(100);
-        await handleToolCall('podbit.query', { text: longText });
+        await handleToolCall('podbit_query', { text: longText });
         const expected = `query \u2014 "${'a'.repeat(60)}"`;
         expect(mockEmitActivity).toHaveBeenCalledWith('mcp', 'tool_call', expected);
     });
 
     it('emits activity with domain hint', async () => {
-        await handleToolCall('podbit.query', { domain: 'my-domain' });
+        await handleToolCall('podbit_query', { domain: 'my-domain' });
         expect(mockEmitActivity).toHaveBeenCalledWith('mcp', 'tool_call', 'query [my-domain]');
     });
 
     it('emits activity with all hints combined', async () => {
-        await handleToolCall('podbit.query', {
+        await handleToolCall('podbit_query', {
             action: 'search',
             text: 'find nodes',
             domain: 'design',
@@ -288,11 +288,11 @@ describe('mcp/dispatch — handleToolCall', () => {
         mockHandleQuery.mockRejectedValueOnce(new Error('DB connection failed'));
         const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-        const result = await handleToolCall('podbit.query', { text: 'test' });
+        const result = await handleToolCall('podbit_query', { text: 'test' });
 
         expect(result).toEqual({ error: 'DB connection failed' });
         expect(consoleSpy).toHaveBeenCalledWith(
-            'Tool error (podbit.query):',
+            'Tool error (podbit_query):',
             expect.any(Error)
         );
         consoleSpy.mockRestore();
@@ -302,7 +302,7 @@ describe('mcp/dispatch — handleToolCall', () => {
         mockHandleGet.mockRejectedValueOnce(new Error('fail'));
         jest.spyOn(console, 'error').mockImplementation(() => {});
 
-        await handleToolCall('podbit.get', { id: '123' });
+        await handleToolCall('podbit_get', { id: '123' });
 
         expect(mockEmitActivity).toHaveBeenCalledWith('mcp', 'tool_call', 'get');
         jest.spyOn(console, 'error').mockRestore();
@@ -312,14 +312,14 @@ describe('mcp/dispatch — handleToolCall', () => {
 
     it('has handlers for all expected tool names', async () => {
         const expectedTools = [
-            'podbit.query', 'podbit.get', 'podbit.lineage', 'podbit.propose',
-            'podbit.remove', 'podbit.edit', 'podbit.dedup', 'podbit.voice',
-            'podbit.promote', 'podbit.stats', 'podbit.tensions', 'podbit.question',
-            'podbit.validate', 'podbit.patterns', 'podbit.pending', 'podbit.complete',
-            'podbit.synthesis', 'podbit.summarize', 'podbit.compress', 'podbit.partitions',
-            'podbit.context', 'podbit.config', 'podbit.feedback', 'podbit.labVerify',
-            'podbit.elite', 'podbit.kb', 'podbit.projects', 'podbit.api',
-            'docs.templates', 'docs.decompose', 'docs.generate',
+            'podbit_query', 'podbit_get', 'podbit_lineage', 'podbit_propose',
+            'podbit_remove', 'podbit_edit', 'podbit_dedup', 'podbit_voice',
+            'podbit_promote', 'podbit_stats', 'podbit_tensions', 'podbit_question',
+            'podbit_validate', 'podbit_patterns', 'podbit_pending', 'podbit_complete',
+            'podbit_synthesis', 'podbit_summarize', 'podbit_compress', 'podbit_partitions',
+            'podbit_context', 'podbit_config', 'podbit_feedback', 'podbit_labVerify',
+            'podbit_elite', 'podbit_kb', 'podbit_projects', 'podbit_api',
+            'docs_templates', 'docs_decompose', 'docs_generate',
         ];
 
         for (const toolName of expectedTools) {

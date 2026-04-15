@@ -40,7 +40,7 @@ jest.unstable_mockModule('../../config.js', () => ({
     },
 }));
 
-jest.unstable_mockModule('../../services/event-bus.js', () => ({
+jest.unstable_mockModule('../../services/event-bus.js', () => ({ nodeLabel: (id, c) => c ? `${id.slice(0,8)} "${c.slice(0,30)}"` : id.slice(0,8),
     emitActivity: mockEmitActivity,
 }));
 
@@ -276,7 +276,7 @@ describe('callSubsystemModel', () => {
         expect(mockCallSingleModel).toHaveBeenCalledTimes(1);
     });
 
-    it('uses maxTokens from options when provided', async () => {
+    it('uses maxTokens from options when provided (floored to MIN_MAX_TOKENS)', async () => {
         mockCacheLoad([makeAssignmentRow()]);
         await loadAssignmentCache();
         mockCallSingleModel.mockResolvedValue({ text: 'ok', usage: null });
@@ -284,10 +284,11 @@ describe('callSubsystemModel', () => {
         await callSubsystemModel('voice', 'test', { maxTokens: 1024 });
 
         const callArgs = (mockCallSingleModel.mock.calls[0] as any[])[2];
-        expect(callArgs.maxTokens).toBe(1024);
+        // MIN_MAX_TOKENS = 16384 floor applies
+        expect(callArgs.maxTokens).toBe(16384);
     });
 
-    it('leaves maxTokens undefined when registry has no maxTokens (ignores contextSize)', async () => {
+    it('uses MIN_MAX_TOKENS floor when registry has no maxTokens', async () => {
         mockCacheLoad([makeAssignmentRow({ max_tokens: null, context_size: 32000 })]);
         await loadAssignmentCache();
         mockCallSingleModel.mockResolvedValue({ text: 'ok', usage: null });
@@ -295,10 +296,11 @@ describe('callSubsystemModel', () => {
         await callSubsystemModel('voice', 'test');
 
         const callArgs = (mockCallSingleModel.mock.calls[0] as any[])[2];
-        expect(callArgs.maxTokens).toBeUndefined();
+        // Falls back to MIN_MAX_TOKENS = 16384
+        expect(callArgs.maxTokens).toBe(16384);
     });
 
-    it('leaves maxTokens undefined when neither maxTokens nor contextSize available', async () => {
+    it('uses MIN_MAX_TOKENS floor when neither maxTokens nor contextSize available', async () => {
         mockCacheLoad([makeAssignmentRow({ max_tokens: null, context_size: null })]);
         await loadAssignmentCache();
         mockCallSingleModel.mockResolvedValue({ text: 'ok', usage: null });
@@ -306,11 +308,12 @@ describe('callSubsystemModel', () => {
         await callSubsystemModel('voice', 'test');
 
         const callArgs = (mockCallSingleModel.mock.calls[0] as any[])[2];
-        expect(callArgs.maxTokens).toBeUndefined();
+        // Falls back to MIN_MAX_TOKENS = 16384
+        expect(callArgs.maxTokens).toBe(16384);
     });
 
-    it('does not derive maxTokens from contextSize', async () => {
-        // With no registry maxTokens, should be undefined regardless of contextSize
+    it('uses MIN_MAX_TOKENS floor regardless of contextSize', async () => {
+        // With no registry maxTokens, falls back to MIN_MAX_TOKENS floor
         mockCacheLoad([makeAssignmentRow({ max_tokens: null, context_size: 200000 })]);
         await loadAssignmentCache();
         mockCallSingleModel.mockResolvedValue({ text: 'ok', usage: null });
@@ -318,18 +321,18 @@ describe('callSubsystemModel', () => {
         await callSubsystemModel('voice', 'test');
 
         const callArgs = (mockCallSingleModel.mock.calls[0] as any[])[2];
-        expect(callArgs.maxTokens).toBeUndefined();
+        expect(callArgs.maxTokens).toBe(16384);
     });
 
-    it('passes registry maxTokens directly without reasoning bonus', async () => {
-        mockCacheLoad([makeAssignmentRow({ max_tokens: 8192, no_think: 0, sa_no_think: null })]);
+    it('passes registry maxTokens directly when above MIN_MAX_TOKENS floor', async () => {
+        mockCacheLoad([makeAssignmentRow({ max_tokens: 32768, no_think: 0, sa_no_think: null })]);
         await loadAssignmentCache();
         mockCallSingleModel.mockResolvedValue({ text: 'ok', usage: null });
 
         await callSubsystemModel('voice', 'test');
 
         const callArgs = (mockCallSingleModel.mock.calls[0] as any[])[2];
-        expect(callArgs.maxTokens).toBe(8192);
+        expect(callArgs.maxTokens).toBe(32768);
     });
 
     it('passes semaphore info to callSingleModel', async () => {
@@ -444,7 +447,8 @@ describe('callSubsystemModel', () => {
     });
 
     it('uses default backoff when rate-limit has no parseable time', async () => {
-        mockCacheLoad([makeAssignmentRow({ max_retries: 2, rate_limit_backoff_ms: 10 })]);
+        // rate_limit_backoff_ms must be >= 1000 to avoid the "window exhausted" shortcut
+        mockCacheLoad([makeAssignmentRow({ max_retries: 2, rate_limit_backoff_ms: 1000 })]);
         await loadAssignmentCache();
 
         let callCount = 0;
@@ -454,7 +458,11 @@ describe('callSubsystemModel', () => {
             return { text: 'ok', usage: null };
         });
 
-        const result = await callSubsystemModel('voice', 'test');
+        jest.useFakeTimers();
+        const promise = callSubsystemModel('voice', 'test');
+        await jest.advanceTimersByTimeAsync(300000);
+        const result = await promise;
+        jest.useRealTimers();
         expect(result).toBe('ok');
     });
 
@@ -635,7 +643,7 @@ describe('callConsultantModel', () => {
         expect(modelArg._requestPauseMs).toBe(300);
     });
 
-    it('leaves maxTokens undefined when consultant has no maxTokens (ignores contextSize)', async () => {
+    it('uses MIN_MAX_TOKENS floor when consultant has no maxTokens', async () => {
         mockCacheLoad([makeConsultantRow({ cr_max_tokens: null, cr_context_size: 40000 })]);
         await loadAssignmentCache();
         mockCallSingleModel.mockResolvedValue({ text: 'ok', usage: null });
@@ -643,10 +651,11 @@ describe('callConsultantModel', () => {
         await callConsultantModel('voice', 'test');
 
         const callArgs = (mockCallSingleModel.mock.calls[0] as any[])[2];
-        expect(callArgs.maxTokens).toBeUndefined();
+        // Falls back to MIN_MAX_TOKENS = 16384
+        expect(callArgs.maxTokens).toBe(16384);
     });
 
-    it('leaves maxTokens undefined when consultant has no maxTokens or contextSize', async () => {
+    it('uses MIN_MAX_TOKENS floor when consultant has no maxTokens or contextSize', async () => {
         mockCacheLoad([makeConsultantRow({ cr_max_tokens: null, cr_context_size: null })]);
         await loadAssignmentCache();
         mockCallSingleModel.mockResolvedValue({ text: 'ok', usage: null });
@@ -654,7 +663,8 @@ describe('callConsultantModel', () => {
         await callConsultantModel('voice', 'test');
 
         const callArgs = (mockCallSingleModel.mock.calls[0] as any[])[2];
-        expect(callArgs.maxTokens).toBeUndefined();
+        // Falls back to MIN_MAX_TOKENS = 16384
+        expect(callArgs.maxTokens).toBe(16384);
     });
 
     it('uses default temperature 0.15 for consultant calls', async () => {
@@ -1142,7 +1152,8 @@ describe('setSubsystemThinking valid levels', () => {
 
 describe('callSubsystemModel rate-limit patterns', () => {
     async function setupAndCallWithRateLimit(errorMsg: string): Promise<string> {
-        mockCacheLoad([makeAssignmentRow({ max_retries: 2, rate_limit_backoff_ms: 10 })]);
+        // rate_limit_backoff_ms must be >= 1000 to avoid the "window exhausted" shortcut (delay < 1000 check)
+        mockCacheLoad([makeAssignmentRow({ max_retries: 2, rate_limit_backoff_ms: 1000 })]);
         await loadAssignmentCache();
         let callCount = 0;
         mockCallSingleModel.mockImplementation(async () => {
@@ -1220,15 +1231,16 @@ describe('callSubsystemModel rate-limit patterns', () => {
 // =============================================================================
 
 describe('callSubsystemModel maxTokens precedence', () => {
-    it('options.maxTokens overrides model registry maxTokens', async () => {
+    it('options.maxTokens overrides model registry maxTokens (floored to MIN_MAX_TOKENS)', async () => {
         mockCacheLoad([makeAssignmentRow({ max_tokens: 4096 })]);
         await loadAssignmentCache();
         mockCallSingleModel.mockResolvedValue({ text: 'ok', usage: null });
 
-        await callSubsystemModel('voice', 'test', { maxTokens: 2048 });
+        // options.maxTokens = 32768 > MIN_MAX_TOKENS, so it takes precedence over registry 4096
+        await callSubsystemModel('voice', 'test', { maxTokens: 32768 });
 
         const callArgs = (mockCallSingleModel.mock.calls[0] as any[])[2];
-        expect(callArgs.maxTokens).toBe(2048);
+        expect(callArgs.maxTokens).toBe(32768);
     });
 });
 

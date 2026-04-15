@@ -36,7 +36,7 @@ jest.unstable_mockModule('../../prompts.js', () => ({
 }));
 
 const mockEmitActivity = jest.fn<any>();
-jest.unstable_mockModule('../../services/event-bus.js', () => ({
+jest.unstable_mockModule('../../services/event-bus.js', () => ({ nodeLabel: (id, c) => c ? `${id.slice(0,8)} "${c.slice(0,30)}"` : id.slice(0,8),
     emitActivity: mockEmitActivity,
 }));
 

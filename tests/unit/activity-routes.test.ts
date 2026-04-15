@@ -14,7 +14,7 @@ const mockEmitActivityLocal = jest.fn<(...args: any[]) => void>();
 const mockOnActivity = jest.fn<(...args: any[]) => () => void>();
 const mockGetRecentActivity = jest.fn<(...args: any[]) => any[]>();
 
-jest.unstable_mockModule('../../services/event-bus.js', () => ({
+jest.unstable_mockModule('../../services/event-bus.js', () => ({ nodeLabel: (id, c) => c ? `${id.slice(0,8)} "${c.slice(0,30)}"` : id.slice(0,8),
     emitActivityLocal: mockEmitActivityLocal,
     onActivity: mockOnActivity,
     getRecentActivity: mockGetRecentActivity,

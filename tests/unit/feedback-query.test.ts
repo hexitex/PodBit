@@ -15,7 +15,7 @@ jest.unstable_mockModule('../../core.js', () => ({
     queryOne: mockQueryOne,
 }));
 
-jest.unstable_mockModule('../../services/event-bus.js', () => ({
+jest.unstable_mockModule('../../services/event-bus.js', () => ({ nodeLabel: (id, c) => c ? `${id.slice(0,8)} "${c.slice(0,30)}"` : id.slice(0,8),
     emitActivity: mockEmitActivity,
 }));
 
@@ -413,14 +413,14 @@ describe('pruneOldExecutions', () => {
 // =============================================================================
 
 describe('getRecentExecutions — additional filters', () => {
-    it('applies verified=false filter', async () => {
+    it('applies verified=false filter (refuted = claim_supported = 0)', async () => {
         mockQueryOne.mockResolvedValue({ total: '0' });
         mockQuery.mockResolvedValue([]);
 
         await getRecentExecutions({ verified: false });
 
         const [sql] = mockQueryOne.mock.calls[0] as any[];
-        expect(sql).toContain('e.verified = 0');
+        expect(sql).toContain('e.claim_supported = 0');
         expect(sql).toContain("e.status = 'completed'");
     });
 
