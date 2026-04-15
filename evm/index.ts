@@ -223,9 +223,8 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
 
         let extraction;
         try {
-            // No abort signal for spec extraction - let it run without a deadline.
-            // The freeze timeout only governs the lab polling phase so semaphore
-            // wait time during LLM calls doesn't eat into the polling budget.
+            // Pass the pipeline signal so the watchdog can abort a hanging spec
+            // extraction. Without this, a stuck LLM call blocks the slot forever.
             extraction = await extractExperimentSpec(
                 nodeId, resolvedClaim, resolvedParents, node.domain,
                 {
@@ -233,6 +232,7 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
                     precisionHint: hints?.precisionHint,
                     priorRejections,
                     priorLabErrors,
+                    signal: hints?.signal,
                 },
             );
         } catch (e: any) {

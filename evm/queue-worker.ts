@@ -38,8 +38,8 @@ let workerTimer: ReturnType<typeof setInterval> | null = null;
 let stopped = false;
 let tickRunning = false;
 
-/** In-flight jobs: entryId -> startTimestamp */
-const inflight = new Map<number, number>();
+/** In-flight jobs: entryId -> { startedAt, abort, nodeId } */
+const inflight = new Map<number, { startedAt: number; abort: AbortController; nodeId: string }>();
 
 /** In-flight abort controllers: nodeId -> AbortController[] (a node may have multiple inflight entries) */
 const inflightAborts = new Map<string, AbortController[]>();
@@ -74,13 +74,28 @@ export function startQueueWorker(intervalMs = RC.timeouts.queuePollingMs): void 
         tickRunning = true;
 
         (async () => {
-            // Watchdog: check for stuck jobs in memory
+            // Watchdog: abort and fail jobs that exceed the wall-clock deadline.
+            // This covers the ENTIRE pipeline (spec extraction + lab + eval), not
+            // just the lab polling phase. Without this, a hanging LLM call in spec
+            // extraction blocks the slot forever.
             const maxMs = (appConfig.lab?.freezeTimeoutMs ?? 600_000) + 60_000;
-            for (const [entryId, startedAt] of inflight) {
-                const stuckMs = Date.now() - startedAt;
+            for (const [entryId, job] of inflight) {
+                const stuckMs = Date.now() - job.startedAt;
                 if (stuckMs > maxMs) {
-                    console.error(`[lab-queue-worker] Watchdog: entry ${entryId} stuck for ${Math.round(stuckMs / 1000)}s - removing from inflight`);
-                    emitActivity('system', 'evm_queue_worker', `Watchdog reset: entry ${entryId} stuck for ${Math.round(stuckMs / 1000)}s`);
+                    const stuckSec = Math.round(stuckMs / 1000);
+                    console.error(`[lab-queue-worker] Watchdog: entry ${entryId} stuck for ${stuckSec}s - aborting and failing`);
+                    emitActivity('system', 'evm_queue_worker', `Watchdog killed entry ${entryId} after ${stuckSec}s`, { queueId: entryId, nodeId: job.nodeId });
+
+                    // Abort the running pipeline - propagates to LLM calls and lab polling
+                    job.abort.abort();
+
+                    // Mark DB entry as failed so it doesn't get re-recovered as an orphan
+                    try {
+                        await completeEntry(entryId, null, `Watchdog: stuck for ${stuckSec}s - aborted`);
+                        await clearNodeQueueStatus(job.nodeId);
+                    } catch { /* non-fatal */ }
+                    try { await unfreezeNode(job.nodeId); } catch { /* non-fatal */ }
+
                     inflight.delete(entryId);
                 }
             }
@@ -100,7 +115,7 @@ export function startQueueWorker(intervalMs = RC.timeouts.queuePollingMs): void 
 }
 
 /**
- * Stop the worker gracefully. Waits for in-flight jobs to finish.
+ * Stop the worker gracefully. Aborts in-flight jobs and waits briefly for cleanup.
  */
 export async function stopQueueWorker(): Promise<void> {
     stopped = true;
@@ -109,7 +124,12 @@ export async function stopQueueWorker(): Promise<void> {
         workerTimer = null;
     }
 
-    const maxWait = 120_000;
+    // Abort all in-flight jobs so they don't keep running as zombies
+    for (const [, job] of inflight) {
+        job.abort.abort();
+    }
+
+    const maxWait = 15_000;
     const start = Date.now();
     while (inflight.size > 0 && Date.now() - start < maxWait) {
         await new Promise(r => setTimeout(r, 500));
@@ -155,12 +175,16 @@ async function _claimAndStart(): Promise<boolean> {
     const entry = await nextPending();
     if (!entry) return false;
 
+    // Create a pipeline-wide abort controller. The watchdog fires this if the
+    // entire entry (spec extraction + lab + eval) exceeds the wall-clock limit.
+    const pipelineAbort = new AbortController();
+
     // Clear recovery counter - this entry is being actively processed now
     recoveryCount.delete(entry.id);
-    inflight.set(entry.id, Date.now());
+    inflight.set(entry.id, { startedAt: Date.now(), abort: pipelineAbort, nodeId: entry.node_id });
 
     // Run the full pipeline in background - don't await
-    _executeEntry(entry).finally(() => {
+    _executeEntry(entry, pipelineAbort).finally(() => {
         inflight.delete(entry.id);
         // Try to fill the freed slot immediately, but NOT if a tick is
         // already running (recovery + fillSlots). Concurrent fillSlots
@@ -171,10 +195,11 @@ async function _claimAndStart(): Promise<boolean> {
     return true;
 }
 
-async function _executeEntry(entry: any): Promise<void> {
+async function _executeEntry(entry: any, pipelineAbort: AbortController): Promise<void> {
     let frozeNode = false;
-    // Hoist abort controller so it's accessible in the finally block for cleanup
-    const jobAbort = new AbortController();
+    // Use the pipeline-wide abort controller. The watchdog fires this if the
+    // entry exceeds the wall-clock limit, covering spec extraction + lab + eval.
+    const jobAbort = pipelineAbort;
     const nodeAborts = inflightAborts.get(entry.node_id) || [];
     nodeAborts.push(jobAbort);
     inflightAborts.set(entry.node_id, nodeAborts);
@@ -213,7 +238,9 @@ async function _executeEntry(entry: any): Promise<void> {
         // Build hints - include chain context if this is a chain job
         const hints: import('./types.js').VerifyHints = {
             pollBudgetMs: freezeTimeoutMs,
-            // Signal and timer start deferred until lab submission
+            // Signal covers the ENTIRE pipeline (spec extraction + lab + eval).
+            // The watchdog fires jobAbort if the wall-clock limit is exceeded.
+            signal: jobAbort.signal,
             labAbort: jobAbort,
             freezeTimeoutMs,
         };
@@ -549,6 +576,8 @@ export async function cancelNodeJobs(nodeId: string): Promise<{ cancelled: numbe
                 "UPDATE lab_queue SET status = 'cancelled', error = 'Node deleted', completed_at = datetime('now') WHERE id = $1",
                 [r.id],
             );
+            const job = inflight.get(r.id);
+            if (job) job.abort.abort();
             inflight.delete(r.id);
             recoveryCount.delete(r.id);
             await _cancelLabJob(r.external_job_id, r.id);

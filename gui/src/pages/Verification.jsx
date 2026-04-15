@@ -499,10 +499,13 @@ export default function Verification() {
     }
   }, [pruneMutation.isSuccess, pruneMutation.isError]);
 
+  // Poll faster when lab jobs are active or recently finished
+  const activeRefetchMs = queueActive > 0 || queueCooldown ? 5000 : 30000;
+
   const { data: stats } = useQuery({
     queryKey: ['lab-stats', days],
     queryFn: () => evm.stats(days),
-    refetchInterval: 30000,
+    refetchInterval: activeRefetchMs,
   });
 
   const confActive = confRange[0] > 0 || confRange[1] < 100;
@@ -528,7 +531,7 @@ export default function Verification() {
       ...(outcomeFilter === 'needs_expert' ? { status: 'needs_expert' } : {}),
       ...(outcomeFilter === 'analysis' ? { status: 'analysis' } : {}),
     }),
-    refetchInterval: 30000,
+    refetchInterval: activeRefetchMs,
   });
 
   const bulkApproveMutation = useMutation({

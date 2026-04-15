@@ -265,12 +265,12 @@ export interface VerifyHints {
      *  in submitSpec derives its maxPollAttempts from this so it never exceeds the
      *  freeze timeout. */
     pollBudgetMs?: number;
-    /** Abort signal for lab polling only. When this fires (freeze timeout),
-     *  the poll loop cancels. Spec extraction runs without this signal so
-     *  semaphore wait time doesn't eat into the lab's polling budget. */
+    /** Pipeline-wide abort signal. The queue worker's watchdog fires this when the
+     *  entire entry (spec extraction + lab + eval) exceeds the wall-clock limit.
+     *  Propagated to spec extraction LLM calls and lab polling. */
     signal?: AbortSignal;
-    /** AbortController for the lab phase - the queue worker creates it,
-     *  verifyNodeInternal starts the timer just before lab submission. */
+    /** AbortController for the pipeline - the queue worker creates it,
+     *  the watchdog fires it if the entry exceeds the wall-clock deadline. */
     labAbort?: AbortController;
     /** Freeze timeout in ms - used to start the lab abort timer. */
     freezeTimeoutMs?: number;
