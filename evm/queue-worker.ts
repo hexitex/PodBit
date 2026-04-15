@@ -258,14 +258,15 @@ async function _executeEntry(entry: any, pipelineAbort: AbortController): Promis
         // Resume polling if this entry already has a lab job ID (recovery after restart)
         if (entry.external_job_id) {
             hints.resumeJobId = entry.external_job_id;
+            hints.resumeTemplateId = entry.template_id || undefined;
             console.error(`[lab-queue-worker] Resuming job ${entry.external_job_id} for entry ${entry.id}`);
         }
 
-        // Persist lab jobId to queue entry immediately after submission (before polling starts)
-        hints.onJobId = async (jobId: string) => {
+        // Persist lab jobId (and templateId for recovery) to queue entry immediately after submission
+        hints.onJobId = async (jobId: string, templateId?: string) => {
             try {
                 const { setExternalJobId } = await import('./queue.js');
-                await setExternalJobId(entry.id, jobId);
+                await setExternalJobId(entry.id, jobId, templateId);
             } catch { /* non-fatal */ }
         };
 
@@ -440,60 +441,99 @@ async function _recoverOrphanedEntries(): Promise<void> {
             try {
                 const { checkStatus } = await import('../lab/client.js');
                 const { getTemplate: getT } = await import('../lab/templates.js');
-                const { getLab } = await import('../lab/registry.js');
-                const templateId = r.template_id || 'math-lab';
-                let template = await getT(templateId);
-                if (!template) {
-                    const lab = await getLab(templateId);
-                    if (lab) {
-                        template = {
-                            id: lab.id, name: lab.name, description: lab.description, systemTemplate: false,
-                            executionConfig: { url: lab.url, authType: lab.authType, authKey: lab.authCredential || undefined, authHeader: lab.authHeader || undefined },
-                            triageConfig: null,
-                            pollConfig: { strategy: 'interval', pollIntervalMs: 2000, maxPollAttempts: 300, completionValues: ['completed', 'failed'], failureValues: ['failed'] },
-                            interpretConfig: null, outcomeConfig: {}, evidenceSchema: null, budgetConfig: null,
-                            createdAt: lab.createdAt, updatedAt: lab.updatedAt,
-                        };
+                const { getLab, listLabs } = await import('../lab/registry.js');
+
+                // Build list of labs to try: specific template first, then all enabled labs
+                const labsToTry: Array<{ id: string; template: any }> = [];
+                if (r.template_id) {
+                    let template = await getT(r.template_id);
+                    if (!template) {
+                        const lab = await getLab(r.template_id);
+                        if (lab) {
+                            template = {
+                                id: lab.id, name: lab.name, description: lab.description, systemTemplate: false,
+                                executionConfig: { url: lab.url, authType: lab.authType, authKey: lab.authCredential || undefined, authHeader: lab.authHeader || undefined },
+                                triageConfig: null,
+                                pollConfig: { strategy: 'interval', pollIntervalMs: 2000, maxPollAttempts: 300, completionValues: ['completed', 'failed'], failureValues: ['failed'] },
+                                interpretConfig: null, outcomeConfig: {}, evidenceSchema: null, budgetConfig: null,
+                                createdAt: lab.createdAt, updatedAt: lab.updatedAt,
+                            };
+                        }
+                    }
+                    if (template) labsToTry.push({ id: r.template_id, template });
+                }
+                // Fallback: try all enabled labs (the job might have been routed to any of them)
+                if (labsToTry.length === 0) {
+                    const allLabs = await listLabs();
+                    for (const lab of allLabs.filter((l: any) => l.enabled)) {
+                        labsToTry.push({
+                            id: lab.id,
+                            template: {
+                                id: lab.id, name: lab.name, description: lab.description, systemTemplate: false,
+                                executionConfig: { url: lab.url, authType: lab.authType, authKey: lab.authCredential || undefined, authHeader: lab.authHeader || undefined },
+                                triageConfig: null,
+                                pollConfig: { strategy: 'interval', pollIntervalMs: 2000, maxPollAttempts: 300, completionValues: ['completed', 'failed'], failureValues: ['failed'] },
+                                interpretConfig: null, outcomeConfig: {}, evidenceSchema: null, budgetConfig: null,
+                                createdAt: lab.createdAt, updatedAt: lab.updatedAt,
+                            },
+                        });
                     }
                 }
-                if (template) {
-                    const status = await checkStatus(template, r.external_job_id);
-                    if (status.status === 'failed') {
-                        console.error(`[lab-queue-worker] Lab job ${r.external_job_id} already failed for entry ${r.id} - clearing stale job ID`);
-                        await query(
-                            "UPDATE lab_queue SET external_job_id = NULL WHERE id = $1",
-                            [r.id],
-                        );
-                    } else if (status.status === 'completed') {
-                        console.error(`[lab-queue-worker] Lab job ${r.external_job_id} already completed for entry ${r.id} - will fetch result on next slot`);
+
+                let found = false;
+                for (const { id: labId, template } of labsToTry) {
+                    try {
+                        const status = await checkStatus(template, r.external_job_id);
+                        if (status.status === 'failed') {
+                            console.error(`[lab-queue-worker] Lab job ${r.external_job_id} already failed in ${labId} for entry ${r.id} - clearing stale job ID`);
+                            await query(
+                                "UPDATE lab_queue SET external_job_id = NULL WHERE id = $1",
+                                [r.id],
+                            );
+                        } else if (status.status === 'completed') {
+                            console.error(`[lab-queue-worker] Lab job ${r.external_job_id} already completed in ${labId} for entry ${r.id} - will fetch result on next slot`);
+                            // Store the lab's template_id so the resume fast-path knows where to poll
+                            if (!r.template_id) {
+                                await query("UPDATE lab_queue SET template_id = $1 WHERE id = $2", [labId, r.id]);
+                            }
+                        }
+                        found = true;
+                        break; // Found the lab that has this job
+                    } catch (labErr: any) {
+                        if (labErr.message?.includes('404')) continue; // Not in this lab, try next
+                        throw labErr; // Network error - propagate
                     }
-                } else {
-                    // No template or lab found - clear stale job ID to prevent infinite resume loop
-                    console.error(`[lab-queue-worker] No template/lab found for entry ${r.id} (template "${templateId}") - clearing stale job ID`);
+                }
+
+                if (!found) {
+                    // No lab has this job - clear stale job ID
+                    console.error(`[lab-queue-worker] No lab has job ${r.external_job_id} for entry ${r.id} - clearing stale job ID`);
                     await query(
                         "UPDATE lab_queue SET external_job_id = NULL WHERE id = $1",
                         [r.id],
                     );
                 }
             } catch (err: any) {
-                // Lab unreachable - clear stale job ID after 3 consecutive failures
-                // to prevent infinite resume loops. Track via poll_count as a proxy.
-                console.error(`[lab-queue-worker] Status check failed for entry ${r.id}: ${err.message}`);
-                try {
-                    const pollCount = (r.poll_count || 0) + 1;
-                    if (pollCount >= 3) {
-                        console.error(`[lab-queue-worker] Entry ${r.id} failed status check 3 times - clearing stale job ID`);
-                        await query(
-                            "UPDATE lab_queue SET external_job_id = NULL, poll_count = 0 WHERE id = $1",
-                            [r.id],
-                        );
-                    } else {
-                        await query(
-                            "UPDATE lab_queue SET poll_count = $1 WHERE id = $2",
-                            [pollCount, r.id],
-                        );
-                    }
-                } catch { /* DB write failed - will retry next tick */ }
+                const is404 = err.message?.includes('404');
+                if (is404) {
+                    // Job was deleted from the lab - clear immediately, no point retrying
+                    console.error(`[lab-queue-worker] Lab job gone (404) for entry ${r.id} - clearing stale job ID`);
+                    try {
+                        await query("UPDATE lab_queue SET external_job_id = NULL, poll_count = 0 WHERE id = $1", [r.id]);
+                    } catch { /* non-fatal */ }
+                } else {
+                    // Lab unreachable - clear stale job ID after 3 consecutive failures
+                    console.error(`[lab-queue-worker] Status check failed for entry ${r.id}: ${err.message}`);
+                    try {
+                        const pollCount = (r.poll_count || 0) + 1;
+                        if (pollCount >= 3) {
+                            console.error(`[lab-queue-worker] Entry ${r.id} failed status check 3 times - clearing stale job ID`);
+                            await query("UPDATE lab_queue SET external_job_id = NULL, poll_count = 0 WHERE id = $1", [r.id]);
+                        } else {
+                            await query("UPDATE lab_queue SET poll_count = $1 WHERE id = $2", [pollCount, r.id]);
+                        }
+                    } catch { /* DB write failed - will retry next tick */ }
+                }
             }
         }
     } catch (err: any) {
@@ -666,4 +706,311 @@ export async function cancelBulkLabJobs(domain?: string): Promise<number> {
         console.error(`[lab-queue-worker] Error in bulk cancel: ${err.message}`);
         return 0;
     }
+}
+
+// =========================================================================
+// Lab Result Recovery — scan labs for orphaned completed jobs
+// =========================================================================
+
+/**
+ * Scan all enabled labs for completed jobs whose results Podbit never recorded.
+ * This recovers from scenarios where server restarts orphaned the link between
+ * queue entries and lab jobs.
+ *
+ * For each completed lab job:
+ *   1. Extract the nodeId from the job's spec
+ *   2. Check if Podbit already has an execution record for this lab job
+ *   3. If not, fetch the full result and record it
+ *
+ * @returns Count of recovered results
+ */
+export async function recoverOrphanedLabResults(): Promise<{ recovered: number; scanned: number; errors: number }> {
+    let recovered = 0;
+    let scanned = 0;
+    let errors = 0;
+
+    try {
+        const { listLabs } = await import('../lab/registry.js');
+        const { listLabJobs, fetchResult, buildAuthHeadersFromRegistry } = await import('../lab/client.js');
+        const { recordVerification } = await import('./feedback.js');
+
+        const labs = await listLabs({ enabled: true });
+
+        for (const lab of labs) {
+            try {
+                const authHeaders = buildAuthHeadersFromRegistry(lab);
+                const completedJobs = await listLabJobs(lab.url, 'completed', authHeaders, 200);
+
+                for (const job of completedJobs) {
+                    scanned++;
+                    if (!job.id) continue;
+
+                    // Extract nodeId from the job's spec
+                    const spec = typeof job.spec === 'string' ? JSON.parse(job.spec) : job.spec;
+                    const nodeId = spec?.nodeId;
+                    if (!nodeId) continue;
+
+                    // Check if we already have an execution record for this lab job
+                    const existing = await query(
+                        "SELECT id FROM lab_executions WHERE lab_job_id = $1 LIMIT 1",
+                        [job.id],
+                    );
+                    if (existing.length > 0) continue;
+
+                    // Check the node still exists (include archived - recovery should
+                    // still record results for nodes that were archived by prior runs)
+                    const node = await query(
+                        "SELECT id, weight, domain, archived FROM nodes WHERE id = $1",
+                        [nodeId],
+                    ) as any[];
+                    if (node.length === 0) continue;
+
+                    // Fetch the full result from the lab
+                    try {
+                        const { getTemplate } = await import('../lab/templates.js');
+                        let template = await getTemplate(lab.id);
+                        if (!template) {
+                            template = {
+                                id: lab.id, name: lab.name, description: lab.description, systemTemplate: false,
+                                executionConfig: { url: lab.url, authType: lab.authType, authKey: lab.authCredential || undefined, authHeader: lab.authHeader || undefined },
+                                triageConfig: null,
+                                pollConfig: { strategy: 'interval', pollIntervalMs: 2000, completionValues: ['completed', 'failed'], failureValues: ['failed'] },
+                                interpretConfig: null, outcomeConfig: {}, evidenceSchema: null, budgetConfig: null,
+                                createdAt: lab.createdAt, updatedAt: lab.updatedAt,
+                            };
+                        }
+
+                        const labData = await fetchResult(template, job.id);
+
+                        const isInconclusive = labData.verdict === 'inconclusive';
+                        const claimSupported = labData.verdict === 'supported';
+                        const isComplete = labData.verdict === 'supported' || labData.verdict === 'refuted' || isInconclusive;
+                        const isError = labData.verdict === 'error';
+
+                        if (!isComplete && !isError) continue;
+
+                        const result = {
+                            nodeId,
+                            status: isError ? 'failed' as const : 'completed' as const,
+                            testCategory: (labData.testCategory || spec?.claimType || 'unknown') as any,
+                            evaluation: isComplete ? {
+                                verified: claimSupported,
+                                claimSupported: isInconclusive ? null as any : claimSupported,
+                                confidence: labData.confidence,
+                                score: isInconclusive ? 0 : labData.confidence,
+                                mode: 'boolean' as any,
+                                details: labData.details || `Lab verdict: ${labData.verdict}`,
+                                rawOutput: labData.details || null,
+                                inconclusive: isInconclusive,
+                            } : undefined,
+                            codegen: {
+                                hypothesis: labData.hypothesis || spec?.hypothesis || '',
+                                claimType: (spec?.claimType || 'unknown') as any,
+                                code: '' as string, expectedBehavior: '' as string, evaluationMode: 'boolean' as any,
+                                assertionPolarity: 'positive' as any, raw: '' as string,
+                            },
+                            weightBefore: node[0].weight,
+                            error: isError ? `Lab error: ${labData.error || 'unknown'}` : undefined,
+                            startedAt: job.created_at || new Date().toISOString(),
+                            completedAt: job.completed_at || new Date().toISOString(),
+                        };
+
+                        // Recovery imports historical results — skip weight changes,
+                        // auto-archive, and taint propagation. These side effects should
+                        // only fire during live verification, not retroactive imports.
+                        await recordVerification(result, {
+                            labJobId: job.id,
+                            labId: lab.id,
+                            labName: lab.name,
+                            spec: typeof job.spec === 'string' ? job.spec : JSON.stringify(spec),
+                            skipWeightAdjust: true,
+                            skipNodeUpdate: node[0].archived ? true : undefined,
+                        });
+
+                        // Store verdict + spec as inline evidence so the GUI renders
+                        // the VerdictCard and SpecCard without needing an artifact zip.
+                        try {
+                            const evidenceItems: Array<{ type: string; label: string; data: string }> = [];
+
+                            // Verdict evidence (renders as VerdictCard in GUI)
+                            const verdictPayload: Record<string, unknown> = {
+                                verdict: labData.verdict,
+                                confidence: labData.confidence,
+                                hypothesis: labData.hypothesis,
+                                testCategory: labData.testCategory,
+                                details: labData.details,
+                            };
+                            if (labData.structuredDetails) verdictPayload.structuredDetails = labData.structuredDetails;
+                            evidenceItems.push({ type: 'json', label: 'verdict', data: JSON.stringify(verdictPayload) });
+
+                            // Spec evidence (renders as SpecCard in GUI)
+                            evidenceItems.push({ type: 'json', label: 'spec', data: typeof job.spec === 'string' ? job.spec : JSON.stringify(spec) });
+
+                            // Update the execution record's evidence column
+                            const latestExec = await query(
+                                `SELECT id FROM lab_executions WHERE lab_job_id = $1 ORDER BY created_at DESC LIMIT 1`,
+                                [job.id],
+                            );
+                            if (latestExec.length > 0) {
+                                await query(
+                                    `UPDATE lab_executions SET evidence = $1 WHERE id = $2`,
+                                    [JSON.stringify(evidenceItems), (latestExec[0] as any).id],
+                                );
+                            }
+
+                            // Also pull artifact zip if available
+                            try {
+                                const { pullArtifactZip } = await import('../lab/evidence.js');
+                                const zipId = await pullArtifactZip(lab, job.id, nodeId, node[0].domain, null);
+                                if (zipId && latestExec.length > 0) {
+                                    await query(
+                                        `UPDATE lab_executions SET artifact_zip_id = $1 WHERE id = $2`,
+                                        [zipId, (latestExec[0] as any).id],
+                                    );
+                                }
+                            } catch { /* artifact zip optional */ }
+                        } catch { /* evidence storage non-fatal */ }
+
+                        recovered++;
+                        console.error(`[lab-recovery] Recovered result for node ${nodeId.slice(0, 8)} from ${lab.name} (job ${job.id}): ${labData.verdict}`);
+                        emitActivity('lab', 'orphan_recovered',
+                            `Recovered orphaned result from ${lab.name}: ${labData.verdict} for node ${nodeId.slice(0, 8)}`,
+                            { nodeId, labId: lab.id, labName: lab.name, jobId: job.id, verdict: labData.verdict });
+                    } catch (fetchErr: any) {
+                        errors++;
+                        console.error(`[lab-recovery] Failed to fetch result for job ${job.id} from ${lab.name}: ${fetchErr.message}`);
+                    }
+                }
+            } catch (labErr: any) {
+                console.error(`[lab-recovery] Failed to scan lab ${lab.name}: ${labErr.message}`);
+                errors++;
+            }
+        }
+
+        if (recovered > 0) {
+            console.error(`[lab-recovery] Recovered ${recovered} orphaned results from ${labs.length} lab(s)`);
+            emitActivity('lab', 'recovery_complete',
+                `Recovered ${recovered} orphaned lab result(s) (scanned ${scanned}, errors: ${errors})`,
+                { recovered, scanned, errors });
+        }
+    } catch (err: any) {
+        console.error(`[lab-recovery] Recovery failed: ${err.message}`);
+    }
+
+    return { recovered, scanned, errors };
+}
+
+/**
+ * Backfill evidence data on execution records that have a lab_job_id but
+ * empty evidence column. This patches records from earlier recovery runs
+ * that stored the verdict/confidence but not the full evidence payload
+ * the GUI needs to render VerdictCard.
+ */
+export async function backfillMissingEvidence(): Promise<{ patched: number; errors: number }> {
+    let patched = 0;
+    let errors = 0;
+
+    try {
+        // Find execution records with lab_job_id but no evidence
+        const rows = await query(
+            `SELECT e.id, e.lab_job_id, e.lab_id, e.lab_name, e.node_id, e.spec,
+                    n.domain
+             FROM lab_executions e
+             LEFT JOIN nodes n ON n.id = e.node_id
+             WHERE e.lab_job_id IS NOT NULL
+               AND (e.evidence IS NULL OR e.evidence = '' OR e.evidence = '[]')
+             ORDER BY e.created_at DESC
+             LIMIT 200`,
+            [],
+        ) as any[];
+
+        if (rows.length === 0) return { patched: 0, errors: 0 };
+
+        const { listLabs } = await import('../lab/registry.js');
+        const { fetchResult, buildAuthHeadersFromRegistry } = await import('../lab/client.js');
+        const labs = await listLabs({ enabled: true });
+        const labMap = new Map(labs.map(l => [l.id, l]));
+
+        for (const row of rows) {
+            try {
+                // Find the lab that has this job
+                let lab = row.lab_id ? labMap.get(row.lab_id) : null;
+                if (!lab) {
+                    // Try all labs
+                    for (const l of labs) {
+                        try {
+                            const { checkStatus } = await import('../lab/client.js');
+                            const template = {
+                                id: l.id, name: l.name, description: '', systemTemplate: false,
+                                executionConfig: { url: l.url, authType: l.authType, authKey: l.authCredential || undefined, authHeader: l.authHeader || undefined },
+                                triageConfig: null,
+                                pollConfig: { strategy: 'interval' as const, pollIntervalMs: 2000, completionValues: ['completed', 'failed'], failureValues: ['failed'] },
+                                interpretConfig: null, outcomeConfig: {}, evidenceSchema: null, budgetConfig: null,
+                                createdAt: l.createdAt, updatedAt: l.updatedAt,
+                            };
+                            await checkStatus(template, row.lab_job_id);
+                            lab = l;
+                            break;
+                        } catch { continue; }
+                    }
+                }
+                if (!lab) continue;
+
+                const template = {
+                    id: lab.id, name: lab.name, description: '', systemTemplate: false,
+                    executionConfig: { url: lab.url, authType: lab.authType, authKey: lab.authCredential || undefined, authHeader: lab.authHeader || undefined },
+                    triageConfig: null,
+                    pollConfig: { strategy: 'interval' as const, pollIntervalMs: 2000, completionValues: ['completed', 'failed'], failureValues: ['failed'] },
+                    interpretConfig: null, outcomeConfig: {}, evidenceSchema: null, budgetConfig: null,
+                    createdAt: lab.createdAt, updatedAt: lab.updatedAt,
+                };
+
+                const labData = await fetchResult(template, row.lab_job_id);
+
+                // Build evidence items
+                const evidenceItems: Array<{ type: string; label: string; data: string }> = [];
+                const verdictPayload: Record<string, unknown> = {
+                    verdict: labData.verdict,
+                    confidence: labData.confidence,
+                    hypothesis: labData.hypothesis,
+                    testCategory: labData.testCategory,
+                    details: labData.details,
+                };
+                if (labData.structuredDetails) verdictPayload.structuredDetails = labData.structuredDetails;
+                evidenceItems.push({ type: 'json', label: 'verdict', data: JSON.stringify(verdictPayload) });
+
+                if (row.spec) {
+                    evidenceItems.push({ type: 'json', label: 'spec', data: row.spec });
+                }
+
+                await query(
+                    `UPDATE lab_executions SET evidence = $1 WHERE id = $2`,
+                    [JSON.stringify(evidenceItems), row.id],
+                );
+
+                // Pull artifact zip if missing
+                if (!row.artifact_zip_id) {
+                    try {
+                        const { pullArtifactZip } = await import('../lab/evidence.js');
+                        const zipId = await pullArtifactZip(lab, row.lab_job_id, row.node_id, row.domain || '', null);
+                        if (zipId) {
+                            await query(`UPDATE lab_executions SET artifact_zip_id = $1 WHERE id = $2`, [zipId, row.id]);
+                        }
+                    } catch { /* optional */ }
+                }
+
+                patched++;
+            } catch (err: any) {
+                errors++;
+            }
+        }
+
+        if (patched > 0) {
+            console.error(`[lab-recovery] Backfilled evidence on ${patched} execution records`);
+        }
+    } catch (err: any) {
+        console.error(`[lab-recovery] Backfill failed: ${err.message}`);
+    }
+
+    return { patched, errors };
 }

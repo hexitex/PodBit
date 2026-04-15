@@ -205,8 +205,12 @@ export async function completeEntry(id: number, executionId: string | null, erro
 /**
  * Store the external lab job ID on a queue entry so it can be resumed after restart.
  */
-export async function setExternalJobId(id: number, externalJobId: string): Promise<void> {
-    await query(`UPDATE lab_queue SET external_job_id = $1 WHERE id = $2`, [externalJobId, id]);
+export async function setExternalJobId(id: number, externalJobId: string, templateId?: string): Promise<void> {
+    if (templateId) {
+        await query(`UPDATE lab_queue SET external_job_id = $1, template_id = $2 WHERE id = $3`, [externalJobId, templateId, id]);
+    } else {
+        await query(`UPDATE lab_queue SET external_job_id = $1 WHERE id = $2`, [externalJobId, id]);
+    }
 }
 
 /**
@@ -421,12 +425,13 @@ export async function getQueueStats(): Promise<QueueStats> {
  * @returns Number of entries recovered
  */
 export async function recoverStuck(): Promise<number> {
-    // Clear external_job_id on ALL pending/processing entries — any lab job from a
-    // previous process is orphaned and must not be resumed. The worker will submit fresh.
-    await query(
-        "UPDATE lab_queue SET external_job_id = NULL WHERE status IN ('pending', 'processing') AND external_job_id IS NOT NULL",
-        [],
-    );
+    // Reset processing entries to pending so the worker picks them up again.
+    // PRESERVE external_job_id — the lab may have already completed these jobs.
+    // The worker's _recoverOrphanedEntries() checks pending entries with job IDs
+    // against the lab: completed jobs get their results fetched via resumeJobId,
+    // failed/404 jobs get the ID cleared for a fresh submission.
+    // Clearing job IDs here would orphan completed lab results — the lab's
+    // "Completed" tab fills up with jobs Podbit never retrieves.
     const rows = await query(
         "UPDATE lab_queue SET status = 'pending', started_at = NULL WHERE status = 'processing' RETURNING id",
         [],

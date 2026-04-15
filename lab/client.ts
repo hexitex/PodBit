@@ -311,6 +311,29 @@ export function buildAuthHeadersFromRegistry(lab: LabRegistryEntry): Record<stri
     return headers;
 }
 
+/**
+ * List jobs from a lab server. Used for recovering orphaned completed results.
+ */
+export async function listLabJobs(
+    baseUrl: string,
+    status: string = 'completed',
+    authHeaders?: Record<string, string>,
+    limit: number = 200,
+    timeoutMs: number = 15_000,
+): Promise<Array<{ id: string; status: string; spec?: any; verdict?: string; confidence?: number; created_at?: string; completed_at?: string }>> {
+    const url = buildUrl(baseUrl, `/jobs?status=${encodeURIComponent(status)}&limit=${limit}`);
+    const headers: Record<string, string> = { ...authHeaders };
+
+    try {
+        const response = await fetchWithTimeout(url, { method: 'GET', headers }, timeoutMs);
+        if (!response.ok) return [];
+        const body = await response.json() as any;
+        return Array.isArray(body) ? body : (body.jobs || []);
+    } catch {
+        return [];
+    }
+}
+
 // =============================================================================
 // HELPERS
 // =============================================================================
@@ -370,7 +393,7 @@ export async function submitSpec(
     spec: import('./types.js').ExperimentSpec,
     templateId: string = 'math-lab',
     labInfo?: { labId: string; labName: string },
-    options?: { resumeJobId?: string; onJobId?: (jobId: string) => void; pollBudgetMs?: number; signal?: AbortSignal },
+    options?: { resumeJobId?: string; onJobId?: (jobId: string, templateId?: string) => void; pollBudgetMs?: number; signal?: AbortSignal },
 ): Promise<LabExperimentResult> {
     const { getTemplate } = await import('./templates.js');
     const { getLab } = await import('./registry.js');
@@ -430,8 +453,8 @@ export async function submitSpec(
         jobId = submitResponse.jobId;
         hasResourceLock = submitResponse.resourceLock ?? false;
 
-        // Notify caller of the jobId so they can persist it before polling starts
-        if (options?.onJobId) options.onJobId(jobId);
+        // Notify caller of the jobId (and templateId for recovery) before polling starts
+        if (options?.onJobId) options.onJobId(jobId, templateId);
     }
 
     // Acquire resource lock if lab requested it
@@ -486,6 +509,10 @@ export async function submitSpec(
             } catch (pollErr: any) {
                 // If aborted AND the lab is unreachable, give up
                 if (signal?.aborted) throw new Error(`Verification aborted during lab polling for job ${jobId}`);
+                // 404 = job was deleted from the lab. Fail immediately, don't retry.
+                if (pollErr.message?.includes('404')) {
+                    throw new Error(`Lab job ${jobId} not found (deleted?) - ${pollErr.message}`);
+                }
                 consecutiveErrors++;
                 if (consecutiveErrors >= maxConsecutiveErrors) {
                     throw new Error(`Lab unreachable during polling (${maxConsecutiveErrors} consecutive failures): ${pollErr.message}`);

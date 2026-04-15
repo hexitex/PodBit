@@ -69,7 +69,9 @@ export async function getRecentExecutions(options: {
         paramIdx++;
     }
     if (options.status === 'attention') {
-        conditions.push(`e.status IN ('code_error', 'failed', 'skipped')`);
+        // Exclude nodes that are already queued for retry - they don't need attention
+        conditions.push(`e.status IN ('code_error', 'failed', 'skipped')
+            AND NOT EXISTS (SELECT 1 FROM lab_queue q WHERE q.node_id = e.node_id AND q.status IN ('pending', 'processing'))`);
     } else if (options.status === 'inconclusive') {
         conditions.push(`e.claim_supported IS NULL AND e.verified = 0 AND e.status = 'completed'`);
     } else if (options.status) {
@@ -108,8 +110,10 @@ export async function getRecentExecutions(options: {
         WHERE e2.node_id = e.node_id
     )`;
 
-    // Exclude orphans (archived/deleted) and nodes currently re-queued
-    const alive = `n.id IS NOT NULL AND n.archived = 0 AND COALESCE(n.verification_status, '') != 'in_queue'`;
+    // Exclude truly deleted nodes (n.id IS NULL from LEFT JOIN).
+    // Include archived nodes — they may have been archived BY verification
+    // (auto-archive on refutation) and their results should still be visible.
+    const alive = `n.id IS NOT NULL`;
 
     const countRow: any = await queryOne(
         `SELECT COUNT(*) as total FROM lab_executions e

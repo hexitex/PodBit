@@ -291,6 +291,18 @@ router.post('/lab/prune', asyncHandler(async (req: any, res: any) => {
     res.json(result);
 }));
 
+router.post('/lab/recover', asyncHandler(async (req: any, res: any) => {
+    const { recoverOrphanedLabResults, backfillMissingEvidence } = await import('../evm/queue-worker.js');
+
+    // First backfill evidence on existing records that have lab_job_id but empty evidence
+    const backfill = await backfillMissingEvidence();
+
+    // Then recover fully orphaned results
+    const result = await recoverOrphanedLabResults();
+
+    res.json({ ...result, backfilled: backfill.patched });
+}));
+
 router.get('/lab/stats', asyncHandler(async (req: any, res: any) => {
     const { handleLabVerify } = await import('../handlers/evm.js');
     const result = await handleLabVerify({

@@ -251,8 +251,10 @@ export interface VerifyHints {
     queueEntryId?: number;
     /** Resume polling an existing lab job instead of submitting a new one */
     resumeJobId?: string;
-    /** Callback: persist the lab jobId to the queue entry immediately after submission */
-    onJobId?: (jobId: string) => void;
+    /** Template/lab ID for the resumed job (avoids re-routing) */
+    resumeTemplateId?: string;
+    /** Callback: persist the lab jobId (and optionally templateId) to the queue entry immediately after submission */
+    onJobId?: (jobId: string, templateId?: string) => void;
     /**
      * Allow the spec extractor to fall back to `node_critique` (LLM-on-LLM critique).
      * Defaults to false so autonomous cycles cannot launder LLM agreement into weight gain.

@@ -563,9 +563,14 @@ function startServer(): void {
                 const recovered = await recoverStuck();
                 if (recovered > 0) console.log(`  ✓ EVM queue: recovered ${recovered} stuck entries`);
 
-                const { startQueueWorker } = await import('./evm/queue-worker.js');
+                const { startQueueWorker, recoverOrphanedLabResults } = await import('./evm/queue-worker.js');
                 startQueueWorker();
                 console.log('  ✓ EVM queue worker: started');
+
+                // Recover orphaned lab results in background (non-blocking)
+                recoverOrphanedLabResults().then(({ recovered }) => {
+                    if (recovered > 0) console.log(`  ✓ Lab recovery: imported ${recovered} orphaned result(s)`);
+                }).catch(() => { /* non-fatal */ });
             } catch (e: any) {
                 console.log(`  ✗ EVM queue worker: failed (${e.message})`);
             }

@@ -16,7 +16,14 @@ export default function CreateNodeForm({ onClose, domains }) {
       queryClient.invalidateQueries({ queryKey: ['resonance'] });
       onClose();
     },
+    onError: (err) => {
+      // Extract rejection reason from 422 response
+      const reason = err?.response?.data?.reason;
+      if (reason) setError(reason);
+      else setError(err?.message || 'Failed to create node');
+    },
   });
+  const [error, setError] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -65,6 +72,11 @@ export default function CreateNodeForm({ onClose, domains }) {
             />
           </div>
         </div>
+        {error && (
+          <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+            <span className="font-medium">Rejected:</span> {error}
+          </div>
+        )}
         <div className="flex gap-2">
           <button
             type="submit"

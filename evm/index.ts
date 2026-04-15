@@ -109,6 +109,120 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
         parents.map((p: any) => resolveContent(p.content))
     );
 
+    // ─── RESUME FAST-PATH ────────────────────────────────────────────
+    // When recovering a job after restart, the lab may already have the result.
+    // Skip extraction/routing entirely and go straight to polling. This avoids
+    // burning an LLM call on spec extraction only to fetch an already-completed result,
+    // and prevents extraction failures from orphaning completed lab results.
+    if (hints?.resumeJobId) {
+        emitActivity('system', 'evm_resume',
+            `${nodeLabel(nodeId, node.content)}: resuming lab job ${hints.resumeJobId}`,
+            { nodeId, jobId: hints.resumeJobId });
+
+        const templateId = hints.resumeTemplateId || 'math-lab';
+        let labExperiment: import('../lab/client.js').LabExperimentResult;
+        let chosenLabId: string | undefined;
+        let chosenLabName: string | undefined;
+
+        try {
+            const { getLab } = await import('../lab/registry.js');
+            const lab = await getLab(templateId);
+            chosenLabId = lab?.id;
+            chosenLabName = lab?.name;
+
+            if (hints?.labAbort && hints?.freezeTimeoutMs) {
+                setTimeout(() => hints.labAbort!.abort(), hints.freezeTimeoutMs);
+            }
+            const labSignal = hints?.labAbort?.signal ?? hints?.signal;
+
+            labExperiment = await submitSpec(
+                { specType: 'unknown', hypothesis: '', setup: {}, criteria: [], nodeId } as ExperimentSpec,
+                templateId, lab ? { labId: lab.id, labName: lab.name } : undefined,
+                { resumeJobId: hints.resumeJobId, pollBudgetMs: hints.freezeTimeoutMs ?? hints.pollBudgetMs, signal: labSignal },
+            );
+        } catch (e: any) {
+            const result: VerificationResult = {
+                nodeId, status: 'failed', error: `Lab resume failed: ${e.message}`,
+                weightBefore: node.weight, startedAt, completedAt: new Date().toISOString(),
+            };
+            await recordVerification(result);
+            return result;
+        }
+
+        // Result fetched - process it through the normal verdict mapping below
+        const labData = labExperiment.result;
+        const labJobId = labExperiment.jobId;
+        const isInconclusive = labData.verdict === 'inconclusive';
+        const claimSupported = labData.verdict === 'supported';
+        const isComplete = labData.verdict === 'supported' || labData.verdict === 'refuted' || isInconclusive;
+        const isError = labData.verdict === 'error';
+
+        const result: VerificationResult = {
+            nodeId,
+            status: isError ? 'failed' : isComplete ? 'completed' : 'skipped',
+            testCategory: (labData.testCategory || 'unknown') as any,
+            evaluation: isComplete ? {
+                verified: claimSupported,
+                claimSupported: isInconclusive ? null as any : claimSupported,
+                confidence: labData.confidence,
+                score: isInconclusive ? 0 : labData.confidence,
+                mode: 'boolean' as any,
+                details: labData.details || `Lab verdict: ${labData.verdict}`,
+                structuredDetails: liftStructuredDetails(labData),
+                rawOutput: labData.details || null,
+                inconclusive: isInconclusive,
+            } : undefined,
+            codegen: {
+                hypothesis: labData.hypothesis || '',
+                claimType: 'unknown' as any,
+                code: '', expectedBehavior: '', evaluationMode: 'boolean' as any,
+                assertionPolarity: 'positive' as any, raw: '',
+            },
+            weightBefore: node.weight,
+            error: isError ? `Lab error: ${labData.error || 'unknown'}` :
+                   !isComplete ? `Lab verdict: ${labData.verdict} - ${labData.details || ''}` : undefined,
+            startedAt,
+            completedAt: new Date().toISOString(),
+        };
+
+        await recordVerification(result, { labJobId, labId: chosenLabId, labName: chosenLabName });
+
+        // Pull artifacts
+        try {
+            const { getLab } = await import('../lab/registry.js');
+            const lab = chosenLabId ? await getLab(chosenLabId) : null;
+            if (lab) {
+                const { pullArtifactZip } = await import('../lab/evidence.js');
+                await pullArtifactZip(lab, labJobId, nodeId, node.domain, null);
+            }
+        } catch { /* non-fatal */ }
+
+        // Store inline evidence
+        try {
+            const { storeEvidence } = await import('../lab/evidence.js');
+            const { getLab } = await import('../lab/registry.js');
+            const lab = chosenLabId ? await getLab(chosenLabId) : null;
+            await storeEvidence(null, nodeId, node.domain, labData, { specType: 'unknown', hypothesis: '', setup: {}, criteria: [], nodeId } as ExperimentSpec, lab?.url || '');
+        } catch { /* non-fatal */ }
+
+        const verdictMsg = isError
+            ? `ERROR via ${chosenLabName || 'unknown'}: ${labData.error || 'unknown'}`
+            : `${claimSupported ? 'SUPPORTED' : 'REFUTED'} (confidence: ${labData.confidence?.toFixed(2) || '?'}) via ${chosenLabName || 'unknown'} [resumed]`;
+        emitActivity('system', 'lab_complete',
+            `${nodeLabel(nodeId, node.content)}: ${verdictMsg}`,
+            { nodeId, claimSupported, confidence: labData.confidence, labJobId, labId: chosenLabId, labName: chosenLabName, verdict: labData.verdict, resumed: true });
+
+        // Apply graph consequences (weight, taint, elite promotion)
+        if (claimSupported && config.elitePool?.enabled) {
+            try {
+                const { promoteToElite } = await import('../core/elite-pool.js');
+                await promoteToElite(nodeId, result);
+            } catch { /* non-fatal */ }
+        }
+
+        return result;
+    }
+
     // ─── CHAIN SPEC BYPASS ──────────────────────────────────────────
     // When a chain job provides a pre-built spec (e.g., experiment_review for critique,
     // or a retest with corrective guidance), skip extraction entirely.

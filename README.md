@@ -5,7 +5,7 @@
 <h1 align="center">Podbit</h1>
 <h2 align="center">AI has nothing to say
 unless you ask the question.</h2>
-Podbit discovers the questions that creates NEW knowledge.
+Podbit discovers the questions.
 
 <p align="center">A genetic algorithm that breeds knowledge into verified insight. It combines your research, the LLM's training knowledge, and live web research - then evolves them through multiple generations.</p>
 

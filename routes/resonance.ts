@@ -53,6 +53,9 @@ router.get('/resonance/nodes/:id/lineage', asyncHandler(async (req, res) => {
 router.post('/resonance/nodes', asyncHandler(async (req, res) => {
     const { handlePropose } = await import('../mcp-server.js');
     const result = await handlePropose(req.body);
+    if (result.rejected) {
+        return res.status(422).json(result);
+    }
     res.json(result);
 }));
 
