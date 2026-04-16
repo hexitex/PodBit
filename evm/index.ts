@@ -620,6 +620,34 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
         chainType: hints?.chainType,
     });
 
+    // Write inline evidence to lab_executions.evidence so the GUI can render
+    // VerdictCard and SpecCard without needing the separate lab_evidence table.
+    try {
+        const inlineEvidence: Array<{ type: string; label: string; data: string }> = [];
+
+        // Verdict evidence (renders as VerdictCard in GUI)
+        const verdictPayload: Record<string, unknown> = {
+            verdict: labData.verdict,
+            confidence: labData.confidence,
+            hypothesis: labData.hypothesis,
+            testCategory: labData.testCategory,
+            details: labData.details,
+        };
+        if (labData.structuredDetails) verdictPayload.structuredDetails = labData.structuredDetails;
+        inlineEvidence.push({ type: 'json', label: 'verdict', data: JSON.stringify(verdictPayload) });
+
+        // Spec evidence (renders as SpecCard in GUI)
+        inlineEvidence.push({ type: 'json', label: 'spec', data: JSON.stringify(spec) });
+
+        await query(
+            `UPDATE lab_executions SET evidence = $1
+             WHERE node_id = $2 AND created_at = (SELECT MAX(created_at) FROM lab_executions WHERE node_id = $2)`,
+            [JSON.stringify(inlineEvidence), nodeId],
+        );
+    } catch (e: any) {
+        console.error(`[lab] Inline evidence write failed: ${e.message}`);
+    }
+
     // Pull artifact zip from lab and store in evidence
     let artifactZipId: string | undefined;
     try {
@@ -639,7 +667,7 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
             { nodeId, labJobId, error: e.message });
     }
 
-    // Also store verdict as inline evidence
+    // Also store verdict to lab_evidence table for artifact-based queries
     try {
         const { storeEvidence } = await import('../lab/evidence.js');
         const { getLab } = await import('../lab/registry.js');

@@ -38,6 +38,11 @@ let workerTimer: ReturnType<typeof setInterval> | null = null;
 let stopped = false;
 let tickRunning = false;
 
+/** Last time we ran the full lab-result recovery scan */
+let lastRecoveryScanMs = 0;
+/** How often to scan labs for orphaned completed results (5 minutes) */
+const RECOVERY_SCAN_INTERVAL_MS = 5 * 60_000;
+
 /** In-flight jobs: entryId -> { startedAt, abort, nodeId } */
 const inflight = new Map<number, { startedAt: number; abort: AbortController; nodeId: string }>();
 
@@ -102,6 +107,14 @@ export function startQueueWorker(intervalMs = RC.timeouts.queuePollingMs): void 
 
             // Recover orphaned entries BEFORE filling slots to prevent races.
             await _recoverOrphanedEntries().catch(() => {});
+
+            // Periodically scan labs for completed jobs whose results Podbit missed
+            // (e.g. poll timeout expired before lab finished, then lab completed later).
+            // This is cheap when there are no orphans and only runs every 5 minutes.
+            if (Date.now() - lastRecoveryScanMs > RECOVERY_SCAN_INTERVAL_MS) {
+                lastRecoveryScanMs = Date.now();
+                recoverOrphanedLabResults().catch(() => {});
+            }
 
             await fillSlots().catch(err => {
                 console.error('[lab-queue-worker] Fill error:', err.message);

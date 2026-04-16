@@ -1319,6 +1319,12 @@ export function VerificationDetailModal({ exec, onClose, onReviewed, navControls
                 <DismissButton nodeId={exec.node_id} />
               </>
             )}
+            {outcome === 'analysis' && (
+              <>
+                <ReverifyButton nodeId={exec.node_id} />
+                <DismissButton nodeId={exec.node_id} />
+              </>
+            )}
             {(outcome === 'needs_review' || outcome === 'needs_expert') && (
               <>
                 <ReviewButtons key={exec.id} nodeId={exec.node_id} status={exec.status} exec={exec} onReviewed={onReviewed} />
@@ -1326,7 +1332,7 @@ export function VerificationDetailModal({ exec, onClose, onReviewed, navControls
               </>
             )}
           </div>
-          {['code_error', 'error', 'disproved', 'inconclusive', 'skipped', 'needs_review', 'needs_expert'].includes(outcome) && (
+          {['code_error', 'error', 'disproved', 'inconclusive', 'skipped', 'needs_review', 'needs_expert', 'analysis'].includes(outcome) && (
             <GuidedRestatementPanel nodeId={exec.node_id} onRetryStarted={onClose} />
           )}
           {exec.node_id && <DecomposePanel nodeId={exec.node_id} />}

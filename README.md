@@ -4,8 +4,8 @@
 
 <h1 align="center">Podbit</h1>
 <h2 align="center">AI has nothing to say
-unless you ask the question.</h2>
-Podbit discovers the questions.
+unless you ask the question. Podbit discovers the questions.</h2>
+
 
 <p align="center">A genetic algorithm that breeds knowledge into verified insight. It combines your research, the LLM's training knowledge, and live web research - then evolves them through multiple generations.</p>
 
@@ -15,7 +15,7 @@ Podbit discovers the questions.
 
 <h2 align="center">Watch overview</h2>
   <a href="https://youtu.be/a1eS4mV5gXQ">
-    <img src="https://img.youtube.com/vi/a1eS4mV5gXQ/maxresdefault.jpg" alt="Podbit Demo" width="600" />
+    <img align="center" src="https://img.youtube.com/vi/a1eS4mV5gXQ/maxresdefault.jpg" alt="Podbit Demo" width="600" />
   </a>
 
 <h1 align="center">Do you want to make a discovery?</h1>
