@@ -69,8 +69,9 @@ async function readStreamingResponse(response: Response): Promise<{ text: string
         if (!trimmed.startsWith('data: ')) return;
         try {
             const chunk = JSON.parse(trimmed.slice(6));
-            const delta = chunk.choices?.[0]?.delta?.content;
-            if (delta) content += delta;
+            const delta = chunk.choices?.[0]?.delta;
+            if (delta?.content) content += delta.content;
+            else if (delta?.reasoning_content) content += delta.reasoning_content;
             if (chunk.choices?.[0]?.finish_reason) finishReason = chunk.choices[0].finish_reason;
             if (chunk.usage) {
                 usage = {
@@ -406,12 +407,13 @@ export async function callSingleModel(model: ModelEntry, prompt: string, options
                 break;
         }
 
-        // When noThink is set, strip reasoning blocks from the response.
-        // Covers: DeepSeek R1, QwQ, Qwen3, and any model that emits <think>/<thinking> tags.
-        if (model.noThink && result.text) {
+        // Always strip reasoning blocks from the response.
+        // Think blocks are model-internal CoT (DeepSeek R1, QwQ, Qwen3, etc.)
+        // and must never leak into downstream consumers (prompts, codegen, graph nodes).
+        if (result.text) {
             const stripped = stripThinkBlocks(result.text);
             if (stripped !== result.text) {
-                console.log(`[llm] noThink: stripped ${result.text.length - stripped.length} chars of think blocks from ${model.model || model.name}`);
+                console.log(`[llm] stripped ${result.text.length - stripped.length} chars of think blocks from ${model.model || model.name}`);
                 result.text = stripped;
             }
         }
@@ -579,7 +581,8 @@ async function _callWithMessagesInner(
         if (!data.choices || data.choices.length === 0) {
             throw new Error('No choices in LLM response');
         }
-        firstContent = data.choices[0]?.message?.content;
+        const proxyMsg = data.choices[0]?.message;
+        firstContent = proxyMsg?.content || proxyMsg?.reasoning_content || '';
     }
 
     if (firstContent) {
@@ -607,13 +610,13 @@ async function _callWithMessagesInner(
         }).catch(() => {});
     }
 
-    // When noThink is set, strip reasoning blocks from each choice's content
-    if (model.noThink && data.choices) {
+    // Always strip reasoning blocks from each choice's content
+    if (data.choices) {
         for (const choice of data.choices) {
             if (choice.message?.content && typeof choice.message.content === 'string') {
                 const stripped = stripThinkBlocks(choice.message.content);
                 if (stripped !== choice.message.content) {
-                    console.log(`[proxy] noThink: stripped ${choice.message.content.length - stripped.length} chars of think blocks`);
+                    console.log(`[proxy] stripped ${choice.message.content.length - stripped.length} chars of think blocks`);
                     choice.message.content = stripped;
                 }
             }
@@ -904,13 +907,20 @@ async function callOpenAICompatible(model: ModelEntry, prompt: string, options: 
 
     const data = await response.json() as any;
     convLog(`RESPONSE callOpenAICompatible → ${modelName}`, data);
-    const content = data.choices?.[0]?.message?.content;
+    const msg = data.choices?.[0]?.message;
+    // Some reasoning models (Qwen3, DeepSeek) put the entire response in
+    // reasoning_content and leave content empty. Fall back to reasoning_content
+    // when content is missing so we don't discard a valid response.
+    const content = msg?.content || msg?.reasoning_content || '';
     const finishReason = data.choices?.[0]?.finish_reason;
     if (!content) {
         const lengthHint = finishReason === 'length'
             ? ` — model exhausted output budget on reasoning/chain-of-thought with nothing left for the response. Increase max_tokens in the model registry (Models page)`
             : '';
         throw new Error(`${model.provider} returned empty content from ${modelName} (finish_reason=${finishReason}, max_tokens=${options.maxTokens})${lengthHint}`);
+    }
+    if (msg?.reasoning_content && !msg?.content) {
+        console.warn(`[llm] ${modelName} returned response in reasoning_content instead of content — using reasoning_content as fallback`);
     }
     if (finishReason === 'length') {
         console.warn(`[llm] ${modelName} output truncated (finish_reason=length, max_tokens=${options.maxTokens}) — returning partial content`);

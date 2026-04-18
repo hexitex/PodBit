@@ -280,7 +280,6 @@ async function processWithDecomposition(
             const prompt = await getPromptFn('kb.decompose_claims', vars);
             const curationTokens = config.knowledgeBase?.curationMaxTokens || 0;
             response = await callSubsystemModel(reader.subsystem, prompt, {
-                temperature: 0.3,
                 ...(curationTokens > 0 ? { maxTokens: curationTokens } : {}),
             });
         } catch (err: any) {
@@ -393,7 +392,6 @@ async function processWithDecomposition(
         const filterPrompt = await getPromptFn('kb.filter_claims', filterVars);
         const filterTokens = config.knowledgeBase?.curationMaxTokens || 0;
         filterResponse = await callSubsystemModel(reader.subsystem, filterPrompt, {
-            temperature: 0.3,
             ...(filterTokens > 0 ? { maxTokens: filterTokens } : {}),
         });
     } catch (err: any) {
@@ -745,7 +743,6 @@ export async function processFile(job: ProcessingJob): Promise<void> {
                     const prompt = await getPrompt(curationPromptId, vars);
                     const cTokens = config.knowledgeBase?.curationMaxTokens || 0;
                     const curated = await callSubsystemModel(reader.subsystem, prompt, {
-                        temperature: 0.3,
                         ...(cTokens > 0 ? { maxTokens: cTokens } : {}),
                     });
 

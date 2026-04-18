@@ -13,7 +13,7 @@
 
 import { callSubsystemModel } from '../models/assignments.js';
 import { getPrompt } from '../prompts.js';
-import type { ExperimentSpec } from '../lab/types.js';
+import type { ExperimentSpec, LabRegistryEntry } from '../lab/types.js';
 
 export interface ExtractionResult {
     /** Whether an experiment spec could be extracted */
@@ -70,51 +70,69 @@ export async function extractExperimentSpec(
         : '';
 
     // Build authoritative spec type registry from structured data (capabilities + DB).
-    // Context prompts are supplementary descriptions only — never the source for specType names.
+    // Context prompts are supplementary descriptions only -- never the source for specType names.
     const availableSpecTypes: string[] = [];
     let labDescriptionBlock = '';
+    let selectedPromptId = 'evm.spec_extraction'; // default (math/physics)
     try {
         const { listLabs } = await import('../lab/registry.js');
         const labs = await listLabs({ enabled: true });
 
-        // 1. Build the authoritative specType table from structured data
-        const specTypeTable: string[] = [];
-        const labDescriptions: string[] = [];
+        // Pre-route: pick the target lab based on claim/domain keywords.
+        // This determines which lab-specific extraction prompt to use.
+        const targetLab = preRouteLab(resolvedClaim, domain, labs);
 
-        for (const lab of labs) {
-            const caps = lab.capabilities;
-            const capsSpecTypes = caps?.specTypes && !Array.isArray(caps.specTypes)
-                ? caps.specTypes as Record<string, string>
-                : null;
+        if (targetLab) {
+            // Use lab-specific prompt and build context from target lab only
+            selectedPromptId = selectPromptForLab(targetLab);
+            console.log(`[spec-extractor] Pre-routed to ${targetLab.name} -> prompt ${selectedPromptId}`);
 
-            // Collect spec type names from DB column (synced from capabilities by health checker)
-            for (const t of (lab.specTypes || [])) {
-                if (!availableSpecTypes.includes(t)) {
-                    availableSpecTypes.push(t);
-                    const desc = capsSpecTypes?.[t] || '';
-                    specTypeTable.push(`- "${t}" (${lab.name})${desc ? ': ' + desc : ''}`);
+            labDescriptionBlock = buildLabContext(targetLab);
+
+            // Collect available specTypes from target lab
+            for (const t of (targetLab.specTypes || [])) {
+                if (!availableSpecTypes.includes(t)) availableSpecTypes.push(t);
+            }
+        } else {
+            // No clear pre-route match -- use default prompt with all labs
+            console.log(`[spec-extractor] No pre-route match, using default prompt with all labs`);
+
+            const specTypeTable: string[] = [];
+            const labDescriptions: string[] = [];
+
+            for (const lab of labs) {
+                const caps = lab.capabilities;
+                const capsSpecTypes = caps?.specTypes && !Array.isArray(caps.specTypes)
+                    ? caps.specTypes as Record<string, string>
+                    : null;
+
+                for (const t of (lab.specTypes || [])) {
+                    if (!availableSpecTypes.includes(t)) {
+                        availableSpecTypes.push(t);
+                        const desc = capsSpecTypes?.[t] || '';
+                        specTypeTable.push(`- "${t}" (${lab.name})${desc ? ': ' + desc : ''}`);
+                    }
+                }
+
+                if (lab.contextPrompt) {
+                    labDescriptions.push(`### ${lab.name}\n${lab.contextPrompt}`);
+                } else if (caps?.description) {
+                    labDescriptions.push(`### ${lab.name}\n${caps.description}`);
                 }
             }
 
-            // Supplementary lab description (context prompt or generated summary)
-            if (lab.contextPrompt) {
-                labDescriptions.push(`### ${lab.name}\n${lab.contextPrompt}`);
-            } else if (caps?.description) {
-                labDescriptions.push(`### ${lab.name}\n${caps.description}`);
+            if (specTypeTable.length > 0) {
+                labDescriptionBlock = '\n\nAVAILABLE SPEC TYPES (you MUST use one of these exact strings as specType):\n' +
+                    specTypeTable.join('\n') +
+                    (labDescriptions.length > 0
+                        ? '\n\nLAB DETAILS:\n' + labDescriptions.join('\n\n')
+                        : '') +
+                    '\n\nIf the claim cannot be tested by ANY spec type above, set reducible to false with claimType "no_lab".';
             }
-        }
-
-        if (specTypeTable.length > 0) {
-            labDescriptionBlock = '\n\nAVAILABLE SPEC TYPES (you MUST use one of these exact strings as specType):\n' +
-                specTypeTable.join('\n') +
-                (labDescriptions.length > 0
-                    ? '\n\nLAB DETAILS:\n' + labDescriptions.join('\n\n')
-                    : '') +
-                '\n\nIf the claim cannot be tested by ANY spec type above, set reducible to false with claimType "no_lab".';
         }
     } catch { /* fallback to no constraint */ }
 
-    const prompt = await getPrompt('evm.spec_extraction', {
+    const prompt = await getPrompt(selectedPromptId, {
         domain,
         claim: resolvedClaim,
         parentContext,
@@ -125,7 +143,6 @@ export async function extractExperimentSpec(
 
     const raw = await callSubsystemModel('spec_extraction', prompt, {
         jsonSchema: EXTRACTION_SCHEMA,
-        temperature: 0.1,
         signal: hints?.signal,
     });
 
@@ -145,7 +162,6 @@ export async function extractExperimentSpec(
                 `You MUST respond with a valid JSON object. No markdown fences, no prose, no explanation — just the raw JSON object starting with { and ending with }.`;
             const retryRaw = await callSubsystemModel('spec_extraction', retryPrompt, {
                 jsonSchema: EXTRACTION_SCHEMA,
-                temperature: 0.1,
                 signal: hints?.signal,
             });
             parsed = tryParseExtractionResponse(retryRaw);
@@ -359,6 +375,111 @@ function extractStringValues(obj: any): string[] {
 }
 
 // =============================================================================
+// PRE-ROUTING — pick lab before extraction for lab-specific prompts
+// =============================================================================
+
+/** Keywords that signal the claim is about neural networks / ML / training. */
+const NN_KEYWORDS = /\b(neural\s*net|deep\s*learn|training|backprop|gradient\s*descent|optimizer|learning\s*rate|batch\s*norm|dropout|convolution|cnn|mlp|resnet|transformer|attention|sparsity|pruning|epoch|convergence|loss\s*landscape|weight\s*decay|sgd|adam|rmsprop|activation\s*function|relu|softmax|overfit|generalization|architecture|hidden\s*layer|embedding|latent|encoder|decoder|autoencoder|gan|diffusion|fine.?tun)/i;
+
+/** Keywords that signal the claim is purely qualitative / definitional. */
+const CRITIQUE_KEYWORDS = /\b(definition|qualitative|subjective|opinion|interpretation|framing|terminology|naming|classification\s*scheme|taxonomy|ontology|semantic|philosophical)/i;
+
+/**
+ * Pre-route a claim to the best lab based on keyword matching.
+ * Returns the target lab, or null if no clear match (use default prompt).
+ *
+ * Only routes to labs that are actually available. Falls back to null
+ * (default math prompt) when ambiguous or no keyword match.
+ */
+function preRouteLab(claim: string, domain: string, labs: LabRegistryEntry[]): LabRegistryEntry | null {
+    const text = `${domain} ${claim}`.toLowerCase();
+
+    // Check for NN-lab keywords
+    if (NN_KEYWORDS.test(text)) {
+        const nnLab = labs.find(l => (l.specTypes || []).some(t => t.startsWith('nn_')));
+        if (nnLab) return nnLab;
+    }
+
+    // Check for critique-lab keywords (only if no computational signal)
+    if (CRITIQUE_KEYWORDS.test(text) && !NN_KEYWORDS.test(text)) {
+        const critiqueLab = labs.find(l => (l.specTypes || []).some(t => t === 'node_critique'));
+        if (critiqueLab) return critiqueLab;
+    }
+
+    // No clear match -- fall back to default (math) prompt
+    return null;
+}
+
+/**
+ * Select the extraction prompt ID for a pre-routed lab.
+ * Falls back to the default prompt if no lab-specific one exists.
+ */
+function selectPromptForLab(lab: LabRegistryEntry): string {
+    const specTypes = lab.specTypes || [];
+
+    if (specTypes.some(t => t.startsWith('nn_'))) return 'evm.spec_extraction.nn';
+    if (specTypes.includes('node_critique')) return 'evm.spec_extraction.critique';
+
+    // Default math/physics prompt
+    return 'evm.spec_extraction';
+}
+
+/**
+ * Build lab context block for a single pre-routed lab.
+ * Includes full capabilities (architectures, datasets, measurements, etc.)
+ * so the extraction LLM can produce valid setup structures.
+ */
+function buildLabContext(lab: LabRegistryEntry): string {
+    const caps = lab.capabilities as Record<string, any> | undefined;
+    const capsSpecTypes = caps?.specTypes && !Array.isArray(caps.specTypes)
+        ? caps.specTypes as Record<string, string>
+        : null;
+
+    const lines: string[] = [];
+
+    // Spec type descriptions
+    const specTypeTable: string[] = [];
+    for (const t of (lab.specTypes || [])) {
+        const desc = capsSpecTypes?.[t] || '';
+        specTypeTable.push(`- "${t}"${desc ? ': ' + desc : ''}`);
+    }
+    if (specTypeTable.length > 0) {
+        lines.push(`\n\nAVAILABLE SPEC TYPES for ${lab.name} (you MUST use one of these exact strings as specType):`);
+        lines.push(specTypeTable.join('\n'));
+    }
+
+    // Full capabilities -- architectures, datasets, optimizers, measurements, etc.
+    // These help the LLM produce valid enum values in the setup.
+    if (caps) {
+        const capDetails: string[] = [];
+        if (Array.isArray(caps.architectures)) capDetails.push(`Architectures: ${caps.architectures.join(', ')}`);
+        if (Array.isArray(caps.datasets)) capDetails.push(`Datasets: ${caps.datasets.join(', ')}`);
+        if (Array.isArray(caps.optimizers)) capDetails.push(`Optimizers: ${caps.optimizers.join(', ')}`);
+        if (Array.isArray(caps.lr_schedules)) capDetails.push(`LR schedules: ${caps.lr_schedules.join(', ')}`);
+        if (Array.isArray(caps.measurements)) capDetails.push(`Measurements: ${caps.measurements.join(', ')}`);
+        if (Array.isArray(caps.comparison_measurements)) capDetails.push(`Comparison measurements: ${caps.comparison_measurements.join(', ')}`);
+        if (Array.isArray(caps.sparsity_methods)) capDetails.push(`Sparsity methods: ${caps.sparsity_methods.join(', ')}`);
+        if (Array.isArray(caps.modifications)) capDetails.push(`Modifications: ${caps.modifications.join(', ')}`);
+
+        if (capDetails.length > 0) {
+            lines.push(`\nAVAILABLE VALUES (use these exact strings in setup fields):`);
+            lines.push(capDetails.join('\n'));
+        }
+    }
+
+    // Supplementary lab description
+    if (lab.contextPrompt) {
+        lines.push(`\nLAB DETAILS:\n### ${lab.name}\n${lab.contextPrompt}`);
+    } else if (caps?.description) {
+        lines.push(`\nLAB DETAILS:\n### ${lab.name}\n${caps.description}`);
+    }
+
+    lines.push(`\nIf the claim cannot be tested by ANY spec type above, set reducible to false with claimType "no_lab".`);
+
+    return lines.join('\n');
+}
+
+// =============================================================================
 // FALSIFIABILITY REVIEW (adversarial LLM check)
 // =============================================================================
 
@@ -416,7 +537,6 @@ async function reviewFalsifiability(
 
         const raw = await callSubsystemModel('spec_review', prompt, {
             jsonSchema: REVIEW_SCHEMA,
-            temperature: 0.2,
             signal,
         });
 

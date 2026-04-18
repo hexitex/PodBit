@@ -21,9 +21,25 @@ export const EVM_PROMPTS: Record<string, PromptDefinition> = {
     'evm.spec_extraction': {
         id: 'evm.spec_extraction',
         category: 'evm',
-        description: 'Extract an experiment specification from a knowledge claim — the one auditable bias surface in the verification pipeline',
+        description: 'Extract an experiment specification from a knowledge claim — the one auditable bias surface in the verification pipeline. Used for math/physics labs (default).',
         variables: ['domain', 'claim', 'parentContext', 'guidance', 'labContext', 'precisionNote'],
         content: loadTemplate(CAT, 'evm.spec_extraction'),
+    },
+
+    'evm.spec_extraction.nn': {
+        id: 'evm.spec_extraction.nn',
+        category: 'evm',
+        description: 'Extract an NN-lab experiment spec — tuned for neural network training, architecture, and optimization claims',
+        variables: ['domain', 'claim', 'parentContext', 'guidance', 'labContext', 'precisionNote'],
+        content: loadTemplate(CAT, 'evm.spec_extraction.nn'),
+    },
+
+    'evm.spec_extraction.critique': {
+        id: 'evm.spec_extraction.critique',
+        category: 'evm',
+        description: 'Extract a critique-lab spec — for qualitative claims that need LLM-based quality review rather than computation',
+        variables: ['domain', 'claim', 'parentContext', 'guidance', 'labContext', 'precisionNote'],
+        content: loadTemplate(CAT, 'evm.spec_extraction.critique'),
     },
 
     'evm.analysis': {

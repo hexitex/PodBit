@@ -14,7 +14,7 @@ export function useScrollToHash() {
 
     const id = hash.replace('#', '');
     let attempts = 0;
-    const maxAttempts = 25;
+    const maxAttempts = 40;
     let timer = null;
 
     const tryScroll = () => {
@@ -24,6 +24,8 @@ export function useScrollToHash() {
           // Backoff: 200ms, 200ms, 300ms, 300ms, 400ms, ...
           const delay = 200 + Math.floor(attempts / 2) * 100;
           timer = setTimeout(tryScroll, delay);
+        } else {
+          console.warn(`[useScrollToHash] Failed to find element #${id} after ${maxAttempts} attempts`);
         }
         return;
       }

@@ -100,17 +100,19 @@ const labServices: Record<string, Record<string, any>> = Object.fromEntries(
 
 // Default inference parameters per subsystem — used for initial config AND reset-on-model-change
 export const DEFAULT_TEMPERATURES: Record<string, number> = {
-  voice: 0.7, chat: 0.7, compress: 0.3, proxy: 0.7, research: 0.7,
-  context: 0.3, docs: 0.7, keyword: 0.3, autorating: 0.3,
-  spec_extraction: 0.1, evm_analysis: 0.3, breakthrough_check: 0.2, api_verification: 0.2, ground_rules: 0.1,
+  voice: 0.7, chat: 0.7, synthesis: 0.7, research: 0.7, docs: 0.7, proxy: 0.7, image_gen: 0.7,
+  compress: 0.3, context: 0.3, keyword: 0.3, elite_mapping: 0.3, evm_analysis: 0.3, evm_guidance: 0.3, config_tune: 0.3,
+  autorating: 0.15, spec_extraction: 0.1, spec_review: 0.15, api_verification: 0.2, breakthrough_check: 0.2,
+  ground_rules: 0.1, population_control: 0.15, lab_routing: 0.15, dedup_judge: 0.15, tuning_judge: 0.15,
   reader_text: 0.3, reader_pdf: 0.3, reader_doc: 0.3,
   reader_image: 0.4, reader_sheet: 0.3, reader_code: 0.3,
 };
 
 export const DEFAULT_REPEAT_PENALTIES: Record<string, number> = {
-  voice: 1.0, chat: 1.0, compress: 1.0, proxy: 1.0, research: 1.0,
-  context: 1.0, docs: 1.0, keyword: 1.0, autorating: 1.0,
-  spec_extraction: 1.0, evm_analysis: 1.0, breakthrough_check: 1.0, ground_rules: 1.0,
+  voice: 1.0, chat: 1.0, synthesis: 1.0, research: 1.0, docs: 1.0, proxy: 1.0, image_gen: 1.0,
+  compress: 1.0, context: 1.0, keyword: 1.0, elite_mapping: 1.0, evm_analysis: 1.0, evm_guidance: 1.0, config_tune: 1.0,
+  autorating: 1.0, spec_extraction: 1.0, spec_review: 1.0, api_verification: 1.0, breakthrough_check: 1.0,
+  ground_rules: 1.0, population_control: 1.0, lab_routing: 1.0, dedup_judge: 1.0, tuning_judge: 1.0,
   reader_text: 1.0, reader_pdf: 1.0, reader_doc: 1.0,
   reader_image: 1.2, reader_sheet: 1.0, reader_code: 1.0,
 };
@@ -844,19 +846,28 @@ export const config: PodbitConfig = {
 
   // Sampling parameters per subsystem
   subsystemTopP: {
-    reader_image: 0.9, chat: 0.9, reader_code: 0.75, docs: 0.9, context: 1,
-    compress: 0.8, keyword: 0.9, api_verification: 0.9, autorating: 0.9,
-    reader_pdf: 1, reader_doc: 1, reader_text: 1, reader_sheet: 1,
+    voice: 0.9, chat: 0.9, synthesis: 0.9, research: 0.9, docs: 0.9, proxy: 0.9, image_gen: 0.9,
+    compress: 0.8, context: 1, keyword: 0.9, elite_mapping: 0.9, evm_analysis: 0.9, evm_guidance: 0.9, config_tune: 0.9,
+    autorating: 0.9, spec_extraction: 0.9, spec_review: 0.9, api_verification: 0.9, breakthrough_check: 0.9,
+    ground_rules: 0.9, population_control: 0.9, lab_routing: 0.9, dedup_judge: 0.9, tuning_judge: 0.9,
+    reader_text: 1, reader_pdf: 1, reader_doc: 1,
+    reader_image: 0.9, reader_sheet: 1, reader_code: 0.75,
   } as Record<string, number>,
   subsystemMinP: {
-    reader_image: 0.05, chat: 0.05, reader_code: 0.08, docs: 0.05, context: 0,
-    compress: 0, keyword: 0, api_verification: 0.05, autorating: 0,
-    reader_pdf: 0, reader_doc: 0, reader_text: 0, reader_sheet: 0,
+    voice: 0.05, chat: 0.05, synthesis: 0.05, research: 0.05, docs: 0.05, proxy: 0.05, image_gen: 0.05,
+    compress: 0, context: 0, keyword: 0, elite_mapping: 0.05, evm_analysis: 0.05, evm_guidance: 0.05, config_tune: 0,
+    autorating: 0, spec_extraction: 0, spec_review: 0, api_verification: 0.05, breakthrough_check: 0,
+    ground_rules: 0, population_control: 0, lab_routing: 0, dedup_judge: 0, tuning_judge: 0,
+    reader_text: 0, reader_pdf: 0, reader_doc: 0,
+    reader_image: 0.05, reader_sheet: 0, reader_code: 0.08,
   } as Record<string, number>,
   subsystemTopK: {
-    reader_image: 40, chat: 40, reader_code: 20, docs: 40, context: 0,
-    compress: 0, keyword: 0, api_verification: 40, autorating: 0,
-    reader_pdf: 0, reader_doc: 0, reader_text: 0, reader_sheet: 0,
+    voice: 40, chat: 40, synthesis: 40, research: 40, docs: 40, proxy: 40, image_gen: 40,
+    compress: 0, context: 0, keyword: 0, elite_mapping: 40, evm_analysis: 40, evm_guidance: 40, config_tune: 0,
+    autorating: 0, spec_extraction: 0, spec_review: 0, api_verification: 40, breakthrough_check: 0,
+    ground_rules: 0, population_control: 0, lab_routing: 0, dedup_judge: 0, tuning_judge: 0,
+    reader_text: 0, reader_pdf: 0, reader_doc: 0,
+    reader_image: 40, reader_sheet: 0, reader_code: 20,
   } as Record<string, number>,
 
   // Consultant model inference parameters — separate from primary model params.

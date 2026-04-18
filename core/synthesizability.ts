@@ -48,9 +48,7 @@ export async function classifySingleNode(): Promise<boolean> {
 
     const resolved = await resolveContent(node.content);
     const prompt = await getPrompt('kb.synthesizability_check', { content: resolved });
-    const response = await callSubsystemModel('ground_rules', prompt, {
-        temperature: 0.1,
-    });
+    const response = await callSubsystemModel('ground_rules', prompt, {});
 
     const answer = (typeof response === 'string' ? response : String(response)).trim().toUpperCase();
     const isSynthesizable = answer.startsWith('YES');

@@ -595,6 +595,7 @@ function startServer(): void {
             }
 
             // Ensure subsystems exist for all local labs (backfill for labs created before this feature)
+            // Also migrates legacy UUID-based subsystem names (lab:<uuid>) to name-based (lab:<name>).
             try {
                 const { listLabs } = await import('./lab/registry.js');
                 const { systemQuery } = await import('./db/sqlite-backend.js');
@@ -606,16 +607,35 @@ function startServer(): void {
                         const host = new URL(lab.url).hostname.toLowerCase();
                         const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '0.0.0.0';
                         if (!isLocal) continue;
+
                         const sub = `lab:${lab.id}`;
+                        // Create if missing
                         const existing = await systemQuery('SELECT subsystem FROM subsystem_assignments WHERE subsystem = $1', [sub]);
                         if ((existing as any[]).length > 0) continue;
                         await systemQuery(`INSERT INTO subsystem_assignments (subsystem, model_id, updated_at) VALUES ($1, NULL, datetime('now'))`, [sub]);
                         created++;
                     } catch { /* per-lab, non-fatal */ }
                 }
-                if (created > 0) {
+                // Clean up orphaned lab subsystems (labs that were removed from registry)
+                const allLabSubs = await systemQuery(
+                    `SELECT subsystem FROM subsystem_assignments WHERE subsystem LIKE 'lab:%'`, [],
+                ) as any[];
+                const validIds = new Set(labs.map(l => `lab:${l.id}`));
+                let cleaned = 0;
+                for (const row of allLabSubs) {
+                    const sub = row.subsystem as string;
+                    if (!validIds.has(sub)) {
+                        await systemQuery('DELETE FROM subsystem_assignments WHERE subsystem = $1', [sub]);
+                        cleaned++;
+                    }
+                }
+
+                if (created > 0 || cleaned > 0) {
                     await loadAssignmentCache();
-                    console.log(`  ✓ Lab subsystems: created ${created} new subsystem(s)`);
+                    const parts = [];
+                    if (created > 0) parts.push(`created ${created}`);
+                    if (cleaned > 0) parts.push(`cleaned ${cleaned} orphaned entries`);
+                    console.log(`  ✓ Lab subsystems: ${parts.join(', ')}`);
                 }
             } catch (e: any) {
                 console.log(`  ✗ Lab subsystems: failed (${e.message})`);

@@ -992,13 +992,39 @@ export async function backfillMissingEvidence(): Promise<{ patched: number; erro
                 if (labData.structuredDetails) verdictPayload.structuredDetails = labData.structuredDetails;
                 evidenceItems.push({ type: 'json', label: 'verdict', data: JSON.stringify(verdictPayload) });
 
-                if (row.spec) {
-                    evidenceItems.push({ type: 'json', label: 'spec', data: row.spec });
+                // Retrieve spec from the lab job if not stored locally
+                let specData = row.spec;
+                if (!specData) {
+                    try {
+                        const { listLabJobs } = await import('../lab/client.js');
+                        const authH = buildAuthHeadersFromRegistry(lab);
+                        const jobs = await listLabJobs(lab.url, 'completed', authH, 200);
+                        const match = jobs.find(j => j.id === row.lab_job_id);
+                        if (match?.spec) {
+                            specData = typeof match.spec === 'string' ? match.spec : JSON.stringify(match.spec);
+                        }
+                    } catch { /* non-fatal */ }
+                }
+                if (specData) {
+                    evidenceItems.push({ type: 'json', label: 'spec', data: specData });
                 }
 
+                // Patch execution record: evidence + any missing fields
+                const updates: string[] = ['evidence = $1'];
+                const params: any[] = [JSON.stringify(evidenceItems)];
+                let pIdx = 2;
+                if (!row.spec && specData) {
+                    updates.push(`spec = $${pIdx++}`);
+                    params.push(specData);
+                }
+                if (!row.hypothesis && labData.hypothesis) {
+                    updates.push(`hypothesis = $${pIdx++}`);
+                    params.push(labData.hypothesis);
+                }
+                params.push(row.id);
                 await query(
-                    `UPDATE lab_executions SET evidence = $1 WHERE id = $2`,
-                    [JSON.stringify(evidenceItems), row.id],
+                    `UPDATE lab_executions SET ${updates.join(', ')} WHERE id = $${pIdx}`,
+                    params,
                 );
 
                 // Pull artifact zip if missing

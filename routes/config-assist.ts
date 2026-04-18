@@ -550,9 +550,7 @@ router.post('/config/assist', asyncHandler(async (req, res) => {
     const assignments = await getSubsystemAssignments();
     const subsystem = assignments.config_tune ? 'config_tune' : 'compress';
 
-    const response = await callSubsystemModel(subsystem, fullPrompt, {
-        temperature: 0.5,
-    });
+    const response = await callSubsystemModel(subsystem, fullPrompt, {});
 
     // Parse response for embedded suggestions
     const { cleanedResponse, suggestions } = parseSuggestions(response);

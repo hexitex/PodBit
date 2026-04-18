@@ -12,6 +12,7 @@ import { callSubsystemModel, getSubsystemAssignments } from '../models.js';
 import { getPrompt } from '../prompts.js';
 import { getSafeConfig } from '../config.js';
 import { SECTION_METADATA } from '../config-sections.js';
+import { augmentWithLabSubsystems, type LabSubsystemInfo } from '../config-sections/subsystem-params.js';
 import { config as defaultConfig } from '../config/defaults.js';
 
 const router = Router();
@@ -112,7 +113,6 @@ router.post('/config/tune', asyncHandler(async (req, res) => {
 
         const response = await callTuneModel(prompt, {
             jsonSchema,
-            temperature: 0.3,
         });
 
         // Parse the LLM response
@@ -222,7 +222,6 @@ router.post('/config/tune/generate-patterns', asyncHandler(async (req, res) => {
 
         const response = await callTuneModel(prompt, {
             jsonSchema,
-            temperature: 0.7,
         });
 
         let parsed: any;
@@ -319,7 +318,6 @@ router.post('/config/tune/generate-intent-patterns', asyncHandler(async (req, re
 
         const response = await callTuneModel(prompt, {
             jsonSchema,
-            temperature: 0.7,
         });
 
         let parsed: any;
@@ -399,9 +397,7 @@ router.post('/config/tune/generate-words', asyncHandler(async (req, res) => {
             count: String(Math.min(count, 50)),
         });
 
-        const response = await callTuneModel(prompt, {
-            temperature: 0.7,
-        });
+        const response = await callTuneModel(prompt, {});
 
         let parsed: any;
         try {
@@ -583,8 +579,30 @@ router.post('/config/critical-analysis', asyncHandler(async (_req, res) => {
 }));
 
 // ─── GET /config/sections ────────────────────────────────────────────────────
-router.get('/config/sections', (_req, res) => {
-    res.json(SECTION_METADATA);
+// Augment static metadata with dynamic lab:* subsystem parameters discovered
+// from the assignment cache. Lab subsystems appear when labs register and get
+// model assignments, making their inference params configurable in the GUI.
+router.get('/config/sections', async (_req, res) => {
+    try {
+        const assignments = await getSubsystemAssignments();
+        const labSubs = Object.keys(assignments).filter(s => s.startsWith('lab:'));
+        if (labSubs.length > 0) {
+            // Look up display names from the lab registry
+            const { listLabs } = await import('../lab/registry.js');
+            const labs = await listLabs();
+            const labIdToName = new Map(labs.map(l => [l.id, l.name]));
+            const labInfos: LabSubsystemInfo[] = labSubs.map(sub => {
+                const labId = sub.replace('lab:', '');
+                return { subsystem: sub, displayName: labIdToName.get(labId) || labId };
+            });
+            res.json(augmentWithLabSubsystems(SECTION_METADATA, labInfos));
+        } else {
+            res.json(SECTION_METADATA);
+        }
+    } catch {
+        // Fallback to static metadata if assignment cache isn't ready
+        res.json(SECTION_METADATA);
+    }
 });
 
 // ─── GET /config/defaults/:sectionId ─────────────────────────────────────────

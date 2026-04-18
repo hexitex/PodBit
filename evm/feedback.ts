@@ -188,7 +188,9 @@ export async function recordVerification(result: VerificationResult, options?: R
                  options?.deferConsequences ? 'pending_review' : null,
                  execId],
             );
-        } catch { /* non-fatal */ }
+        } catch (e: any) {
+            console.error(`[evm] Traceability metadata update failed for ${execId}: ${e.message}`);
+        }
     }
 
     // 1c. Build and store evidence items alongside the execution record
