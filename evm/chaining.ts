@@ -402,7 +402,7 @@ export async function applyDeferredConsequences(
 
     if (weightDelta !== 0) {
         const weightCeiling = config.engine.weightCeiling ?? 3.0;
-        const weightFloor = config.feedback?.weightFloor ?? 0.1;
+        const weightFloor = config.engine?.weightFloor ?? 0.05;
         const newWeight = Math.max(weightFloor, Math.min(weightCeiling, weightBefore + weightDelta));
 
         await query(`UPDATE nodes SET weight = $1, verification_status = 'completed', updated_at = datetime('now') WHERE id = $2`,

@@ -21,7 +21,7 @@ export const EMBEDDING_EVAL_SECTIONS: Record<string, SectionMeta> = {
         behavior: `When live (shadow mode OFF), embedding eval replaces the LLM consultant entirely — zero LLM cost per evaluation. Each node is checked against its parents using instruction-aware embeddings. Binary outcome:
 
 FAIL (any check score exceeds its threshold) → ARCHIVE the node
-PASS (all check scores below thresholds) → BOOST the node (weight × Boost Multiplier)
+PASS (all check scores below thresholds) → BOOST the node (weight × Boost Weight Multiplier from the Population Control section)
 
 Errors (embedding service down, model not responding) fail-open — the node passes.
 
@@ -48,15 +48,6 @@ CROSS-PARAMETER CONSTRAINTS (auto-enforced on save):
                 description: 'ON = embedding checks log results only, LLM consultant makes the actual decision (use for calibration). OFF = embedding checks decide directly: FAIL→archive, PASS→boost — no LLM call at all. Start with ON and check the Embedding Eval calibration page to see how scores distribute before switching to OFF.',
                 min: 0, max: 1, step: 1, default: 1,
                 configPath: ['embeddingEval', 'shadowMode'],
-                tier: 'basic',
-            },
-            // ── Outcome ──────────────────────────────────────────────────
-            {
-                key: 'eeBoostMultiplier',
-                label: 'PASS → Boost Multiplier',
-                description: 'Weight multiplier applied when all embedding checks PASS. Multiplied against the node\'s current weight — e.g., 1.1 means a node with weight 1.0 becomes 1.1 after passing. Weight is clamped to the engine weight ceiling. Set to 1.0 if you only want embedding eval to archive bad nodes without rewarding good ones. FAIL always archives — no multiplier needed.',
-                min: 1.0, max: 1.5, step: 0.05, default: 1.1,
-                configPath: ['embeddingEval', 'boostMultiplier'],
                 tier: 'basic',
             },
             // ── Mode 8: Self-Reinforcing Drift → Archive ──────────────

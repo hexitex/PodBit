@@ -116,6 +116,14 @@ export const SYNTHESIS_SECTIONS: Record<string, SectionMeta> = {
                 configPath: ['engine', 'weightDecay'],
                 tier: 'advanced',
             },
+            {
+                key: 'weightFloor',
+                label: 'Weight Floor',
+                description: 'Global minimum weight any node can have. All weight modifications (decay, feedback, population control, lab verification, question degradation) clamp to this floor. At 0.05 (default), nodes can sink very low but never reach zero - they retain a small chance of being rediscovered. At 0.1, nodes retain more presence even after heavy penalties. At 0.01, near-zero weights are allowed - effectively removing penalized nodes from sampling without archiving them. This is the single weight floor used across all subsystems.',
+                min: 0.01, max: 0.5, step: 0.01, default: 0.05,
+                configPath: ['engine', 'weightFloor'],
+                tier: 'intermediate',
+            },
         ],
         presets: [
             { label: 'Favor Concrete', intent: 'Strongly reward knowledge-trajectory content by increasing knowledge weight and parent boost while reducing abstraction weight' },
@@ -153,7 +161,7 @@ export const SYNTHESIS_SECTIONS: Record<string, SectionMeta> = {
             {
                 key: 'minSpecificity',
                 label: 'Min Specificity',
-                description: 'Minimum per-word specificity density for voiced content — below this, the output is rejected. Specificity is a weighted count of concrete markers (numbers, technical terms, named entities, units) divided by word count. At 0.05 (default), content needs at least a few concrete markers per paragraph. At 0.15, content needs roughly one specific term every 6-7 words — only highly technical output passes. At 0.30, extremely strict — only dense technical writing survives.',
+                description: 'Minimum per-word specificity density for voiced content — below this, the output is rejected. Also serves as the post-voicing quality floor in the Synthesis Quality Gates section. Specificity is a weighted count of concrete markers (numbers, technical terms, named entities, units) divided by word count. At 0.05 (default), content needs at least a few concrete markers per paragraph. At 0.15, content needs roughly one specific term every 6-7 words — only highly technical output passes. At 0.30, extremely strict — only dense technical writing survives.',
                 min: 0, max: 0.5, step: 0.01, default: 0.05,
                 configPath: ['engine', 'minSpecificity'],
                 tier: 'basic',
@@ -208,7 +216,7 @@ export const SYNTHESIS_SECTIONS: Record<string, SectionMeta> = {
         tier: 'basic',
         title: 'Synthesis Quality Gates',
         description: 'Filters that prevent low-quality synthesis engine output',
-        behavior: `After the synthesis engine voices a synthesis, it must pass quality gates before becoming a node. The junk filter compares the voiced content against previously junked nodes — if similarity exceeds the threshold, the output is rejected. synthesisMinSpecificity sets a minimum specificity score. Higher junk threshold = more permissive. Higher min specificity = stricter quality requirements.`,
+        behavior: `After the synthesis engine voices a synthesis, it must pass quality gates before becoming a node. The junk filter compares the voiced content against previously junked nodes — if similarity exceeds the threshold, the output is rejected. The minimum specificity floor is controlled by the Min Specificity parameter in the Similarity & Specificity section. Higher junk threshold = more permissive.`,
         parameters: [
             {
                 key: 'synthesisJunkThreshold',
@@ -217,14 +225,6 @@ export const SYNTHESIS_SECTIONS: Record<string, SectionMeta> = {
                 min: 0.5, max: 0.95, step: 0.05, default: 0.80,
                 configPath: ['engine', 'junkThreshold'],
                 tier: 'basic',
-            },
-            {
-                key: 'synthesisMinSpecificity',
-                label: 'Min Synthesis Specificity',
-                description: 'Minimum per-word specificity density for synthesis output before it enters the graph. At 0.05 (default), content needs at least a few concrete markers per paragraph. At 0.15, only content with strong technical density passes. At 0.01, almost everything passes — only completely empty platitudes are rejected.',
-                min: 0, max: 0.5, step: 0.01, default: 0.05,
-                configPath: ['engine', 'minSpecificity'],
-                tier: 'intermediate',
             },
         ],
         presets: [

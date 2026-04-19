@@ -577,11 +577,12 @@ async function updateNodeSalience(nodeId: string, delta: number) {
  */
 async function updateNodeWeight(nodeId: string, delta: number) {
     const ceiling = config.weightCeiling ?? 3.0;
+    const floor = appConfig.engine.weightFloor ?? 0.05;
     return query(`
         UPDATE nodes
-        SET weight = MIN($3, weight + $2)
+        SET weight = MAX($4, MIN($3, weight + $2))
         WHERE id = $1
-    `, [nodeId, delta, ceiling]);
+    `, [nodeId, delta, ceiling, floor]);
 }
 
 /**
@@ -621,24 +622,25 @@ async function decayAll() {
     `, [rescueSalience, rescueThreshold, appConfig.magicNumbers.salienceRescueDays]);
 
     // Decay weights toward baseline (replaces stored function decay_weights)
+    const floor = appConfig.engine.weightFloor ?? 0.05;
     await query(`
         UPDATE nodes
-        SET weight = weight * $1
+        SET weight = MAX($2, weight * $1)
         WHERE archived = FALSE AND lab_status IS NULL
-    `, [config.weightDecay]);
+    `, [config.weightDecay, floor]);
 
     // GA-inspired: extra decay for synthesis/voiced nodes never used by context engine
     if (appConfig.engine.synthesisDecayEnabled) {
         const graceDays = appConfig.engine.synthesisDecayGraceDays;
         const multiplier = appConfig.engine.synthesisDecayMultiplier;
         await query(`
-            UPDATE nodes SET weight = weight * $1
+            UPDATE nodes SET weight = MAX($3, weight * $1)
             WHERE archived = FALSE
               AND lab_status IS NULL
               AND node_type IN ('synthesis', 'voiced')
               AND created_at < datetime('now', '-' || $2 || ' days')
               AND id NOT IN (SELECT node_id FROM session_node_usage WHERE times_used > 0)
-        `, [multiplier, graceDays]);
+        `, [multiplier, graceDays, floor]);
     }
 }
 

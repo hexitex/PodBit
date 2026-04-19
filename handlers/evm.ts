@@ -680,7 +680,7 @@ async function handleDecomposeApply(params: Record<string, any>) {
     }
 
     // Downgrade original node weight
-    const weightFloor = config.feedback?.weightFloor ?? 0.1;
+    const weightFloor = config.engine?.weightFloor ?? 0.05;
     const newWeight = Math.max(weightFloor, node.weight + decomposeConfig.weightDowngrade);
     await query('UPDATE nodes SET weight = $1 WHERE id = $2', [newWeight, nodeId]);
 

@@ -42,6 +42,8 @@ const config = {
     get parentBoost() { return appConfig.engine.parentBoost; },
     /** Maximum weight value a node can reach. */
     get weightCeiling() { return appConfig.engine.weightCeiling; },
+    /** Global minimum weight any node can have. */
+    get weightFloor() { return appConfig.engine.weightFloor; },
 
     // ── Cycle timing ──────────────────────────────────────────────────
     /** Delay in milliseconds between synthesis cycles. */

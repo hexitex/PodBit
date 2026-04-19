@@ -145,7 +145,6 @@ export const AXIS_PARAM_TERMS = {
     { configPath: ['contextEngine', 'feedback', 'maxBoostPerTurn'], min: 0.0, max: 0.5, weight: 0.04, inverted: false, type: 'continuous', defaultValue: 0.1, label: 'Context Max Boost/Turn', sectionId: 'context_engine', tier: 'advanced' },
     { configPath: ['populationControl', 'boostWeight'], min: 1.0, max: 1.5, weight: 0.04, inverted: false, type: 'continuous', defaultValue: 1.1, label: 'Population Boost Multiplier', sectionId: 'population_control', tier: 'intermediate' },
     { configPath: ['feedback', 'usefulWeight'], min: 0.01, max: 1.0, weight: 0.04, inverted: false, type: 'continuous', defaultValue: 0.2, label: 'Useful Feedback Boost', sectionId: 'feedback_weights', tier: 'intermediate' },
-    { configPath: ['embeddingEval', 'boostMultiplier'], min: 1.0, max: 1.5, weight: 0.03, inverted: false, type: 'continuous', defaultValue: 1.1, label: 'Embedding Eval Boost', sectionId: 'embedding_eval', tier: 'intermediate' },
   ],
 
   // --- Verification: how much validation and evidence-checking is active ---

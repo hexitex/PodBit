@@ -48,6 +48,11 @@ describe('config defaults', () => {
     it('nodes.defaultWeight is positive', () => {
       expect(config.nodes.defaultWeight).toBeGreaterThan(0);
     });
+
+    it('engine.weightFloor is positive and below weightCeiling', () => {
+      expect(config.engine.weightFloor).toBeGreaterThan(0);
+      expect(config.engine.weightFloor).toBeLessThan(config.engine.weightCeiling);
+    });
   });
 
   describe('labVerify config', () => {

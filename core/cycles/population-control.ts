@@ -146,13 +146,13 @@ async function evaluateNode(node: ResonanceNode, cfg: typeof appConfig.populatio
                     reasoning = `Embedding eval failed: ${failModes}`;
                 } else {
                     action = 'boost';
-                    newWeight = currentWeight * (eeCfg.boostMultiplier ?? 1.1);
+                    newWeight = currentWeight * (cfg.boostWeight ?? 1.1);
                     reasoning = 'Embedding eval: all checks passed';
                 }
 
                 // Clamp weight
                 const weightCeiling = appConfig.engine?.weightCeiling ?? 3.0;
-                const weightFloor = appConfig.feedback?.weightFloor ?? 0.1;
+                const weightFloor = appConfig.engine?.weightFloor ?? 0.05;
                 newWeight = Math.max(weightFloor, Math.min(weightCeiling, newWeight));
 
                 if (action === 'archive') {
@@ -221,7 +221,7 @@ async function evaluateNode(node: ResonanceNode, cfg: typeof appConfig.populatio
 
     // Clamp weight
     const weightCeiling = appConfig.engine?.weightCeiling ?? 3.0;
-    const weightFloor = appConfig.feedback?.weightFloor ?? 0.1;
+    const weightFloor = appConfig.engine?.weightFloor ?? 0.05;
     newWeight = Math.max(weightFloor, Math.min(weightCeiling, newWeight));
 
     if (action === 'archive') {

@@ -4,12 +4,15 @@
  */
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
-const mockConfig = {
+const mockConfig: any = {
     feedback: {
         usefulWeight: 0.2,
         notUsefulWeight: -0.1,
         harmfulWeight: -0.3,
         weightFloor: 0.1,
+    },
+    engine: {
+        weightFloor: 0.05,
     },
 };
 

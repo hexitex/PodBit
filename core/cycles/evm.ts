@@ -35,12 +35,14 @@ async function runEvmCycleSingle(): Promise<void> {
 
     // Find unverified candidates.
     //
-    // Seeds are excluded UNLESS they have at least one derivative child (an outgoing edge
-    // where the seed is the source). Rationale: a pure seed proves its value by being
-    // generative — synthesis using it to spawn something downstream. Verifying a childless
-    // seed has no test surface and ends up routed to critique-lab, which is LLM-on-LLM
-    // weight laundering. Once a seed has children, the cycle can test it normally because
-    // the synthesis has produced something with a real testable mechanism.
+    // Seeds are excluded entirely -- they are user-contributed input, not novel
+    // claims the system generated. The autonomous cycle should focus on verifying
+    // the system's own output (synthesis, voiced, breakthrough). Seeds can still
+    // be manually sent to the lab via the GUI "Send to Lab" button.
+    //
+    // Candidates must have parents (incoming edges where the node is the target),
+    // meaning they are products of the synthesis pipeline. This ensures only
+    // derived knowledge is autonomously verified, not raw input.
     const evmCandidates = await query(`
         SELECT n.id, n.content, n.weight, n.domain, n.node_type
         FROM nodes n
@@ -57,11 +59,8 @@ async function runEvmCycleSingle(): Promise<void> {
         WHERE n.archived = FALSE
           AND n.lab_status IS NULL
           AND n.weight >= $1
-          AND n.node_type NOT IN ('raw', 'question')
-          AND (
-              n.node_type != 'seed'
-              OR EXISTS (SELECT 1 FROM edges e WHERE e.source_id = n.id)
-          )
+          AND n.node_type NOT IN ('raw', 'question', 'seed')
+          AND EXISTS (SELECT 1 FROM edges e WHERE e.target_id = n.id)
           AND (n.verification_status IS NULL OR n.verification_status IN ('failed', 'skipped'))
           AND retried.node_id IS NULL
           AND ee3.node_id IS NULL

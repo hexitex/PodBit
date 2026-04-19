@@ -31,7 +31,7 @@ jest.unstable_mockModule('../../db.js', () => ({
 jest.unstable_mockModule('../../config.js', () => ({
     config: {
         populationControl: mockCfg,
-        engine: { weightCeiling: 3.0 },
+        engine: { weightCeiling: 3.0, weightFloor: 0.05 },
         feedback: { weightFloor: 0.1 },
     },
 }));

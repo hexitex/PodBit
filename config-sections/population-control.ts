@@ -86,7 +86,7 @@ Cross-parameter constraint (auto-enforced): Pass Threshold must be > Archive Thr
             {
                 key: 'pcBoostWeight',
                 label: 'Boost Weight Multiplier',
-                description: 'Weight multiplier when LLM consultant scores at or above Pass Threshold. At 1.1 (default), a passing node with weight 1.0 becomes 1.1 — modest reward. At 1.3, weight jumps to 1.3 — strong reward, passing nodes quickly climb toward the weight ceiling. At 1.0, passing has no weight effect — population control only punishes, never rewards. Weight is clamped to the engine weight ceiling (default 3.0). Only used when Embedding Eval is disabled or in shadow mode.',
+                description: 'Weight multiplier applied when a node passes quality evaluation — used by both the LLM consultant (score >= Pass Threshold) and Embedding Eval live mode (all checks pass). At 1.1 (default), a passing node with weight 1.0 becomes 1.1 — modest reward. At 1.3, weight jumps to 1.3 — strong reward, passing nodes quickly climb toward the weight ceiling. At 1.0, passing has no weight effect — population control only punishes, never rewards. Weight is clamped to the engine weight ceiling (default 3.0).',
                 min: 1.0, max: 1.5, step: 0.05, default: 1.1,
                 configPath: ['populationControl', 'boostWeight'],
             },

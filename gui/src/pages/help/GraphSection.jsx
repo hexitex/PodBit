@@ -109,21 +109,89 @@ function GraphSection() {
         <div className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg p-4">
           <h3 className="font-semibold text-sm mb-3 text-gray-900 dark:text-gray-200">Weight (Importance)</h3>
           <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-            Weight represents accumulated importance (starts at 1.0, unbounded). Higher weight means the node is more valuable.
+            Weight represents accumulated importance. Higher weight means a node is sampled more often for synthesis and has more influence in the graph. All weights are clamped between the global <strong>weight floor</strong> (default 0.05) and <strong>weight ceiling</strong> (default 3.0).
           </p>
-          <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-            <li>All nodes start at 1.0 (default)</li>
-            <li>Breakthroughs get a weight floor of 1.5 (keeps current weight if already higher)</li>
-            <li>Breakthrough parents gain +0.15, grandparents +0.05</li>
-            <li>Possible nodes at 1.0, promoted to at least 1.5 as breakthrough</li>
-            <li>Questions start at 1.0 (from tensions)</li>
-            <li>Raw nodes at 1.0 (excluded from synthesis cycles)</li>
-            <li>Decays slowly (x0.999 every 10 cycles)</li>
-          </ul>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            Weight and salience are independent signals with different timescales. Salience decays quickly (half-life ~35 min) and controls short-term sampling probability. Weight decays slowly (half-life ~2.4 days) and controls long-term importance.
+          </p>
         </div>
         <div className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg p-4">
           <h3 className="font-semibold text-sm mb-3 text-gray-900 dark:text-gray-200">Salience (Attention)</h3>
           <SalienceDiagram />
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg p-4">
+        <h3 className="font-semibold text-sm mb-3 text-gray-900 dark:text-gray-200">Weight Dynamics - All Modification Pathways</h3>
+        <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+          12 independent systems modify node weight at different lifecycle stages. A node's weight at any moment is the cumulative result of all pathways that have acted on it. All config parameters are tunable via the Algorithm Parameters page.
+        </p>
+        <div className="grid grid-cols-3 gap-2 text-xs">
+          <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 rounded p-2">
+            <p className="font-semibold text-emerald-700 dark:text-emerald-300 mb-1">1. Initial Weight</p>
+            <p className="text-emerald-600 dark:text-emerald-400">Set at creation. Knowledge nodes: 1.0, abstraction: 0.1, seeds: 1.0, breakthroughs: 1.5</p>
+            <p className="text-emerald-500 dark:text-emerald-500 mt-1">Config: Weight Dynamics</p>
+          </div>
+          <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 rounded p-2">
+            <p className="font-semibold text-emerald-700 dark:text-emerald-300 mb-1">2. Fitness Modifier</p>
+            <p className="text-emerald-600 dark:text-emerald-400">At creation: weight x0.85-1.15 based on dissimilarity, novelty, and specificity scores</p>
+            <p className="text-emerald-500 dark:text-emerald-500 mt-1">Config: Fitness Modifier</p>
+          </div>
+          <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 rounded p-2">
+            <p className="font-semibold text-emerald-700 dark:text-emerald-300 mb-1">3. Parent Boost</p>
+            <p className="text-emerald-600 dark:text-emerald-400">When a knowledge child is created: parent weight +0.05 (default). Rewards productive nodes</p>
+            <p className="text-emerald-500 dark:text-emerald-500 mt-1">Config: Weight Dynamics</p>
+          </div>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded p-2">
+            <p className="font-semibold text-red-700 dark:text-red-300 mb-1">4. Weight Decay</p>
+            <p className="text-red-600 dark:text-red-400">Every 10 cycles: weight x0.9999. Prevents permanent dominance. Half-life ~2.4 days</p>
+            <p className="text-red-500 dark:text-red-500 mt-1">Config: Weight Dynamics</p>
+          </div>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded p-2">
+            <p className="font-semibold text-red-700 dark:text-red-300 mb-1">5. Synthesis Decay</p>
+            <p className="text-red-600 dark:text-red-400">After 7-day grace: unreferenced synthesis nodes get extra x0.95 decay per pass (~50x faster)</p>
+            <p className="text-red-500 dark:text-red-500 mt-1">Config: GA Features</p>
+          </div>
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded p-2">
+            <p className="font-semibold text-blue-700 dark:text-blue-300 mb-1">6. User Feedback</p>
+            <p className="text-blue-600 dark:text-blue-400">Useful: +0.2, not useful: -0.1, harmful: -0.3. Asymmetric to favor positive signal</p>
+            <p className="text-blue-500 dark:text-blue-500 mt-1">Config: Feedback Weights</p>
+          </div>
+          <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded p-2">
+            <p className="font-semibold text-purple-700 dark:text-purple-300 mb-1">7. Population Control</p>
+            <p className="text-purple-600 dark:text-purple-400">Every 120s: LLM or embedding eval scores nodes. Boost (x1.1), demote (x0.5), or archive</p>
+            <p className="text-purple-500 dark:text-purple-500 mt-1">Config: Population Control / Embedding Eval</p>
+          </div>
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded p-2">
+            <p className="font-semibold text-amber-700 dark:text-amber-300 mb-1">8. Lab Verification</p>
+            <p className="text-amber-600 dark:text-amber-400">Supported: +0.15. Refuted: -0.05 + salience cap. Disproved with high confidence: archive</p>
+            <p className="text-amber-500 dark:text-amber-500 mt-1">Config: Lab Verification</p>
+          </div>
+          <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 rounded p-2">
+            <p className="font-semibold text-emerald-700 dark:text-emerald-300 mb-1">9. Breakthrough Promotion</p>
+            <p className="text-emerald-600 dark:text-emerald-400">Validated nodes promoted to weight 1.5. Parents +0.293, grandparents +0.177</p>
+            <p className="text-emerald-500 dark:text-emerald-500 mt-1">Config: Validation</p>
+          </div>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded p-2">
+            <p className="font-semibold text-red-700 dark:text-red-300 mb-1">10. Question Degradation</p>
+            <p className="text-red-600 dark:text-red-400">Unanswered questions lose -0.25 per failed attempt, clamped to the global weight floor</p>
+            <p className="text-red-500 dark:text-red-500 mt-1">Config: Question Cycle</p>
+          </div>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded p-2">
+            <p className="font-semibold text-red-700 dark:text-red-300 mb-1">11. Dedup Attractor Decay</p>
+            <p className="text-red-600 dark:text-red-400">Nodes repeatedly matched as duplicate targets: -0.02 per match. Prevents generic gravity wells</p>
+            <p className="text-red-500 dark:text-red-500 mt-1">Config: Dedup Settings</p>
+          </div>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded p-2">
+            <p className="font-semibold text-red-700 dark:text-red-300 mb-1">12. Lab Decompose</p>
+            <p className="text-red-600 dark:text-red-400">When a claim is decomposed into facts + questions: original node -0.20 weight downgrade</p>
+            <p className="text-red-500 dark:text-red-500 mt-1">Config: Lab Verification</p>
+          </div>
+        </div>
+        <div className="mt-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded p-2">
+          <p className="text-xs text-gray-600 dark:text-gray-400">
+            <strong>Global bounds:</strong> All weight modifications are clamped to the <strong>weight floor</strong> (default 0.05, configurable in Weight Dynamics) and <strong>weight ceiling</strong> (default 3.0). No node can go below the floor or above the ceiling regardless of which pathway modifies it.
+          </p>
         </div>
       </div>
 

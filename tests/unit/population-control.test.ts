@@ -30,7 +30,6 @@ const mockPopulationCfg = {
 const mockEmbeddingEvalCfg = {
     enabled: false,
     shadowMode: true,
-    boostMultiplier: 1.1,
 };
 
 jest.unstable_mockModule('../../db.js', () => ({
@@ -42,7 +41,7 @@ jest.unstable_mockModule('../../config.js', () => ({
     config: {
         populationControl: mockPopulationCfg,
         embeddingEval: mockEmbeddingEvalCfg,
-        engine: { weightCeiling: 3.0 },
+        engine: { weightCeiling: 3.0, weightFloor: 0.05 },
         feedback: { weightFloor: 0.1 },
     },
 }));
@@ -83,7 +82,6 @@ beforeEach(() => {
     Object.assign(mockEmbeddingEvalCfg, {
         enabled: false,
         shadowMode: true,
-        boostMultiplier: 1.1,
     });
     mockRunComprehensiveConsultant.mockResolvedValue({
         composite: 5.0, reasoning: 'good', accept: true,

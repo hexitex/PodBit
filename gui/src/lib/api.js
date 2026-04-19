@@ -364,6 +364,7 @@ export const evm = {
   queue: (params) => api.get('/lab/queue', { params }).then((r) => r.data),
   queueStats: () => api.get('/lab/queue/stats').then((r) => r.data),
   cancelQueue: (id) => api.delete(`/lab/queue/${id}`).then((r) => r.data),
+  enqueue: (nodeId, opts = {}) => api.post(`/lab/queue/${nodeId}`, { priority: opts.priority, guidance: opts.guidance, queuedBy: 'manual' }).then((r) => r.data),
 };
 
 // Elite Pool API

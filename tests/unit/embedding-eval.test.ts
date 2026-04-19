@@ -41,7 +41,6 @@ const embeddingEvalCfg = {
     toxicParentThreshold: 0.80,
     toxicParentMinChildren: 3,
     toxicParentMinDomains: 2,
-    boostMultiplier: 1.1,
     instructStructuralClaim: 'Represent the structural claim of this text',
     instructMechanicalProcess: 'Represent the mechanical process described',
     instructQuantitativeClaims: 'Represent the quantitative claims made',

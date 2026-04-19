@@ -266,7 +266,7 @@ export async function recordVerification(result: VerificationResult, options?: R
 
         if (weightDelta !== 0) {
             const weightCeiling = config.engine.weightCeiling ?? 3.0;
-            const weightFloor = config.feedback?.weightFloor ?? 0.1;
+            const weightFloor = config.engine?.weightFloor ?? 0.05;
             const newWeight = Math.max(weightFloor, Math.min(weightCeiling, result.weightBefore + weightDelta));
 
             await query(`UPDATE nodes SET weight = $1 WHERE id = $2`, [newWeight, result.nodeId]);
@@ -390,7 +390,7 @@ export async function recordMultiClaimAggregate(
 
         if (weightDelta !== 0) {
             const weightCeiling = config.engine.weightCeiling ?? 3.0;
-            const weightFloor = config.feedback?.weightFloor ?? 0.1;
+            const weightFloor = config.engine?.weightFloor ?? 0.05;
             const newWeight = Math.max(weightFloor, Math.min(weightCeiling, aggregate.weightBefore + weightDelta));
 
             await query(`UPDATE nodes SET weight = $1 WHERE id = $2`, [newWeight, nodeId]);

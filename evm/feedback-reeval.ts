@@ -180,7 +180,7 @@ export async function reevaluateStoredResults(options: {
                         }
 
                         const weightCeiling = config.engine.weightCeiling ?? 3.0;
-                        const weightFloor = config.feedback?.weightFloor ?? 0.1;
+                        const weightFloor = config.engine?.weightFloor ?? 0.05;
                         const newWeight = Math.max(weightFloor, Math.min(weightCeiling, row.weight_before + weightDelta));
 
                         change.oldWeight = row.current_weight;

@@ -116,14 +116,7 @@ export const ADVANCED_SECTIONS: Record<string, SectionMeta> = {
                 configPath: ['feedback', 'harmfulWeight'],
                 tier: 'advanced',
             },
-            {
-                key: 'weightFloor',
-                label: 'Weight Floor',
-                description: 'Minimum weight a node can reach. Slide right → nodes retain more weight even after heavy downvoting. Slide left → nodes can sink closer to zero. Safe range: 0.05–0.2.',
-                min: 0, max: 0.5, step: 0.01, default: 0.1,
-                configPath: ['feedback', 'weightFloor'],
-                tier: 'advanced',
-            },
+            // Weight floor moved to Weight Dynamics section (engine.weightFloor) — single global floor for all subsystems
         ],
         presets: [
             { label: 'Aggressive Cleanup', intent: 'Strong negative weights so bad nodes decay fast. Not-useful at -0.25, harmful at -0.5. Low weight floor.' },

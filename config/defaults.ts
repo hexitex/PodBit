@@ -260,6 +260,7 @@ export const config: PodbitConfig = {
     weightDecay: parseFloat(process.env.WEIGHT_DECAY!) || 0.9999,
     parentBoost: parseFloat(process.env.PARENT_BOOST!) || 0.05,
     weightCeiling: parseFloat(process.env.WEIGHT_CEILING!) || 3.0,
+    weightFloor: parseFloat(process.env.WEIGHT_FLOOR!) || 0.05,
     cycleDelayMs: parseInt(process.env.CYCLE_DELAY_MS!, 10) || 2100,
     decayEveryNCycles: parseInt(process.env.DECAY_EVERY_N_CYCLES!, 10) || 10,
     junkThreshold: parseFloat(process.env.SYNTHESIS_JUNK_THRESHOLD!) || 0.75,
@@ -1152,9 +1153,6 @@ export const config: PodbitConfig = {
     toxicParentThreshold: 0.80,
     toxicParentMinChildren: 3,
     toxicParentMinDomains: 3,
-    // Outcome weight multiplier (used in live mode when embedding eval replaces LLM consultant)
-    // FAIL → archive (no multiplier needed). PASS → boost by this multiplier.
-    boostMultiplier: 1.1,
     // Instruction prefixes (Qwen3-Embedding format: "Instruct: ...\nQuery:")
     instructStructuralClaim: 'Represent the core structural claim of this text, ignoring domain-specific terminology',
     instructMechanicalProcess: 'Represent the mechanical process or mechanism described, not the vocabulary used',

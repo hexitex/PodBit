@@ -4,7 +4,7 @@ import {
   ChevronRight, ChevronUp, ChevronDown, Zap, Layers, Trash2, Ban,
   GitBranch, ThumbsUp, ThumbsDown, AlertTriangle, Loader2, ArrowLeft,
   ArrowDown, History, Pencil, EyeOff, Eye, FileText, Tag, Key,
-  CheckCircle, HelpCircle, ShieldCheck, XCircle, Clock, Copy,
+  CheckCircle, HelpCircle, ShieldCheck, XCircle, Clock, Copy, Send,
 } from 'lucide-react';
 import api, { resonance, feedback, evm } from '../../lib/api';
 import { formatLocal, formatLocalDate } from '../../lib/datetime';
@@ -351,6 +351,18 @@ export default function NodeDetail({ node, onClose, onSelectNode, onShowTree, do
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['resonance'] }),
   });
 
+  const enqueueMutation = useMutation({
+    mutationFn: () => evm.enqueue(node.id),
+    onSuccess: (data) => {
+      if (data?.error) { setActionError(`Lab queue: ${data.error}`); setTimeout(() => setActionError(null), 5000); return; }
+      if (data?.existing) { setActionError('Already in queue'); setTimeout(() => setActionError(null), 3000); return; }
+      setActionError(null);
+      queryClient.invalidateQueries({ queryKey: ['resonance'] });
+      queryClient.invalidateQueries({ queryKey: ['evm', 'history', node.id] });
+    },
+    onError: (err) => { setActionError(`Lab queue failed: ${err.response?.data?.error || err.message}`); setTimeout(() => setActionError(null), 5000); },
+  });
+
   const editContentMutation = useMutation({
     mutationFn: (content) => resonance.editContent(node.id, { content, contributor: 'gui:user' }),
     onSuccess: () => {
@@ -649,57 +661,65 @@ export default function NodeDetail({ node, onClose, onSelectNode, onShowTree, do
         )}
 
         {/* Lab Verification */}
-        {(n.verification_status || evmHistory?.count > 0) && (
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs text-gray-500 dark:text-gray-400 font-medium flex items-center gap-1.5">
-                <ShieldCheck size={12} /> Lab Verification
-              </label>
-              {evmHistory?.count > 0 && (
-                <span className="text-xs text-gray-400 dark:text-gray-500">{evmHistory.count} run{evmHistory.count !== 1 ? 's' : ''}</span>
-              )}
-            </div>
-            {n.verification_status && (
-              <div className={`flex items-center gap-2 rounded p-2 mb-2 ${
-                n.verification_status === 'completed' && n.verification_score > 0 ? 'bg-green-50 dark:bg-green-900/20'
-                  : n.verification_status === 'completed' ? 'bg-red-50 dark:bg-red-900/20'
-                  : n.verification_status === 'failed' ? 'bg-yellow-50 dark:bg-yellow-900/20'
-                  : 'bg-gray-50 dark:bg-gray-800'
-              }`}>
-                {n.verification_status === 'completed' && n.verification_score > 0 ? <CheckCircle size={14} className="text-green-500" />
-                  : n.verification_status === 'completed' ? <XCircle size={14} className="text-red-500" />
-                  : n.verification_status === 'failed' ? <AlertTriangle size={14} className="text-yellow-500" />
-                  : <Clock size={14} className="text-gray-400" />}
-                <div className="flex-1">
-                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300 capitalize">{n.verification_status}</span>
-                  {n.verification_score != null && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">Score: {(n.verification_score * 100).toFixed(0)}%</span>
-                  )}
-                </div>
-              </div>
-            )}
-            {evmHistory?.executions?.length > 0 && (
-              <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                {evmHistory.executions.map((exec) => {
-                  const outcome = getOutcome(exec);
-                  const cfg = OUTCOME_CONFIG[outcome];
-                  const Icon = cfg.icon;
-                  return (
-                    <div
-                      key={exec.id}
-                      className="flex items-center gap-2 text-xs bg-gray-50 dark:bg-gray-800 rounded p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                      onClick={() => setSelectedVerificationExec({ ...exec, node_content: n.content, node_domain: n.domain })}
-                    >
-                      <Icon size={12} className={`shrink-0 ${cfg.text}`} />
-                      <span className="text-gray-600 dark:text-gray-400 truncate flex-1">{exec.hypothesis || exec.error || cfg.label}</span>
-                      {exec.confidence != null && <span className="text-gray-400 dark:text-gray-500 shrink-0">{(exec.confidence * 100).toFixed(0)}%</span>}
-                    </div>
-                  );
-                })}
-              </div>
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs text-gray-500 dark:text-gray-400 font-medium flex items-center gap-1.5">
+              <ShieldCheck size={12} /> Lab Verification
+            </label>
+            {evmHistory?.count > 0 && (
+              <span className="text-xs text-gray-400 dark:text-gray-500">{evmHistory.count} run{evmHistory.count !== 1 ? 's' : ''}</span>
             )}
           </div>
-        )}
+          {n.verification_status && (
+            <div className={`flex items-center gap-2 rounded p-2 mb-2 ${
+              n.verification_status === 'completed' && n.verification_score > 0 ? 'bg-green-50 dark:bg-green-900/20'
+                : n.verification_status === 'completed' ? 'bg-red-50 dark:bg-red-900/20'
+                : n.verification_status === 'failed' ? 'bg-yellow-50 dark:bg-yellow-900/20'
+                : 'bg-gray-50 dark:bg-gray-800'
+            }`}>
+              {n.verification_status === 'completed' && n.verification_score > 0 ? <CheckCircle size={14} className="text-green-500" />
+                : n.verification_status === 'completed' ? <XCircle size={14} className="text-red-500" />
+                : n.verification_status === 'failed' ? <AlertTriangle size={14} className="text-yellow-500" />
+                : <Clock size={14} className="text-gray-400" />}
+              <div className="flex-1">
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 capitalize">{n.verification_status}</span>
+                {n.verification_score != null && (
+                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">Score: {(n.verification_score * 100).toFixed(0)}%</span>
+                )}
+              </div>
+            </div>
+          )}
+          {evmHistory?.executions?.length > 0 && (
+            <div className="space-y-1.5 max-h-48 overflow-y-auto mb-2">
+              {evmHistory.executions.map((exec) => {
+                const outcome = getOutcome(exec);
+                const cfg = OUTCOME_CONFIG[outcome];
+                const Icon = cfg.icon;
+                return (
+                  <div
+                    key={exec.id}
+                    className="flex items-center gap-2 text-xs bg-gray-50 dark:bg-gray-800 rounded p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    onClick={() => setSelectedVerificationExec({ ...exec, node_content: n.content, node_domain: n.domain })}
+                  >
+                    <Icon size={12} className={`shrink-0 ${cfg.text}`} />
+                    <span className="text-gray-600 dark:text-gray-400 truncate flex-1">{exec.hypothesis || exec.error || cfg.label}</span>
+                    {exec.confidence != null && <span className="text-gray-400 dark:text-gray-500 shrink-0">{(exec.confidence * 100).toFixed(0)}%</span>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {n.verification_status !== 'in_queue' && n.verification_status !== 'pending_review' && (
+            <button
+              onClick={() => enqueueMutation.mutate()}
+              disabled={enqueueMutation.isPending}
+              className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
+            >
+              {enqueueMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+              Send to Lab
+            </button>
+          )}
+        </div>
 
         {/* Lineage Explorer */}
         <div className="border-t pt-4">

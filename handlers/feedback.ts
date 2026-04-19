@@ -25,7 +25,7 @@ function getWeightAdjustments(): Record<FeedbackRating, number> {
 
 /** Minimum weight a node can have after feedback; prevents nodes from being driven to zero. */
 function getWeightFloor(): number {
-    return appConfig.feedback?.weightFloor ?? 0.1;
+    return appConfig.engine?.weightFloor ?? 0.05;
 }
 
 /**

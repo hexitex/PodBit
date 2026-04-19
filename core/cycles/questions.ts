@@ -128,7 +128,7 @@ async function runQuestionCycleSingle(): Promise<void> {
 
         if (contextNodes.length === 0) {
             console.error(`[questions] No context found for question ${question.id.slice(0, 8)}, deprioritizing`);
-            await query(`UPDATE nodes SET weight = MAX(${cfg.weightFloor}, weight - ${cfg.weightPenalty}) WHERE id = $1`, [question.id]);
+            await query(`UPDATE nodes SET weight = MAX(${appConfig.engine.weightFloor ?? 0.05}, weight - ${cfg.weightPenalty}) WHERE id = $1`, [question.id]);
             continue;
         }
 
@@ -181,7 +181,7 @@ async function runQuestionCycleSingle(): Promise<void> {
         } catch (err: any) {
             if (err.name === 'AbortError') throw err; // propagate to runCycleLoop
             console.error(`[questions] LLM call failed for question ${question.id.slice(0, 8)}: ${err.message}`);
-            await query(`UPDATE nodes SET weight = MAX(${cfg.weightFloor}, weight - ${cfg.weightPenalty}) WHERE id = $1`, [question.id]);
+            await query(`UPDATE nodes SET weight = MAX(${appConfig.engine.weightFloor ?? 0.05}, weight - ${cfg.weightPenalty}) WHERE id = $1`, [question.id]);
             continue;
         }
 
@@ -195,7 +195,7 @@ async function runQuestionCycleSingle(): Promise<void> {
 
         if (!answerText || answerText.length < 10) {
             console.error(`[questions] Empty/too-short answer for question ${question.id.slice(0, 8)}, deprioritizing`);
-            await query(`UPDATE nodes SET weight = MAX(${cfg.weightFloor}, weight - ${cfg.weightPenalty}) WHERE id = $1`, [question.id]);
+            await query(`UPDATE nodes SET weight = MAX(${appConfig.engine.weightFloor ?? 0.05}, weight - ${cfg.weightPenalty}) WHERE id = $1`, [question.id]);
             continue;
         }
 
@@ -214,7 +214,7 @@ async function runQuestionCycleSingle(): Promise<void> {
         // Dedup gate may return null — deprioritize so other questions get a chance
         if (!answer) {
             console.error(`[questions] Answer deduplicated for question ${question.id.slice(0, 8)}, deprioritizing`);
-            await query(`UPDATE nodes SET weight = MAX(${cfg.weightFloor}, weight - ${cfg.weightPenalty}) WHERE id = $1`, [question.id]);
+            await query(`UPDATE nodes SET weight = MAX(${appConfig.engine.weightFloor ?? 0.05}, weight - ${cfg.weightPenalty}) WHERE id = $1`, [question.id]);
             continue;
         }
 

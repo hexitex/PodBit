@@ -153,8 +153,7 @@ export async function applyVerificationImpact(
     correctionsApplied: number,
 ): Promise<{ weightBefore: number; weightAfter: number; breedable: boolean }> {
     const evmCfg = appConfig.labVerify.apiVerification;
-    const feedbackCfg = appConfig.feedback;
-    const weightFloor = feedbackCfg?.weightFloor ?? 0.1;
+    const weightFloor = appConfig.engine?.weightFloor ?? 0.05;
     const weightCeiling = appConfig.engine?.weightCeiling ?? 3.0;
 
     // Get current weight

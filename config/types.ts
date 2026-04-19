@@ -58,6 +58,8 @@ export interface PodbitConfig {
     weightDecay: number;
     parentBoost: number;
     weightCeiling: number;
+    /** Global minimum weight any node can have - all weight modifications clamp to this floor. */
+    weightFloor: number;
     cycleDelayMs: number;
     decayEveryNCycles: number;
     junkThreshold: number;
@@ -652,8 +654,6 @@ export interface PodbitConfig {
     toxicParentMinChildren: number;
     /** Mode 7: Toxic parent — minimum distinct domains among children. */
     toxicParentMinDomains: number;
-    /** Weight multiplier when all embedding checks PASS. */
-    boostMultiplier: number;
     /** Instruction prefix for structural claim representation (mode 8). */
     instructStructuralClaim: string;
     /** Instruction prefix for mechanical process representation (mode 1). */
