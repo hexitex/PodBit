@@ -67,9 +67,13 @@ export function isSystemDomain(domain: string | null, systemDomains: string[]): 
 /**
  * Select a domain for synthesis sampling using niching (fitness sharing).
  *
- * Examines recent synthesis cycle distribution and identifies domains that have
- * received fewer cycles than their fair share. A random underrepresented domain
- * is returned so the caller can constrain the next synthesis cycle to it.
+ * Examines the recent distribution of synthesis *children* (yield, not attempts)
+ * and identifies domains whose share of produced children is below their fair
+ * share. A random underrepresented domain is returned so the caller can
+ * constrain the next synthesis cycle to it.
+ *
+ * Measuring yield rather than attempts prevents high-cycle low-resonance
+ * domains from appearing "already represented" and starving productive domains.
  *
  * @returns An underrepresented domain name, or `null` if niching is disabled,
  *          there is insufficient data, or all domains are adequately represented.
@@ -95,32 +99,35 @@ export async function selectDomainWithNiching(): Promise<string | null> {
     });
     if (domains.length <= 1) return null;
 
-    // Get domain distribution in recent synthesis cycles
-    const recentCycles = await query(`
-        SELECT domain, COUNT(*) as cycle_count FROM dream_cycles
-        WHERE domain IS NOT NULL AND completed_at > datetime('now', '-1 day')
+    // Count recent children produced per domain (yield, not attempts).
+    // Cycles without a child are excluded so niching equalizes output, not effort.
+    const recentChildren = await query(`
+        SELECT domain, COUNT(*) as child_count FROM dream_cycles
+        WHERE domain IS NOT NULL
+          AND created_child = 1
+          AND completed_at > datetime('now', '-1 day')
         GROUP BY domain
         LIMIT $1
     `, [lookback * 10]);
 
-    const cycleCounts: Record<string, number> = {};
-    let totalCycles = 0;
-    for (const row of recentCycles as any[]) {
+    const childCounts: Record<string, number> = {};
+    let totalChildren = 0;
+    for (const row of recentChildren as any[]) {
         if (row.domain) {
-            cycleCounts[row.domain] = (cycleCounts[row.domain] || 0) + row.cycle_count;
-            totalCycles += row.cycle_count;
+            childCounts[row.domain] = (childCounts[row.domain] || 0) + row.child_count;
+            totalChildren += row.child_count;
         }
     }
 
-    if (totalCycles < lookback * 0.5) return null; // Not enough data yet
+    if (totalChildren < lookback * 0.5) return null; // Not enough yield data yet
 
-    // Find underrepresented domains
+    // Find underrepresented domains by child share
     const fairShare = 1.0 / domains.length;
     const threshold = Math.max(minShare, fairShare);
     const underrepresented: string[] = [];
 
     for (const d of domains as any[]) {
-        const share = (cycleCounts[d.domain] || 0) / totalCycles;
+        const share = (childCounts[d.domain] || 0) / totalChildren;
         if (share < threshold) underrepresented.push(d.domain);
     }
 

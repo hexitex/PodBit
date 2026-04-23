@@ -208,9 +208,9 @@ describe('selectDomainWithNiching', () => {
         mockQuery.mockImplementation(async (sql: string) => {
             if (String(sql).includes('partition_domains')) return [];
             if (String(sql).includes('dream_cycles')) return [
-                { domain: 'science', cycle_count: 50 },
-                { domain: 'math', cycle_count: 50 },
-                // physics gets 0 cycles → underrepresented
+                { domain: 'science', child_count: 50 },
+                { domain: 'math', child_count: 50 },
+                // physics produced 0 children → underrepresented
             ];
             return [
                 { domain: 'science', node_count: 10 },
