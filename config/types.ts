@@ -574,6 +574,33 @@ export interface PodbitConfig {
       minCorrectionConfidence: number;
     };
   };
+  /**
+   * Content spec extraction — post-generation structural coherence gate.
+   *
+   * After synthesis and research produce prose, an LLM extracts a structured
+   * spec (mechanism / prediction / falsifiability / novelty). Degenerate or
+   * hollow outputs can be rejected at birth instead of costing a full lab
+   * verification round-trip. Nodes that pass carry a content_spec in metadata
+   * and are treated as "pre-specced" downstream — the lab-stage falsifiability
+   * review can be skipped for them.
+   */
+  contentSpec: {
+    /** Master toggle — when off, none of the gates below run. */
+    enabled: boolean;
+    /** Run extraction on synthesis birth (cluster + domain-directed paths). */
+    birthEnabled: boolean;
+    /** Run extraction on research-cycle seed generation. */
+    researchEnabled: boolean;
+    /** Lab-stage: skip the adversarial falsifiability review for nodes that
+     *  already carry a valid content_spec. The experimental spec (specType +
+     *  lab-specific parameters + prior rejections) still runs — only the
+     *  duplicate falsifiability check is bypassed. */
+    trustPreSpecced: boolean;
+    /** Minimum number of required fields that must be non-empty and
+     *  non-degenerate for a spec to be considered valid. Defaults to 3 of 4
+     *  (mechanism, prediction, falsifiability, novelty). */
+    minValidFields: number;
+  };
   /** Transient partition system — temporary imports with quarantine, cycle limits, and auto-cleanup. */
   transient: {
     enabled: boolean;
@@ -734,6 +761,12 @@ export interface PodbitConfig {
     taintMaxDepth: number;
     /** Auto-clear taint after N days */
     taintDecayDays: number;
+    /** Minimum embedding cosine similarity between a refuted source and a
+     *  descendant required to propagate taint. Children whose content is
+     *  less similar than this threshold are spared, because refuting one
+     *  mechanism should not lock out a descendant that tests a different
+     *  mechanism. Set to 0 to disable the similarity gate. */
+    taintSimilarityThreshold: number;
     /** Port for the math-lab server */
     mathLabPort: number;
     /** Interval for health-checking registered labs (ms) */

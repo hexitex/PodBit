@@ -1077,6 +1077,14 @@ export const config: PodbitConfig = {
     bridgingRate: 0.2,
   },
 
+  contentSpec: {
+    enabled: process.env.CONTENT_SPEC_ENABLED === 'true',
+    birthEnabled: process.env.CONTENT_SPEC_BIRTH !== 'false',
+    researchEnabled: process.env.CONTENT_SPEC_RESEARCH !== 'false',
+    trustPreSpecced: process.env.CONTENT_SPEC_TRUST !== 'false',
+    minValidFields: parseInt(process.env.CONTENT_SPEC_MIN_FIELDS!, 10) || 3,
+  },
+
   transient: {
     enabled: process.env.TRANSIENT_ENABLED !== 'false',
     maxTransientPartitions: parseInt(process.env.TRANSIENT_MAX_PARTITIONS!, 10) || 3,
@@ -1201,8 +1209,9 @@ export const config: PodbitConfig = {
   lab: {
     freezeOnExperiment: true,
     taintOnRefute: false,
-    taintMaxDepth: 5,
-    taintDecayDays: 30,
+    taintMaxDepth: 2,
+    taintDecayDays: 7,
+    taintSimilarityThreshold: 0.85,
     mathLabPort: PORTS.mathLab,
     healthCheckIntervalMs: 60_000,
     routingEnabled: true,

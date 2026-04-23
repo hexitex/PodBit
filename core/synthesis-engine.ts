@@ -38,6 +38,7 @@ import type { ResonanceNode, SynthesisCycleLogData, SynthesisEngineOptions, Disc
 import { emitActivity } from '../services/event-bus.js';
 import { recordBirth, incrementBarren, lifecycleSweep } from './lifecycle.js';
 import { resolveContent } from './number-variables.js';
+import { gateSynthesisBirth } from './content-spec.js';
 
 // Sub-modules (extracted from this file)
 import {
@@ -753,6 +754,15 @@ async function domainDirectedCycle(constraintDomain: string | null = null): Prom
         }
     }
 
+    // Content spec gate — post-voicing structural coherence check.
+    // Gated by config.contentSpec.enabled; no-op when off.
+    const csGate1 = await gateSynthesisBirth(voicedContent, [nodeA.content, nodeB.content]);
+    if (csGate1.rejected) {
+        emitActivity('synthesis', 'content_spec_rejected', `Content spec degenerate (domain-directed): ${csGate1.reason}`, { nodeA: nodeA.id, nodeB: nodeB.id, domain: targetDomain, emptyFields: csGate1.spec?.emptyFields, synthesisMode: 'domain_directed' });
+        await logSynthesisCycle({ nodeA, nodeB, resonance, threshold: config.resonanceThreshold, createdChild: false, rejectionReason: 'content_spec_degenerate', synthesisMode: 'domain_directed', domainPair: pair });
+        return { resonance, created: false, rejected: true, reason: csGate1.reason, nodeA, nodeB };
+    }
+
     // Create node (skipDedup: synthesis engine already runs checkDuplicate before voicing)
     const child = await createNode(voicedContent, 'synthesis', 'domain-directed', {
         domain: targetDomain,
@@ -763,6 +773,7 @@ async function domainDirectedCycle(constraintDomain: string | null = null): Prom
         skipDedup: true,
         name: voicedName,
         ...getVoiceModelProvenance(),
+        ...csGate1.metadataMerge,
     });
 
     if (voicedEmbedding) setCached(child.id, voicedEmbedding);
@@ -1196,6 +1207,14 @@ async function synthesisCycle(domain: string | null = null) {
         }
     }
 
+    // Content spec gate — post-voicing structural coherence check.
+    const csGate2 = await gateSynthesisBirth(voicedContent, parentNodes.map(p => p.content));
+    if (csGate2.rejected) {
+        emitActivity('synthesis', 'content_spec_rejected', `Content spec degenerate (cluster): ${csGate2.reason}`, { nodeA: nodeA.id, nodeB: nodeB.id, domain: targetDomain, emptyFields: csGate2.spec?.emptyFields, parentCount: parentNodes.length });
+        await logSynthesisCycle({ nodeA, nodeB, resonance, threshold: config.resonanceThreshold, createdChild: false, rejectionReason: 'content_spec_degenerate', parentIds: parentNodes.map(n => n.id) });
+        return { resonance, created: false, rejected: true, reason: csGate2.reason, nodeA, nodeB };
+    }
+
     // 10. Create synthesis node with trajectory-appropriate weight
     // skipDedup: synthesis engine already runs checkDuplicate before voicing
     const child = await createNode(voicedContent, 'synthesis', 'synthesis', {
@@ -1207,6 +1226,7 @@ async function synthesisCycle(domain: string | null = null) {
         skipDedup: true,
         name: voicedName,
         ...getVoiceModelProvenance(),
+        ...csGate2.metadataMerge,
     });
 
     // Cache the new node's embedding
@@ -1392,6 +1412,16 @@ async function eliteBridgingSynthesis(nodeA: any, nodeB: any, domain: string | n
         }
     }
 
+    // Content spec gate — post-voicing structural coherence check.
+    const csGate3 = await gateSynthesisBirth(voicedContent, parentNodes.map((p: any) => p.content));
+    if (csGate3.rejected) {
+        emitActivity('elite', 'content_spec_rejected', `Content spec degenerate (elite-bridging): ${csGate3.reason}`, { parentA: nodeA.id, parentB: nodeB.id, domain: targetDomain, emptyFields: csGate3.spec?.emptyFields });
+        const { logBridgingAttempt } = await import('./elite-pool.js');
+        await logBridgingAttempt({ parentAId: nodeA.id, parentBId: nodeB.id, outcome: 'rejected', attemptedAt: new Date().toISOString() });
+        await logSynthesisCycle({ nodeA, nodeB, resonance: 0, threshold: config.resonanceThreshold, createdChild: false, rejectionReason: 'content_spec_degenerate', parentIds: [nodeA.id, nodeB.id] });
+        return { resonance: 0, created: false, rejected: true, reason: csGate3.reason, nodeA, nodeB };
+    }
+
     // Create synthesis node
     const child = await createNode(voicedContent, 'synthesis', 'synthesis', {
         domain: targetDomain,
@@ -1402,6 +1432,7 @@ async function eliteBridgingSynthesis(nodeA: any, nodeB: any, domain: string | n
         skipDedup: true,
         name: voicedName,
         ...getVoiceModelProvenance(),
+        ...csGate3.metadataMerge,
     });
 
     if (voicedEmbedding) {
@@ -1712,6 +1743,14 @@ async function clusterSynthesisCycle(domain: string | null = null) {
         }
     }
 
+    // Content spec gate — post-voicing structural coherence check.
+    const csGate4 = await gateSynthesisBirth(voicedContent, parentNodes.map((p: any) => p.content));
+    if (csGate4.rejected) {
+        emitActivity('synthesis', 'content_spec_rejected', `Content spec degenerate (multi-cluster): ${csGate4.reason}`, { domain: targetDomain, emptyFields: csGate4.spec?.emptyFields, parentCount: parentNodes.length });
+        await logSynthesisCycle({ nodeA: parentNodes[0], nodeB: parentNodes[1], resonance: cluster.coherence, threshold: config.resonanceThreshold, createdChild: false, rejectionReason: 'content_spec_degenerate', parentIds: parentNodes.map((n: any) => n.id) });
+        return { resonance: cluster.coherence, created: false, rejected: true, reason: csGate4.reason };
+    }
+
     // Create synthesis node (skipDedup: synthesis engine already runs checkDuplicate before voicing)
     const child = await createNode(voicedContent, 'synthesis', 'synthesis', {
         domain: targetDomain,
@@ -1722,6 +1761,7 @@ async function clusterSynthesisCycle(domain: string | null = null) {
         skipDedup: true,
         name: voicedName,
         ...getVoiceModelProvenance(),
+        ...csGate4.metadataMerge,
     });
 
     if (voicedEmbedding) setCached(child.id, voicedEmbedding);

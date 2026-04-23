@@ -145,6 +145,8 @@ const mockAppConfig: any = {
 jest.unstable_mockModule('../../db.js', () => ({
     query: mockQuery,
     queryOne: mockQueryOne,
+    systemQuery: mockQuery,
+    systemQueryOne: mockQueryOne,
 }));
 
 jest.unstable_mockModule('../../core/engine-config.js', () => ({
@@ -256,6 +258,12 @@ jest.unstable_mockModule('../../evm/index.js', () => ({
 jest.unstable_mockModule('../../db/sql.js', () => ({
     inverseWeightedRandom: (col: string) => `RANDOM() * ${col}`,
     withinDays: (col: string, days: number) => `${col} > datetime('now', '-${days} days')`,
+    translate: (sql: string, params: unknown[] = []) => ({ sql, params }),
+    weightedRandom: (col: string) => `RANDOM() * ${col}`,
+    countFilter: (cond: string) => `SUM(CASE WHEN ${cond} THEN 1 ELSE 0 END)`,
+    intervalAgo: (n: number, u: string) => `datetime('now', '-${n} ${u}')`,
+    getLineageQuery: () => '',
+    getPatternSiblingsQuery: () => '',
 }));
 
 // ─── Import module under test ───────────────────────────────────────────────

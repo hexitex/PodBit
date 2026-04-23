@@ -37,7 +37,7 @@ const mockAppConfig: any = {
     numberVariables: { enabled: false },
     autonomousCycles: { autorating: { enabled: false, inlineEnabled: false } },
     magicNumbers: { salienceRescueDays: 7, domainInferenceThreshold: 0.7 },
-    engine: { synthesisDecayEnabled: false, synthesisDecayGraceDays: 14, synthesisDecayMultiplier: 0.95 },
+    engine: { synthesisDecayEnabled: false, synthesisDecayGraceDays: 14, synthesisDecayMultiplier: 0.95, weightFloor: 0.05 },
     labVerify: { failedSalienceCap: 0.5 },
 };
 
@@ -171,7 +171,7 @@ beforeEach(() => {
     mockCheckDuplicate.mockResolvedValue({ isDuplicate: false });
     mockAppConfig.numberVariables = { enabled: false };
     mockAppConfig.autonomousCycles = { autorating: { enabled: false, inlineEnabled: false } };
-    mockAppConfig.engine = { synthesisDecayEnabled: false, synthesisDecayGraceDays: 14, synthesisDecayMultiplier: 0.95 };
+    mockAppConfig.engine = { synthesisDecayEnabled: false, synthesisDecayGraceDays: 14, synthesisDecayMultiplier: 0.95, weightFloor: 0.05 };
 });
 
 // =========================================================================
@@ -417,23 +417,26 @@ describe('updateNodeSalience', () => {
 });
 
 describe('updateNodeWeight', () => {
-    it('calls query with delta and weight ceiling', async () => {
+    it('calls query with delta, weight ceiling, and weight floor', async () => {
         await updateNodeWeight('n1', 0.5);
         expect(mockQuery).toHaveBeenCalledWith(
             expect.stringContaining('UPDATE nodes'),
-            ['n1', 0.5, mockEngineConfig.weightCeiling],
+            ['n1', 0.5, mockEngineConfig.weightCeiling, mockAppConfig.engine.weightFloor],
         );
     });
 
-    it('uses default ceiling of 3.0 when not configured', async () => {
+    it('uses default ceiling of 3.0 and floor of 0.05 when not configured', async () => {
         const origCeiling = mockEngineConfig.weightCeiling;
+        const origFloor = mockAppConfig.engine.weightFloor;
         mockEngineConfig.weightCeiling = undefined;
+        mockAppConfig.engine.weightFloor = undefined;
         await updateNodeWeight('n1', 0.5);
         expect(mockQuery).toHaveBeenCalledWith(
             expect.stringContaining('UPDATE nodes'),
-            ['n1', 0.5, 3.0],
+            ['n1', 0.5, 3.0, 0.05],
         );
         mockEngineConfig.weightCeiling = origCeiling;
+        mockAppConfig.engine.weightFloor = origFloor;
     });
 });
 

@@ -61,6 +61,7 @@ const SUBSYSTEM_REGISTRY: Record<string, SubsystemEntry> = {
     autorating:         { label: 'Autorating',         desc: 'quality autorating',                      profile: 'deterministic', tier: 'intermediate' },
     spec_extraction:    { label: 'Spec Extraction',    desc: 'experiment spec extraction from claims',   profile: 'deterministic', tier: 'intermediate' },
     spec_review:        { label: 'Spec Review',        desc: 'adversarial falsifiability review',        profile: 'deterministic', tier: 'intermediate' },
+    content_spec:       { label: 'Content Spec',       desc: 'post-synthesis structural coherence extraction (mechanism / prediction / falsifiability / novelty)', profile: 'deterministic', tier: 'intermediate' },
     api_verification:   { label: 'API Verification',   desc: 'API verification decisions',               profile: 'deterministic', tier: 'intermediate' },
     breakthrough_check: { label: 'Breakthrough Check', desc: 'breakthrough validation scoring',          profile: 'deterministic', tier: 'intermediate' },
     ground_rules:       { label: 'Ground Rules',       desc: 'ground truth rule extraction',             profile: 'deterministic', tier: 'advanced' },

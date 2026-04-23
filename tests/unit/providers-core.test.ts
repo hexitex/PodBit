@@ -488,7 +488,7 @@ describe('noThink — think block stripping', () => {
         expect(result.text).toBe('Final answer');
     });
 
-    it('does not strip when noThink is not set', async () => {
+    it('always strips think blocks even when noThink is not set (CoT must never leak downstream)', async () => {
         mockFetchOk(openAiResponse('<think>reasoning</think>Answer'));
 
         const result = await callSingleModel(
@@ -496,7 +496,7 @@ describe('noThink — think block stripping', () => {
             'test', {},
         );
 
-        expect(result.text).toBe('<think>reasoning</think>Answer');
+        expect(result.text).toBe('Answer');
     });
 
     it('strips multiline think blocks', async () => {

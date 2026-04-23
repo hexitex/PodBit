@@ -53,7 +53,7 @@ export async function extractExperimentSpec(
     resolvedClaim: string,
     resolvedParents: string[],
     domain: string,
-    hints?: { guidance?: string; precisionHint?: number; priorRejections?: string; priorLabErrors?: string; signal?: AbortSignal },
+    hints?: { guidance?: string; precisionHint?: number; priorRejections?: string; priorLabErrors?: string; signal?: AbortSignal; preSpecced?: boolean },
 ): Promise<ExtractionResult> {
     const parentContext = resolvedParents.length > 0
         ? `SOURCE CONTEXT:\n${resolvedParents.map((p, i) => `Source ${i + 1}: ${p}`).join('\n')}\n`
@@ -227,18 +227,29 @@ export async function extractExperimentSpec(
     // A second LLM reviews whether the setup parameters are cherry-picked
     // to guarantee the claimed result. Catches specs that are technically
     // declarative but adversarially parameterized.
-    const falsifiabilityReason = await reviewFalsifiability(
-        parsed.hypothesis || resolvedClaim.slice(0, 200),
-        parsed.setup,
-        specType,
-        hints?.signal,
-    );
-    if (falsifiabilityReason) {
-        return {
-            reducible: false,
-            reason: `Spec rejected (falsifiability review): ${falsifiabilityReason}`,
-            claimType: parsed.claimType || 'tautological',
-        };
+    //
+    // Pre-specced gate: if the node already carries a valid content_spec
+    // from a synthesis-stage coherence check, and config.contentSpec.trustPreSpecced
+    // is on, skip this redundant review. Mechanism / prediction / falsifiability
+    // were already verified at birth.
+    const preSpecSkip = hints?.preSpecced === true
+        && (await import('../config.js')).config.contentSpec?.trustPreSpecced === true;
+    if (preSpecSkip) {
+        console.log(`[spec-extractor] Skipping falsifiability review for pre-specced ${nodeId.slice(0, 8)}`);
+    } else {
+        const falsifiabilityReason = await reviewFalsifiability(
+            parsed.hypothesis || resolvedClaim.slice(0, 200),
+            parsed.setup,
+            specType,
+            hints?.signal,
+        );
+        if (falsifiabilityReason) {
+            return {
+                reducible: false,
+                reason: `Spec rejected (falsifiability review): ${falsifiabilityReason}`,
+                claimType: parsed.claimType || 'tautological',
+            };
+        }
     }
 
     const spec: ExperimentSpec = {

@@ -374,12 +374,21 @@ const TYPE_BADGES = {
   evm_retry: { label: 'retry', color: 'text-yellow-400 bg-yellow-900/30' },
   evm_result: { label: 'result', color: 'text-cyan-400 bg-cyan-900/30' },
   evm_elite_promoted: { label: 'elite', color: 'text-amber-400 bg-amber-900/30' },
+  evm_candidate: { label: 'candidate', color: 'text-blue-400 bg-blue-900/30' },
+  evm_verified: { label: 'verified', color: 'text-emerald-400 bg-emerald-900/30' },
+  evm_skipped: { label: 'skipped', color: 'text-gray-400 bg-gray-800' },
+  evm_failed: { label: 'failed', color: 'text-red-400 bg-red-900/30' },
+  evm_feedback: { label: 'feedback', color: 'text-cyan-400 bg-cyan-900/30' },
   // Lab framework
   taint_propagated: { label: 'tainted', color: 'text-red-400 bg-red-900/30' },
   taint_cleared: { label: 'untainted', color: 'text-green-400 bg-green-900/30' },
   taint_decay: { label: 'taint decay', color: 'text-gray-400 bg-gray-800' },
+  taint_similarity_skip: { label: 'spared', color: 'text-teal-400 bg-teal-900/30' },
   evidence_stored: { label: 'evidence', color: 'text-cyan-400 bg-cyan-900/30' },
   pre_lab_corrections: { label: 'corrected', color: 'text-amber-400 bg-amber-900/30' },
+  // Content Spec Gate
+  content_spec_rejected: { label: 'spec degen', color: 'text-fuchsia-400 bg-fuchsia-900/30' },
+  research_content_spec_rejected: { label: 'spec degen', color: 'text-fuchsia-400 bg-fuchsia-900/30' },
   // Elite
   elite_promoted: { label: 'promoted', color: 'text-amber-400 bg-amber-900/30' },
   elite_bridging_attempted: { label: 'bridge', color: 'text-amber-400 bg-amber-900/30' },

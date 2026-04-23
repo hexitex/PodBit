@@ -12,7 +12,7 @@ const mockConfig: any = {
         weightFloor: 0.1,
     },
     engine: {
-        weightFloor: 0.05,
+        weightFloor: 0.1,
     },
 };
 

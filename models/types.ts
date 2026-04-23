@@ -209,7 +209,7 @@ export type Subsystem = 'synthesis' | 'chat' | 'context' | 'docs' | 'compress' |
     | 'reader_text' | 'reader_pdf' | 'reader_doc' | 'reader_image' | 'reader_sheet' | 'reader_code'
     | 'dedup_judge' | 'config_tune' | 'tuning_judge' | 'autorating'
     | 'evm_analysis' | 'evm_guidance'
-    | 'spec_extraction' | 'spec_review'
+    | 'spec_extraction' | 'spec_review' | 'content_spec'
     | 'api_verification'
     | 'image_gen'
     | 'breakthrough_check'
@@ -229,7 +229,7 @@ export const VALID_SUBSYSTEMS: Subsystem[] = [
     'reader_text', 'reader_pdf', 'reader_doc', 'reader_image', 'reader_sheet', 'reader_code',
     'dedup_judge', 'config_tune', 'tuning_judge', 'autorating',
     'evm_analysis', 'evm_guidance',
-    'spec_extraction', 'spec_review',
+    'spec_extraction', 'spec_review', 'content_spec',
     'api_verification',
     'image_gen',
     'breakthrough_check',

@@ -1,0 +1,33 @@
+You are a STRUCTURAL COHERENCE auditor for a knowledge graph. A synthesis has just been generated. Your job is to decide whether the synthesis contains a real testable claim or just fluent-sounding filler, by extracting a structured content spec from it.
+
+SYNTHESIS CONTENT:
+{{content}}
+
+SOURCE PARENTS (what the synthesis was built from):
+{{parents}}
+
+Extract four fields from the synthesis. Be ruthless — if a field cannot be filled from what the synthesis actually says, leave it empty. Do NOT invent content that is not in the synthesis text.
+
+FIELDS:
+
+1. "mechanism" — the specific physical/mathematical mechanism the synthesis invokes. Must be a named equation, named physical process, or named quantity (e.g., "Hessian trace via finite-difference curvature", "Adam decoupled weight decay", "Berry phase"). Leave empty if the synthesis only uses vague words like "correlation", "influence", "interaction" without naming a mechanism.
+
+2. "prediction" — what measurable outcome the synthesis predicts. Must include WHAT is measured and the EXPECTED DIRECTION or VALUE (e.g., "summed λ_i decreases by ~15% when switching Adam→AdamW", "validation accuracy gain Y-Z% greater under SAM"). Leave empty if no measurable quantity is named, or if the prediction is "X might improve" without specifying what or how much.
+
+3. "falsifiability" — what observation would refute the synthesis. Must describe an empirical outcome that would disprove the claim (e.g., "no λ_i reduction observed, or SAM gain uncorrelated with λ_i"). Leave empty if the synthesis cannot be refuted by any concrete observation, or if any outcome could be interpreted as consistent with the claim.
+
+4. "novelty" — what the synthesis adds beyond what either parent already says. Must be a specific claim present in the synthesis that is NOT in either source (e.g., "links the two parents' quantities via a testable correlation"). Leave empty if the synthesis only restates or rephrases one of the parents, or if removing either parent would not change the claim.
+
+DEGENERATE PATTERNS (set the corresponding field empty):
+- "mechanism: a relationship exists" → empty (no named mechanism)
+- "prediction: it would be observable" → empty (nothing measurable named)
+- "falsifiability: future experiments could address this" → empty (no refutation criterion)
+- "novelty: combines insights from both sources" → empty (restating what synthesis trivially is)
+
+Respond with JSON only:
+{
+  "mechanism": "named mechanism with quantity or equation, or empty string",
+  "prediction": "measurable quantity + expected direction/value, or empty string",
+  "falsifiability": "what observation would refute this, or empty string",
+  "novelty": "what this adds beyond parents, or empty string"
+}

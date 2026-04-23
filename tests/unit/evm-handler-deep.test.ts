@@ -47,7 +47,7 @@ const mockConfig = {
         decompose: { maxFacts: 10, maxQuestions: 5, factInitialWeight: 0.5, questionInitialWeight: 0.3, weightDowngrade: -0.2 },
     },
     feedback: { weightFloor: 0.1 },
-    engine: { weightFloor: 0.05, weightCeiling: 3.0 },
+    engine: { weightFloor: 0.1, weightCeiling: 3.0 },
 };
 
 // ---------------------------------------------------------------------------

@@ -587,12 +587,12 @@ describe('updateNodeSalience', () => {
 // =============================================================================
 
 describe('updateNodeWeight', () => {
-    it('updates weight capped at ceiling', async () => {
+    it('updates weight capped at ceiling and floor', async () => {
         await updateNodeWeight('node-1', 0.5);
 
         expect(mockQuery).toHaveBeenCalledWith(
             expect.stringContaining('UPDATE nodes'),
-            ['node-1', 0.5, 3.0],
+            ['node-1', 0.5, 3.0, 0.05],
         );
     });
 });

@@ -18,7 +18,7 @@ const mockConfig = {
         },
     },
     feedback: { weightFloor: 0.1 },
-    engine: { weightCeiling: 3.0, weightFloor: 0.05 },
+    engine: { weightCeiling: 3.0, weightFloor: 0.1 },
 };
 
 jest.unstable_mockModule('../../core.js', () => ({

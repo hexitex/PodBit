@@ -41,7 +41,7 @@ jest.unstable_mockModule('../../config.js', () => ({
     config: {
         populationControl: mockPopulationCfg,
         embeddingEval: mockEmbeddingEvalCfg,
-        engine: { weightCeiling: 3.0, weightFloor: 0.05 },
+        engine: { weightCeiling: 3.0, weightFloor: 0.1 },
         feedback: { weightFloor: 0.1 },
     },
 }));

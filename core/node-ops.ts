@@ -629,7 +629,10 @@ async function decayAll() {
         WHERE archived = FALSE AND lab_status IS NULL
     `, [config.weightDecay, floor]);
 
-    // GA-inspired: extra decay for synthesis/voiced nodes never used by context engine
+    // GA-inspired: extra decay for synthesis/voiced nodes that have proven no usefulness.
+    // A node is "useful" if EITHER referenced in chat (session_node_usage) OR has produced
+    // at least one surviving child (parent edge to a non-archived node). Nodes that fail
+    // both signals after the grace period get the extra decay.
     if (appConfig.engine.synthesisDecayEnabled) {
         const graceDays = appConfig.engine.synthesisDecayGraceDays;
         const multiplier = appConfig.engine.synthesisDecayMultiplier;
@@ -640,6 +643,11 @@ async function decayAll() {
               AND node_type IN ('synthesis', 'voiced')
               AND created_at < datetime('now', '-' || $2 || ' days')
               AND id NOT IN (SELECT node_id FROM session_node_usage WHERE times_used > 0)
+              AND id NOT IN (
+                  SELECT e.source_id FROM edges e
+                  JOIN nodes c ON c.id = e.target_id
+                  WHERE e.edge_type = 'parent' AND c.archived = FALSE
+              )
         `, [multiplier, graceDays, floor]);
     }
 }

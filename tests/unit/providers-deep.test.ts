@@ -353,13 +353,13 @@ describe('providers-deep', () => {
             expect(result.text).toBe('midend');
         });
 
-        it('does not strip when noThink is false', async () => {
+        it('always strips think blocks even when noThink is false (CoT must never leak downstream)', async () => {
             mockFetchOpenAI('<think>inner</think>output');
             const result = await callSingleModel(
                 openaiModel({ noThink: false }),
                 'test', {},
             );
-            expect(result.text).toBe('<think>inner</think>output');
+            expect(result.text).toBe('output');
         });
 
         it('returns text unchanged when no think blocks present', async () => {

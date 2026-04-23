@@ -126,7 +126,7 @@ export const ADVANCED_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 15. Fitness Modifier (6 params)
+    // 15. Fitness Modifier
     // -------------------------------------------------------------------------
     fitness_modifier: {
         id: 'fitness_modifier',
@@ -200,12 +200,12 @@ export const ADVANCED_SECTIONS: Record<string, SectionMeta> = {
         tier: 'advanced',
         title: 'GA-Inspired Features',
         description: 'Genetic algorithm improvements: niching, migration, multi-parent, synthesis decay',
-        behavior: `Four features inspired by Holland's Genetic Algorithm framework. All default to enabled for quality synthesis. (1) Synthesis Decay: unused synthesis nodes decay faster after a grace period. (2) Niching: biases synthesis sampling toward underrepresented domains. (3) Migration: seeks partners from foreign partitions for cross-pollination. (4) Multi-Parent: synthesizes from 3+ parents for combinatorial insight. Rates and counts for migration/multi-parent use sensible hardcoded defaults when enabled.`,
+        behavior: `Four features inspired by Holland's Genetic Algorithm framework. All default to enabled for quality synthesis. (1) Synthesis Decay: unused synthesis nodes decay faster after a grace period. A node is "useful" if EITHER referenced in chat OR has at least one surviving (non-archived) child via the synthesis engine. Nodes that fail both signals get the extra decay. (2) Niching: biases synthesis sampling toward underrepresented domains. (3) Migration: seeks partners from foreign partitions for cross-pollination. (4) Multi-Parent: synthesizes from 3+ parents for combinatorial insight. Rates and counts for migration/multi-parent use sensible hardcoded defaults when enabled.`,
         parameters: [
             {
                 key: 'synthesisDecayEnabled',
                 label: 'Synthesis Decay',
-                description: 'Apply extra weight decay to synthesis nodes that are never referenced in conversations (after grace period). Useful content survives; unused synthesis gradually sinks. 1 = on, 0 = off.',
+                description: 'Apply extra weight decay to synthesis nodes that fail both usefulness signals after a grace period: not referenced in any chat session AND have produced no surviving children. Productive parents and chat-relevant nodes are exempt. 1 = on, 0 = off.',
                 min: 0, max: 1, step: 1, default: 1,
                 configPath: ['engine', 'synthesisDecayEnabled'],
                 tier: 'intermediate',
@@ -213,7 +213,7 @@ export const ADVANCED_SECTIONS: Record<string, SectionMeta> = {
             {
                 key: 'synthesisDecayMultiplier',
                 label: 'Synthesis Decay Rate',
-                description: 'Extra weight decay multiplier applied to unreferenced synthesis nodes (on top of normal weightDecay). At 0.95 (default), unreferenced nodes lose an additional 5% weight per decay pass — combined with normal decay (0.999), these nodes decay ~50x faster than referenced ones. A synthesis node at weight 1.0 that is never referenced in chat or cited in other synthesis drops to ~0.35 after one day (with decay every 5 min). At 0.99, the extra penalty is gentle (1% per pass). At 0.90, unreferenced nodes are aggressively culled — drops to ~0.10 in about 12 hours.',
+                description: 'Extra weight decay multiplier applied to nodes failing both usefulness signals (no chat references AND no surviving children) on top of normal weightDecay. At 0.95 (default), affected nodes lose an additional 5% weight per decay pass - combined with normal decay (0.999), these nodes decay ~50x faster than productive/referenced ones. A node at weight 1.0 drops to ~0.35 after one day (with decay every 5 min). At 0.99, the extra penalty is gentle (1% per pass). At 0.90, affected nodes are aggressively culled - drops to ~0.10 in about 12 hours.',
                 min: 0.8, max: 0.999, step: 0.005, default: 0.95,
                 configPath: ['engine', 'synthesisDecayMultiplier'],
                 tier: 'advanced',
@@ -221,7 +221,7 @@ export const ADVANCED_SECTIONS: Record<string, SectionMeta> = {
             {
                 key: 'synthesisDecayGraceDays',
                 label: 'Synthesis Decay Grace Period (days)',
-                description: 'Days after creation before the extra synthesis decay kicks in. At 7 days (default), new synthesis has a full week to be discovered by users or referenced in chat before the penalty applies. At 3 days, the window is tight — nodes that are not engaged with quickly start losing weight. At 14 days, very lenient — useful if you review graph content weekly. This grace period does NOT affect normal weight decay, only the extra synthesis decay multiplier.',
+                description: 'Days after creation before the extra synthesis decay kicks in. At 7 days (default), new synthesis has a full week to be sampled, produce children, or be referenced in chat before the penalty applies. At 3 days, the window is tight - nodes that fail to participate quickly start losing weight. At 14 days, very lenient - useful if you review graph content weekly. This grace period does NOT affect normal weight decay, only the extra synthesis decay multiplier.',
                 min: 1, max: 30, step: 1, default: 7,
                 configPath: ['engine', 'synthesisDecayGraceDays'],
                 tier: 'advanced',
@@ -251,7 +251,7 @@ export const ADVANCED_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 12. Node Validation (4 params)
+    // 12. Node Validation
     // -------------------------------------------------------------------------
     node_validation: {
         id: 'node_validation',
@@ -307,7 +307,7 @@ export const ADVANCED_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 14. Cluster Selection (7 params)
+    // 14. Cluster Selection
     // -------------------------------------------------------------------------
     cluster_selection: {
         id: 'cluster_selection',
@@ -408,7 +408,7 @@ export const ADVANCED_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 15. Knowledge Proxy (2 params)
+    // 15. Knowledge Proxy
     // -------------------------------------------------------------------------
     knowledge_proxy: {
         id: 'knowledge_proxy',
@@ -442,7 +442,7 @@ export const ADVANCED_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 16. Context Engine (14 params)
+    // 16. Context Engine
     // -------------------------------------------------------------------------
     context_engine: {
         id: 'context_engine',

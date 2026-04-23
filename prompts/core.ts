@@ -44,6 +44,22 @@ export const CORE_PROMPTS: Record<string, PromptDefinition> = {
         content: loadTemplate(CAT, 'core.multi_insight_synthesis'),
     },
 
+    'core.content_spec_synthesis': {
+        id: 'core.content_spec_synthesis',
+        category: 'core',
+        description: 'Extract a structured content spec from a synthesis birth output (mechanism / prediction / falsifiability / novelty)',
+        variables: ['content', 'parents'],
+        content: loadTemplate(CAT, 'core.content_spec_synthesis'),
+    },
+
+    'core.content_spec_research': {
+        id: 'core.content_spec_research',
+        category: 'core',
+        description: 'Extract a structured content spec from a research-cycle fact (mechanism / prediction / falsifiability / novelty)',
+        variables: ['content', 'domain'],
+        content: loadTemplate(CAT, 'core.content_spec_research'),
+    },
+
     'core.breakthrough_validation': {
         id: 'core.breakthrough_validation',
         category: 'core',

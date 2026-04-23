@@ -257,7 +257,7 @@ const CATEGORY_ORDER = [
   { id: 'outputShape', title: 'Output Shape', icon: Gauge, defaultOpen: false },
   { id: 'nodeEvolution', title: 'Node Evolution', icon: GitBranch, defaultOpen: false },
   { id: 'autonomousCycles', title: 'Autonomous Cycles', icon: Clock, defaultOpen: false },
-  { id: 'verificationElite', title: 'Verification & Elite', icon: CheckCircle, defaultOpen: false },
+  { id: 'verificationElite', title: 'Verification, Taint & Elite', icon: CheckCircle, defaultOpen: false },
   { id: 'knowledgeDelivery', title: 'Knowledge Delivery', icon: BookOpen, defaultOpen: false },
   { id: 'modelParameters', title: 'Model Parameters', icon: Cpu, defaultOpen: false },
   { id: 'wordListsPatterns', title: 'Word Lists & Patterns', icon: List, defaultOpen: false },

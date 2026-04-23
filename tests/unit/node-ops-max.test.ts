@@ -770,7 +770,7 @@ describe('updateNodeWeight — ceiling edge cases', () => {
 
         expect(mockQuery).toHaveBeenCalledWith(
             expect.stringContaining('UPDATE nodes'),
-            ['n1', 0.5, 5.0],
+            ['n1', 0.5, 5.0, expect.any(Number)],
         );
         engineConfig.weightCeiling = 3.0;
     });
@@ -782,7 +782,7 @@ describe('updateNodeWeight — ceiling edge cases', () => {
 
         expect(mockQuery).toHaveBeenCalledWith(
             expect.stringContaining('UPDATE nodes'),
-            ['n1', 0.5, 3.0],
+            ['n1', 0.5, 3.0, expect.any(Number)],
         );
         engineConfig.weightCeiling = orig;
     });

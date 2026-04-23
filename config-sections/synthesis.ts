@@ -17,7 +17,7 @@ import type { SectionMeta } from './types.js';
 export const SYNTHESIS_SECTIONS: Record<string, SectionMeta> = {
 
     // -------------------------------------------------------------------------
-    // 1. Salience Dynamics (4 params)
+    // 1. Salience Dynamics
     // -------------------------------------------------------------------------
     temperature_dynamics: {
         id: 'temperature_dynamics',
@@ -67,7 +67,7 @@ export const SYNTHESIS_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 2. Weight Dynamics (5 params)
+    // 2. Weight Dynamics
     // -------------------------------------------------------------------------
     weight_dynamics: {
         id: 'weight_dynamics',
@@ -133,7 +133,7 @@ export const SYNTHESIS_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 3. Similarity & Specificity (3 params)
+    // 3. Similarity & Specificity
     // -------------------------------------------------------------------------
     resonance_specificity: {
         id: 'resonance_specificity',
@@ -175,7 +175,7 @@ export const SYNTHESIS_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 4. Synthesis Engine Timing (2 params)
+    // 4. Synthesis Engine Timing
     // -------------------------------------------------------------------------
     synthesis_timing: {
         id: 'synthesis_timing',
@@ -209,7 +209,7 @@ export const SYNTHESIS_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 5. Synthesis Quality Gates (2 params)
+    // 5. Synthesis Quality Gates
     // -------------------------------------------------------------------------
     synthesis_quality_gates: {
         id: 'synthesis_quality_gates',
@@ -235,7 +235,7 @@ export const SYNTHESIS_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 6. Voicing Constraints (6 params)
+    // 6. Voicing Constraints
     // -------------------------------------------------------------------------
     voicing_constraints: {
         id: 'voicing_constraints',
@@ -318,7 +318,7 @@ export const SYNTHESIS_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 7. Synthesis Engine Validation (2 params)
+    // 7. Synthesis Engine Validation
     // -------------------------------------------------------------------------
     synthesis_validation: {
         id: 'synthesis_validation',
@@ -360,7 +360,7 @@ export const SYNTHESIS_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 8. Hallucination Detection (3 params)
+    // 8. Hallucination Detection
     // -------------------------------------------------------------------------
     hallucination_detection: {
         id: 'hallucination_detection',
@@ -434,7 +434,7 @@ export const SYNTHESIS_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 9. Dedup Settings (5 params)
+    // 9. Dedup Settings
     // -------------------------------------------------------------------------
     dedup_settings: {
         id: 'dedup_settings',

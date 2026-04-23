@@ -211,7 +211,7 @@ export default function Part4NodeTypes() {
         <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">Weight Mechanics</h3>
         <p className="text-xs text-gray-600 dark:text-gray-300 mb-3">
           Weight is adjusted additively or subtractively by multiple signals — ratings, filters, LLM judges, and cycle-based decay.
-          Nodes start at <strong>1.0</strong>. There is no hard upper bound; a floor of <strong>0.1</strong> prevents nodes from dropping to zero.
+          Nodes start at <strong>1.0</strong>. All weights are clamped between a global <strong>weight floor</strong> (default 0.05) and <strong>weight ceiling</strong> (default 3.0), configurable in Weight Dynamics.
         </p>
         <div className="space-y-2">
           <div className="flex items-start gap-2">
@@ -244,7 +244,7 @@ export default function Part4NodeTypes() {
           </div>
           <div className="flex items-start gap-2">
             <span className="text-xs text-red-500 dark:text-red-400 w-36 shrink-0 font-medium">&times; extra synthesis decay</span>
-            <span className="text-xs text-gray-700 dark:text-gray-300">Synthesis and voiced nodes never referenced by the context engine accumulate an additional decay multiplier after a grace period</span>
+            <span className="text-xs text-gray-700 dark:text-gray-300">After a grace period, synthesis and voiced nodes that fail BOTH usefulness signals get extra decay - never referenced in chat AND no surviving children. Productive parents are exempt.</span>
           </div>
         </div>
       </div>

@@ -149,7 +149,7 @@ function GraphSection() {
           </div>
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded p-2">
             <p className="font-semibold text-red-700 dark:text-red-300 mb-1">5. Synthesis Decay</p>
-            <p className="text-red-600 dark:text-red-400">After 7-day grace: unreferenced synthesis nodes get extra x0.95 decay per pass (~50x faster)</p>
+            <p className="text-red-600 dark:text-red-400">After 7-day grace: nodes with no chat references AND no surviving children get extra x0.95 decay per pass (~50x faster)</p>
             <p className="text-red-500 dark:text-red-500 mt-1">Config: GA Features</p>
           </div>
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded p-2">

@@ -15,6 +15,64 @@ import type { SectionMeta, SectionTier } from './types.js';
 export const FEATURE_SECTIONS: Record<string, SectionMeta> = {
 
     // -------------------------------------------------------------------------
+    // Content Spec — post-synthesis structural coherence gate
+    // -------------------------------------------------------------------------
+    contentSpec: {
+        id: 'contentSpec',
+        tier: 'intermediate' as SectionTier,
+        title: 'Content Spec Gate',
+        description: 'Post-generation structural coherence check on synthesis outputs and research seeds. Extracts mechanism / prediction / falsifiability / novelty; rejects degenerate outputs before insertion; marks valid nodes "pre-specced" so the lab can skip redundant falsifiability review.',
+        behavior: 'After synthesis or research produces prose, a deterministic LLM extraction tries to fill four fields: (1) named mechanism or equation, (2) measurable prediction with direction/value, (3) refutation criterion, (4) novelty beyond parents. Fields left empty count as degenerate — the prompt explicitly refuses to invent content. When the gate is enabled, nodes missing more than (4 − minValidFields) fields are rejected at birth; that is the gate\'s job and why it exists. Valid specs persist in node metadata; the EVM pipeline detects them and, when trustPreSpecced is on, skips the duplicate lab-side falsifiability review. The experimental spec extraction at the lab boundary still runs, because it fills capability-specific fields (specType, parameters, prior-rejection context) that depend on the live lab registry.',
+        parameters: [
+            {
+                key: 'contentSpecEnabled',
+                label: 'Enable Content Spec',
+                description: 'Master toggle for the content spec gate. When off, synthesis and research run as they did before — no LLM extraction, no gating, no metadata attached.',
+                min: 0, max: 1, step: 1, default: 0,
+                configPath: ['contentSpec', 'enabled'],
+                tier: 'basic',
+            },
+            {
+                key: 'contentSpecBirth',
+                label: 'Gate Synthesis Births',
+                description: 'Run the extraction on every synthesis birth (pair, cluster, domain-directed, elite bridging). Requires master toggle. Costs one LLM call per synthesis output.',
+                min: 0, max: 1, step: 1, default: 1,
+                configPath: ['contentSpec', 'birthEnabled'],
+                tier: 'intermediate',
+            },
+            {
+                key: 'contentSpecResearch',
+                label: 'Gate Research Seeds',
+                description: 'Run the extraction on each fact produced by the research cycle. Requires master toggle. Costs one LLM call per research fact.',
+                min: 0, max: 1, step: 1, default: 1,
+                configPath: ['contentSpec', 'researchEnabled'],
+                tier: 'intermediate',
+            },
+            {
+                key: 'contentSpecTrust',
+                label: 'Trust Pre-Specced at Lab Stage',
+                description: 'When a node carries a valid content_spec in metadata, skip the lab-stage adversarial falsifiability review (which checks for cherry-picked parameters). The experimental spec extraction still runs. Turn off if you want the lab-side falsifiability check to always run as a defence in depth.',
+                min: 0, max: 1, step: 1, default: 1,
+                configPath: ['contentSpec', 'trustPreSpecced'],
+                tier: 'advanced',
+            },
+            {
+                key: 'contentSpecMinValid',
+                label: 'Min Valid Fields',
+                description: 'Out of the four spec fields (mechanism / prediction / falsifiability / novelty), how many must be non-empty for the spec to count as valid. Slide right → stricter (all 4 required). Slide left → more permissive. Safe range: 2–4.',
+                min: 1, max: 4, step: 1, default: 3,
+                configPath: ['contentSpec', 'minValidFields'],
+                tier: 'advanced',
+            },
+        ],
+        presets: [
+            { label: 'On', intent: 'Enable the gate for both synthesis and research (enabled, birthEnabled, researchEnabled, trustPreSpecced). minValidFields 3. This is the default on-configuration — the gate rejects degenerate outputs as its whole point.' },
+            { label: 'Strict', intent: 'Require all four fields populated (enabled, minValidFields 4). Highest bar, most false-rejections.' },
+            { label: 'Off', intent: 'Disable the gate entirely. No extraction, no metadata, no trust skip at the lab. Synthesis and research behave as before.' },
+        ],
+    },
+
+    // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
     // Lab Outcomes — graph consequences of lab experiment results
     // -------------------------------------------------------------------------
@@ -177,7 +235,7 @@ export const FEATURE_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 26. Lab Claim Decomposition (5 params)
+    // 26. Lab Claim Decomposition
     // -------------------------------------------------------------------------
     evm_decompose: {
         id: 'evm_decompose',
@@ -234,7 +292,7 @@ export const FEATURE_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 27. Transient Partitions (11 params)
+    // 27. Transient Partitions
     // -------------------------------------------------------------------------
     transient_partitions: {
         id: 'transient_partitions',
@@ -341,7 +399,7 @@ export const FEATURE_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 27. Node Lifecycle (6 params)
+    // 27. Node Lifecycle
     // -------------------------------------------------------------------------
     node_lifecycle: {
         id: 'node_lifecycle',
@@ -408,7 +466,7 @@ export const FEATURE_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 28. Number Variables (3 params)
+    // 28. Number Variables
     // -------------------------------------------------------------------------
     number_variables: {
         id: 'number_variables',
@@ -449,7 +507,7 @@ export const FEATURE_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 29. Consultant Review (11 params)
+    // 29. Consultant Review
     // -------------------------------------------------------------------------
     consultant_review: {
         id: 'consultant_review',
@@ -607,7 +665,7 @@ export const FEATURE_SECTIONS: Record<string, SectionMeta> = {
     },
 
     // -------------------------------------------------------------------------
-    // 46. Elite Verification Pool (13 params)
+    // 46. Elite Verification Pool
     // -------------------------------------------------------------------------
     elite_pool: {
         id: 'elite_pool',

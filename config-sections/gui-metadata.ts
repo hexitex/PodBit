@@ -180,8 +180,8 @@ export const GUI_ENRICHMENTS: Record<string, GuiEnrichment> = {
     },
     lab: {
         category: 'verificationElite',
-        helpText: 'The lab framework controls how nodes behave during experiments. Freeze prevents synthesis, decay, and lifecycle transitions for nodes under active verification. Taint propagation marks downstream children when a parent claim is refuted. Lab chaining auto-forwards results to a critique lab for methodology review — the critique can confirm, correct, or request a retest before consequences are applied.',
-        searchTerms: ['lab', 'freeze', 'taint', 'propagation', 'experiment', 'frozen', 'tainted', 'math-lab', 'verification', 'routing', 'registry', 'multi-lab', 'health check', 'timeout', 'chaining', 'critique', 'methodology', 'review', 'defer', 'retest'],
+        helpText: 'The lab framework controls how nodes behave during experiments. Freeze prevents synthesis, decay, and lifecycle transitions for nodes under active verification. Taint propagation marks downstream children when a parent claim is refuted, but only within a bounded BFS depth AND only for descendants whose embedding cosine similarity to the refuted source meets the similarity threshold — so children that test a different mechanism are spared. Taint clears automatically when the source is later re-verified as supported OR inconclusive, and after the decay window. Lab chaining auto-forwards results to a critique lab for methodology review — the critique can confirm, correct, or request a retest before consequences are applied.',
+        searchTerms: ['lab', 'freeze', 'taint', 'propagation', 'experiment', 'frozen', 'tainted', 'math-lab', 'verification', 'routing', 'registry', 'multi-lab', 'health check', 'timeout', 'chaining', 'critique', 'methodology', 'review', 'defer', 'retest', 'similarity gate', 'embedding', 'taintSimilarityThreshold', 'inconclusive'],
     },
     embedding_eval: {
         category: 'cullPipeline',
@@ -229,6 +229,11 @@ export const GUI_ENRICHMENTS: Record<string, GuiEnrichment> = {
         category: 'verificationElite',
         helpText: 'The elite pool promotes high-confidence lab-verified nodes into a curated collection that tracks progress against the project manifest. Promoted findings participate in higher-generation synthesis (elite-to-elite bridging).',
         searchTerms: ['elite', 'pool', 'promotion', 'generation', 'bridging', 'manifest', 'elite dedup', 'elite weight'],
+    },
+    contentSpec: {
+        category: 'verificationElite',
+        helpText: 'Post-generation structural coherence gate for synthesis and research. An LLM extracts mechanism / prediction / falsifiability / novelty from each output; degenerate outputs (too many empty fields) can be rejected at birth instead of wasting downstream lab compute. Nodes that pass carry a content_spec in metadata and are treated as "pre-specced" — the lab-stage adversarial falsifiability review is skipped for them when trustPreSpecced is on. The experimental spec extraction (specType + lab-specific parameters) still runs at the lab boundary, because it depends on the live lab registry.',
+        searchTerms: ['content spec', 'contentSpec', 'coherence', 'mechanism', 'prediction', 'falsifiability', 'novelty', 'pre-specced', 'pre-spec', 'degenerate', 'synthesis gate', 'research gate', 'birth gate', 'structural coherence'],
     },
 
     // ═══ Knowledge Delivery — how knowledge reaches LLMs ════════════════════

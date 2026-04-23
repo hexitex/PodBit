@@ -46,6 +46,7 @@ jest.unstable_mockModule('../../db.js', () => ({
 jest.unstable_mockModule('../../config.js', () => ({
     config: {
         autonomousCycles: { questions: mockCfg },
+        engine: { weightFloor: 0.1 },
     },
 }));
 

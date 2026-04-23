@@ -451,6 +451,46 @@ function Part3VerificationQuality() {
         </div>
       </div>
 
+      <div className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg p-4 mb-4">
+        <h3 className="font-semibold text-sm mb-2 text-gray-900 dark:text-gray-200">Content Spec Gate (pre-lab coherence filter)</h3>
+        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+          Before a synthesis or research-cycle output enters the graph, an optional LLM pass extracts
+          a structured <strong>content spec</strong> with four fields:
+        </p>
+        <ul className="text-xs text-gray-600 dark:text-gray-400 list-disc list-inside space-y-1 mb-2">
+          <li><strong>mechanism</strong> — named equation, process, or quantity the output invokes</li>
+          <li><strong>prediction</strong> — measurable outcome with direction or value</li>
+          <li><strong>falsifiability</strong> — what observation would refute the claim</li>
+          <li><strong>novelty</strong> — what the output adds beyond its parents</li>
+        </ul>
+        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+          The prompt is instructed to leave fields <em>empty</em> rather than invent content. When the
+          gate is enabled (<code>config.contentSpec.enabled</code>), nodes with fewer than{' '}
+          <code>minValidFields</code> fields populated (default 3 of 4) are rejected at birth — that's
+          the gate's purpose. Rejections emit <code>content_spec_rejected</code> activity events so
+          you can watch the rate. When the gate is off, synthesis and research behave exactly as
+          before — no extraction, no metadata, no rejections.
+        </p>
+        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+          Nodes that pass the gate carry the spec in their metadata and are treated as{' '}
+          <strong>pre-specced</strong> by the EVM pipeline. When <code>trustPreSpecced</code> is on,
+          the lab-stage adversarial falsifiability review is skipped for them — mechanism, prediction,
+          and falsifiability were already verified at birth. The lab-stage experimental spec
+          extraction (specType + capability-specific parameters + prior-rejection context) still runs,
+          because those fields depend on the live lab registry and cannot exist at synthesis time.
+        </p>
+        <p className="text-xs text-gray-600 dark:text-gray-400">
+          <strong>Backfilling existing nodes:</strong> turning the gate on only affects new births.
+          To retroactively spec nodes that already exist in the graph, run{' '}
+          <code>npx tsx scripts/content-spec-backfill.ts --apply</code>. The script is ordered by
+          weight (most load-bearing nodes first), respects <code>--limit</code> and{' '}
+          <code>--type synthesis|seed</code>, skips already-specced nodes, and never archives
+          degenerate ones — it only attaches metadata so the lab-stage skip starts paying off
+          immediately. Always run without <code>--apply</code> first to see the per-type valid /
+          degenerate breakdown.
+        </p>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg p-4">
           <h3 className="font-semibold text-sm mb-2 text-gray-900 dark:text-gray-200">Node Freezing</h3>
@@ -464,8 +504,40 @@ function Part3VerificationQuality() {
           <h3 className="font-semibold text-sm mb-2 text-gray-900 dark:text-gray-200">Taint Propagation</h3>
           <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
             When a claim is refuted, its downstream children can be <strong>tainted</strong> — marked as
-            potentially unreliable because their foundation was disproved. Tainted nodes are excluded from synthesis
-            until the taint expires (configurable decay) or is cleared by re-verification. Enable via config.
+            potentially unreliable because their foundation was disproved. Tainted nodes are excluded from
+            synthesis <em>and</em> from the EVM verification queue until the taint is cleared.
+          </p>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+            Propagation is bounded by three gates to prevent refutation-cascade lockouts:
+          </p>
+          <ul className="text-xs text-gray-600 dark:text-gray-400 list-disc list-inside space-y-1 mb-2">
+            <li>
+              <strong>BFS depth</strong> (<code>taintMaxDepth</code>, default 2) — only this many
+              generations of descendants can be marked from a single refutation.
+            </li>
+            <li>
+              <strong>Embedding similarity gate</strong> (<code>taintSimilarityThreshold</code>, default
+              0.85) — each descendant's content embedding is compared against the refuted source's
+              embedding. Only descendants whose cosine similarity meets the threshold are tainted. A child
+              that walks the parent edge but tests a different mechanism (different quantities, different
+              method) is spared. Set to 0 to disable the gate and taint everything in range.
+            </li>
+            <li>
+              <strong>Decay</strong> (<code>taintDecayDays</code>, default 7) — taint older than this is
+              cleared automatically. Set to 0 to disable decay.
+            </li>
+          </ul>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+            Taint also clears immediately when the refuted source is later re-verified as <strong>supported
+            </strong> or <strong>inconclusive</strong>. An inconclusive re-verification means the lab could
+            not reproduce the refutation, so descendants are released rather than kept locked out.
+          </p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">
+            <strong>Retroactive cleanup:</strong> when you tighten the gates (raise similarity
+            threshold, lower max depth), existing taint stays in place. Run{' '}
+            <code>npx tsx scripts/retaint-sweep.ts</code> (dry-run) and then{' '}
+            <code>--apply</code> to re-evaluate every tainted node against the current thresholds
+            and clear the ones that wouldn't be tainted under the new rules.
           </p>
         </div>
       </div>

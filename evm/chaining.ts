@@ -270,13 +270,17 @@ export async function handleCritiqueResult(
                 decision.correctedVerdict = 'inconclusive';
             }
             const correctedSupported = decision.correctedVerdict === 'supported';
+            const correctedInconclusive = decision.correctedVerdict === 'inconclusive';
             const correctedConfidence = decision.correctedConfidence ?? 0.5;
-            // Apply consequences with the corrected verdict
+            // Apply consequences with the corrected verdict. Inconclusive
+            // corrections must not taint or archive — the critique walked
+            // back the original refutation.
             await applyDeferredConsequences(
                 parentExecutionId,
                 nodeId,
                 correctedSupported,
                 correctedConfidence,
+                correctedInconclusive,
             );
             // Update parent execution with corrected verdict
             await query(
@@ -380,6 +384,7 @@ export async function applyDeferredConsequences(
     nodeId: string,
     claimSupported: boolean,
     confidence: number,
+    isInconclusive: boolean = false,
 ): Promise<void> {
     const evmConfig = config.labVerify;
 
@@ -432,14 +437,14 @@ export async function applyDeferredConsequences(
         );
     }
 
-    // Auto-archive disproved nodes
-    if (!claimSupported) {
+    // Auto-archive disproved nodes — skip for inconclusive.
+    if (!claimSupported && !isInconclusive) {
         const { maybeAutoArchiveDisproved } = await import('./feedback.js');
         await maybeAutoArchiveDisproved(nodeId, false, confidence, 'chain');
     }
 
-    // Taint propagation
-    if (!claimSupported) {
+    // Taint propagation — only for genuine refutations, never inconclusive.
+    if (!claimSupported && !isInconclusive) {
         try {
             if (config.lab?.taintOnRefute) {
                 const { propagateTaint } = await import('../lab/taint.js');
@@ -453,15 +458,17 @@ export async function applyDeferredConsequences(
         } catch { /* non-fatal */ }
     }
 
-    // Clear taint when supported
-    if (claimSupported) {
+    // Clear taint when supported OR inconclusive — an inconclusive correction
+    // walks back a previous refutation, so descendants should be released.
+    if (claimSupported || isInconclusive) {
         try {
             const { clearTaint } = await import('../lab/taint.js');
             const cleared = await clearTaint(nodeId);
             if (cleared > 0) {
+                const reason = claimSupported ? 'chain-supported' : 'chain-inconclusive';
                 emitActivity('lab', 'taint_cleared',
-                    `Cleared taint from ${cleared} node(s) — ${nodeId.slice(0, 8)} chain-supported`,
-                    { sourceNodeId: nodeId, clearedCount: cleared, deferred: true });
+                    `Cleared taint from ${cleared} node(s) — ${nodeId.slice(0, 8)} ${reason}`,
+                    { sourceNodeId: nodeId, clearedCount: cleared, deferred: true, reason });
             }
         } catch { /* non-fatal */ }
     }

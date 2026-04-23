@@ -25,6 +25,7 @@ import { recordVerification, getNodeVerifications, getEVMStats, getRecentExecuti
 import { isBudgetExceeded } from '../models/budget.js';
 import { emitActivity, nodeLabel } from '../services/event-bus.js';
 import { resolveContent } from '../core/number-variables.js';
+import { readContentSpecFromMetadata } from '../core/content-spec.js';
 import { extractExperimentSpec } from './spec-extractor.js';
 import { submitSpec } from '../lab/client.js';
 import type { VerificationResult, VerifyHints } from './types.js';
@@ -89,7 +90,7 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
     const node: any = await queryOne(
         `SELECT id, content, weight, domain, node_type, contributor, trajectory,
                 specificity, salience, breedable, created_at,
-                verification_status, verification_score
+                verification_status, verification_score, metadata
          FROM nodes WHERE id = $1 AND archived = 0`,
         [nodeId]
     );
@@ -339,6 +340,12 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
         try {
             // Pass the pipeline signal so the watchdog can abort a hanging spec
             // extraction. Without this, a stuck LLM call blocks the slot forever.
+            // Detect pre-specced node: carries a valid content_spec from the
+            // synthesis-stage coherence gate. Signals the spec extractor to
+            // skip the redundant falsifiability review.
+            const preSpeccedSpec = readContentSpecFromMetadata(node.metadata);
+            const preSpecced = !!(preSpeccedSpec && preSpeccedSpec.valid);
+
             extraction = await extractExperimentSpec(
                 nodeId, resolvedClaim, resolvedParents, node.domain,
                 {
@@ -347,6 +354,7 @@ export async function verifyNodeInternal(nodeId: string, _researchData?: string,
                     priorRejections,
                     priorLabErrors,
                     signal: hints?.signal,
+                    preSpecced,
                 },
             );
         } catch (e: any) {

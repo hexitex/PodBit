@@ -314,15 +314,19 @@ export async function recordVerification(result: VerificationResult, options?: R
         } catch { /* non-fatal */ }
     }
 
-    // 4c. Clear taint when a previously-refuted node is now supported
-    if (result.evaluation?.claimSupported) {
+    // 4c. Clear taint when a previously-refuted node is re-verified as
+    // supported OR returns inconclusive. An inconclusive re-verification
+    // means the lab could not reproduce the refutation, so descendants
+    // should be released rather than kept locked out indefinitely.
+    if (result.evaluation?.claimSupported || (result.status === 'completed' && isInconclusive)) {
         try {
             const { clearTaint } = await import('../lab/taint.js');
             const cleared = await clearTaint(result.nodeId);
             if (cleared > 0) {
+                const reason = result.evaluation?.claimSupported ? 'now supported' : 'now inconclusive';
                 emitActivity('lab', 'taint_cleared',
-                    `Cleared taint from ${cleared} node(s) — ${result.nodeId.slice(0, 8)} now supported`,
-                    { sourceNodeId: result.nodeId, clearedCount: cleared });
+                    `Cleared taint from ${cleared} node(s) — ${result.nodeId.slice(0, 8)} ${reason}`,
+                    { sourceNodeId: result.nodeId, clearedCount: cleared, reason });
             }
         } catch { /* non-fatal */ }
     }
@@ -410,15 +414,20 @@ export async function recordMultiClaimAggregate(
         }
     }
 
+    const aggregateInconclusive = (aggregate.evaluation as any)?.inconclusive === true
+        || aggregate.evaluation?.claimSupported == null;
+
     // Auto-archive disproved nodes (multi-claim)
     // Only on genuine completion — infrastructure failures must not archive nodes.
-    if (aggregate.evaluation && aggregate.status === 'completed' && !aggregate.evaluation.claimSupported) {
+    // Skip inconclusive — "I can't tell" is NOT a refutation.
+    if (aggregate.evaluation && aggregate.status === 'completed' && !aggregate.evaluation.claimSupported && !aggregateInconclusive) {
         await maybeAutoArchiveDisproved(nodeId, false, aggregate.evaluation.confidence, 'multi-claim');
     }
 
     // Lab taint propagation for multi-claim refutations
     // Only on genuine completion — infrastructure failures must not poison downstream children.
-    if (aggregate.evaluation && aggregate.status === 'completed' && !aggregate.evaluation.claimSupported) {
+    // Skip inconclusive — taint should only propagate for genuine refutations.
+    if (aggregate.evaluation && aggregate.status === 'completed' && !aggregate.evaluation.claimSupported && !aggregateInconclusive) {
         try {
             const labConfig = (await import('../config.js')).config;
             if (labConfig.lab?.taintOnRefute) {
@@ -433,15 +442,18 @@ export async function recordMultiClaimAggregate(
         } catch { /* non-fatal */ }
     }
 
-    // Clear taint when multi-claim re-verification supports
-    if (aggregate.evaluation?.claimSupported) {
+    // Clear taint when multi-claim re-verification supports OR returns
+    // inconclusive. Inconclusive means the lab could not reproduce the
+    // refutation — descendants should be released rather than locked out.
+    if (aggregate.evaluation?.claimSupported || (aggregate.status === 'completed' && aggregateInconclusive)) {
         try {
             const { clearTaint } = await import('../lab/taint.js');
             const cleared = await clearTaint(nodeId);
             if (cleared > 0) {
+                const reason = aggregate.evaluation?.claimSupported ? 'now supported' : 'now inconclusive';
                 emitActivity('lab', 'taint_cleared',
-                    `Cleared taint from ${cleared} node(s) — ${nodeId.slice(0, 8)} now supported`,
-                    { sourceNodeId: nodeId, clearedCount: cleared });
+                    `Cleared taint from ${cleared} node(s) — ${nodeId.slice(0, 8)} ${reason}`,
+                    { sourceNodeId: nodeId, clearedCount: cleared, reason });
             }
         } catch { /* non-fatal */ }
     }

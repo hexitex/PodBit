@@ -152,6 +152,8 @@ const mockAppConfig: any = {
 jest.unstable_mockModule('../../db.js', () => ({
     query: mockQuery,
     queryOne: mockQueryOne,
+    systemQuery: mockQuery,
+    systemQueryOne: mockQueryOne,
 }));
 
 jest.unstable_mockModule('../../core/engine-config.js', () => ({

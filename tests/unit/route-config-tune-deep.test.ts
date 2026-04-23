@@ -142,7 +142,7 @@ describe('callTuneModel subsystem selection', () => {
         expect(mockCallSubsystemModel).toHaveBeenCalledWith(
             'config_tune',
             expect.any(String),
-            expect.objectContaining({ temperature: 0.3 }),
+            expect.objectContaining({ jsonSchema: expect.any(Object) }),
         );
     });
 
@@ -158,7 +158,7 @@ describe('callTuneModel subsystem selection', () => {
         expect(mockCallSubsystemModel).toHaveBeenCalledWith(
             'compress',
             expect.any(String),
-            expect.objectContaining({ temperature: 0.3 }),
+            expect.objectContaining({ jsonSchema: expect.any(Object) }),
         );
     });
 });

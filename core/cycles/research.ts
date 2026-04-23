@@ -22,6 +22,7 @@ import { resolveContent } from '../number-variables.js';
 import { buildProvenanceTag } from '../provenance.js';
 import { RC } from '../../config/constants.js';
 import { getExcludedDomainsForCycle } from '../governance.js';
+import { gateResearchSeed } from '../content-spec.js';
 
 /**
  * One tick of the research cycle: selects the least-populated eligible domain,
@@ -390,12 +391,25 @@ async function runResearchCycleSingle(): Promise<void> {
             } catch { /* consultant review is non-fatal */ }
         }
 
+        // Content spec gate — structural coherence check for research seeds.
+        // Gated by config.contentSpec.enabled + researchEnabled; no-op when off.
+        const csGate = await gateResearchSeed(seed, targetDomain);
+        if (csGate.rejected) {
+            rejected++;
+            console.error(`[research] Content spec rejected seed: "${seed.slice(0, 80)}..." (${csGate.reason})`);
+            emitActivity('cycle', 'research_content_spec_rejected',
+                `Content spec degenerate: ${csGate.reason}`,
+                { domain: targetDomain, emptyFields: csGate.spec?.emptyFields, preview: seed.slice(0, 120) });
+            continue;
+        }
+
         try {
             const result = await handlePropose({
                 content: seed,
                 nodeType: 'seed',
                 domain: targetDomain,
                 contributor: 'research-cycle',
+                ...csGate.metadataMerge,
             }) as any;
             if (result.success) added++;
         } catch (err: any) {

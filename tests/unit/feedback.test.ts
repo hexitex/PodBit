@@ -16,7 +16,7 @@ const mockConfig = {
         weightBoostOnVerified: 0.1,
         weightPenaltyOnFailed: -0.1,
     },
-    engine: { weightCeiling: 3.0, weightFloor: 0.05 },
+    engine: { weightCeiling: 3.0, weightFloor: 0.1 },
     feedback: { weightFloor: 0.1 },
 };
 

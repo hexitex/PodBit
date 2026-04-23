@@ -35,7 +35,7 @@ import { validateProposal } from './validate.js';
  *   with rejection reason, scores, and suggestion.
  */
 async function handlePropose(params: Record<string, any>) {
-    const { content, nodeType, domain, parentIds, contributor, decidedByTier, supersedes, weight: requestedWeight } = params;
+    const { content, nodeType, domain, parentIds, contributor, decidedByTier, supersedes, weight: requestedWeight, metadata } = params;
 
     // === Project switching guard ===
     // Reject autonomous proposals while a project switch is in progress.
@@ -176,6 +176,7 @@ async function handlePropose(params: Record<string, any>) {
         decidedByTier: decidedByTier || (isHuman ? 'human' : 'system'),
         weight: requestedWeight || (nodeType === 'breakthrough' ? appConfig.nodes.breakthroughWeight : appConfig.nodes.defaultWeight),
         embedding,
+        ...(metadata ? { metadata } : {}),
     });
 
     // Dedup gate may return null — reject gracefully
