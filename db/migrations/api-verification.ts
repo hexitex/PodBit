@@ -15,6 +15,7 @@
  */
 
 import type Database from 'better-sqlite3';
+import { addColumnIfMissing } from './helpers.js';
 
 // =============================================================================
 // INIT MIGRATIONS — run every time the DB is opened
@@ -150,43 +151,18 @@ export function runApiVerificationInitMigrations(db: Database.Database): void {
  */
 export function runApiVerificationSchemaMigrations(db: Database.Database): void {
     // Add test_url column — a known-good endpoint for connectivity checks
-    try {
-        db.prepare('SELECT test_url FROM api_registry LIMIT 1').get();
-    } catch {
-        db.exec('ALTER TABLE api_registry ADD COLUMN test_url TEXT');
-        console.error('[sqlite] Added test_url column to api_registry');
-    }
+    addColumnIfMissing(db, 'api_registry', 'test_url', 'ALTER TABLE api_registry ADD COLUMN test_url TEXT', '[sqlite] Added test_url column to api_registry');
 
     // Add mode column — verify, enrich, or both
-    try {
-        db.prepare('SELECT mode FROM api_registry LIMIT 1').get();
-    } catch {
-        db.exec("ALTER TABLE api_registry ADD COLUMN mode TEXT NOT NULL DEFAULT 'verify'");
-        console.error('[sqlite] Added mode column to api_registry');
-    }
+    addColumnIfMissing(db, 'api_registry', 'mode', "ALTER TABLE api_registry ADD COLUMN mode TEXT NOT NULL DEFAULT 'verify'", '[sqlite] Added mode column to api_registry');
 
     // Add prompt_extract column — per-API instructions for extracting new knowledge
-    try {
-        db.prepare('SELECT prompt_extract FROM api_registry LIMIT 1').get();
-    } catch {
-        db.exec('ALTER TABLE api_registry ADD COLUMN prompt_extract TEXT');
-        console.error('[sqlite] Added prompt_extract column to api_registry');
-    }
+    addColumnIfMissing(db, 'api_registry', 'prompt_extract', 'ALTER TABLE api_registry ADD COLUMN prompt_extract TEXT', '[sqlite] Added prompt_extract column to api_registry');
 
     // Add enrichment tracking columns to api_verifications
-    try {
-        db.prepare('SELECT enrichment_node_ids FROM api_verifications LIMIT 1').get();
-    } catch {
-        db.exec('ALTER TABLE api_verifications ADD COLUMN enrichment_node_ids TEXT');
-        db.exec('ALTER TABLE api_verifications ADD COLUMN enrichment_count INTEGER NOT NULL DEFAULT 0');
-        console.error('[sqlite] Added enrichment columns to api_verifications');
-    }
+    addColumnIfMissing(db, 'api_verifications', 'enrichment_node_ids', 'ALTER TABLE api_verifications ADD COLUMN enrichment_node_ids TEXT', '[sqlite] Added enrichment columns to api_verifications');
+    addColumnIfMissing(db, 'api_verifications', 'enrichment_count', 'ALTER TABLE api_verifications ADD COLUMN enrichment_count INTEGER NOT NULL DEFAULT 0');
 
     // Add decision_mode column to api_verifications
-    try {
-        db.prepare('SELECT decision_mode FROM api_verifications LIMIT 1').get();
-    } catch {
-        db.exec('ALTER TABLE api_verifications ADD COLUMN decision_mode TEXT');
-        console.error('[sqlite] Added decision_mode column to api_verifications');
-    }
+    addColumnIfMissing(db, 'api_verifications', 'decision_mode', 'ALTER TABLE api_verifications ADD COLUMN decision_mode TEXT', '[sqlite] Added decision_mode column to api_verifications');
 }

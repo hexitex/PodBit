@@ -12,6 +12,7 @@
  */
 
 import type Database from 'better-sqlite3';
+import { columnExists } from './helpers.js';
 
 /**
  * Run model registry and subsystem assignment migrations on the project database.
@@ -192,9 +193,7 @@ export function runModelsMigrations(db: Database.Database): void {
     }
 
     // Migrate: add consultant_model_id column for per-subsystem escalation model
-    try {
-        db.prepare('SELECT consultant_model_id FROM subsystem_assignments LIMIT 1').get();
-    } catch {
+    if (!columnExists(db, 'subsystem_assignments', 'consultant_model_id')) {
         db.exec(`ALTER TABLE subsystem_assignments ADD COLUMN consultant_model_id TEXT REFERENCES model_registry(id) ON DELETE SET NULL`);
         console.error('[sqlite] Added consultant_model_id column to subsystem_assignments');
     }

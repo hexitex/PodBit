@@ -297,6 +297,7 @@ describe('runApiVerificationSchemaMigrations', () => {
                 'api_registry.mode',
                 'api_registry.prompt_extract',
                 'api_verifications.enrichment_node_ids',
+                'api_verifications.enrichment_count',
                 'api_verifications.decision_mode',
             ],
         });

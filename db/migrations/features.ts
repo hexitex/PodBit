@@ -11,6 +11,7 @@
  */
 
 import type Database from 'better-sqlite3';
+import { columnExists } from './helpers.js';
 
 /**
  * Run feature init migrations (prompts, scaffold rename, feedback, breakthrough
@@ -152,9 +153,7 @@ export function runFeaturesInitMigrations(db: Database.Database): void {
     }
 
     // Migrate: add documentation column to breakthrough_registry if missing
-    try {
-        db.prepare('SELECT documentation FROM breakthrough_registry LIMIT 1').get();
-    } catch {
+    if (!columnExists(db, 'breakthrough_registry', 'documentation')) {
         db.exec(`ALTER TABLE breakthrough_registry ADD COLUMN documentation TEXT`);
         console.error('[sqlite] Added documentation column to breakthrough_registry');
     }
