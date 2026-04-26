@@ -16,7 +16,7 @@ unless you ask the question. Podbit discovers the questions.</h2>
 
 <h2 align="center">Watch overview</h2>
   <a href="https://youtu.be/a1eS4mV5gXQ">
-    <img align="center" src="https://img.youtube.com/vi/a1eS4mV5gXQ/maxresdefault.jpg" alt="Podbit Demo" width="600" />
+    <img align="center" src="https://i9.ytimg.com/vi_webp/a1eS4mV5gXQ/mqdefault.webp?v=69ee9e76&sqp=CPi_us8G&rs=AOn4CLCOoqeuE3ueErPlte_ZrgfFCiZxbw" alt="Podbit Demo" width="600" />
   </a>
 <h2 align="center">Example Findings</h2>
 See [podbit_elite_nodes.md](podbit_elite_nodes.md) for a registry of reviewed synthesis nodes — the kind of output Podbit produces.
