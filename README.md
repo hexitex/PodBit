@@ -19,6 +19,8 @@ unless you ask the question. Podbit discovers the questions.</h2>
     <img align="center" src="https://img.youtube.com/vi/a1eS4mV5gXQ/maxresdefault.jpg" alt="Podbit Demo" width="600" />
   </a>
 
+See [podbit_elite_nodes.md](podbit_elite_nodes.md) for a registry of reviewed synthesis nodes — the kind of output Podbit produces.
+
 > **Early release - actively in development.** Podbit is under heavy iteration. Expect rough edges, schema migrations, and parameters that are added/removedmove between releases. 
 ---
 
